@@ -1,0 +1,460 @@
+/* ============================================================
+   ito - Global Styles
+   ============================================================ */
+
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1a2e;
+  --surface2: #252540;
+  --primary: #6c5ce7;
+  --primary-hover: #7d6ff0;
+  --success: #00b894;
+  --danger: #e17055;
+  --text: #f0f0f0;
+  --text-dim: #a0a0b8;
+  --border: #333355;
+  --radius: 12px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+#root {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+
+/* ============================================================
+   Common
+   ============================================================ */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--border);
+}
+.btn-text {
+  background: transparent;
+  color: var(--text-dim);
+  text-decoration: underline;
+}
+.btn-icon {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.input {
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--primary);
+}
+
+.error {
+  background: rgba(225, 112, 85, 0.15);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.connection-status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 24px;
+}
+
+/* ============================================================
+   Home
+   ============================================================ */
+
+.logo {
+  font-size: 48px;
+  text-align: center;
+  margin-top: 48px;
+}
+.subtitle {
+  text-align: center;
+  color: var(--text-dim);
+  margin-bottom: 32px;
+}
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ============================================================
+   Lobby
+   ============================================================ */
+
+.room-header {
+  text-align: center;
+}
+.room-id {
+  color: var(--primary);
+  font-family: monospace;
+  font-size: 28px;
+  letter-spacing: 4px;
+}
+.player-count {
+  color: var(--text-dim);
+}
+
+.player-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.player-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.player-item.ready {
+  border-color: var(--success);
+}
+.player-name {
+  font-weight: 600;
+}
+.player-status {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ============================================================
+   Round Header (shared)
+   ============================================================ */
+
+.round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.round-badge, .score-badge {
+  background: var(--surface2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.score-badge {
+  color: var(--primary);
+}
+
+/* ============================================================
+   Topic Card
+   ============================================================ */
+
+.topic-card {
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.topic-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.topic-text {
+  font-size: 24px;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Clue Screen
+   ============================================================ */
+
+.my-number-card {
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary), #a29bfe);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.number-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.number-value {
+  font-size: 56px;
+  font-weight: 800;
+}
+
+.clue-instruction {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.clue-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.waiting {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 16px;
+}
+.waiting-count {
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   Arrange Screen
+   ============================================================ */
+
+.arrange-instruction {
+  font-size: 14px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.arrange-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.arrange-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.arrange-rank {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.arrange-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.arrange-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.arrange-clue {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.arrange-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ============================================================
+   Result Screen
+   ============================================================ */
+
+.result-banner {
+  text-align: center;
+  padding: 20px;
+  border-radius: var(--radius);
+}
+.result-banner.success {
+  background: rgba(0, 184, 148, 0.15);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+.result-banner.failure {
+  background: rgba(225, 112, 85, 0.15);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+.result-banner h2 {
+  font-size: 28px;
+}
+
+.result-order {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+.result-rank {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface2);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+}
+.result-name {
+  flex: 1;
+  font-weight: 600;
+}
+.result-number {
+  color: var(--primary);
+  font-weight: 700;
+  font-family: monospace;
+}
+
+/* ============================================================
+   Final Screen
+   ============================================================ */
+
+.final-title {
+  text-align: center;
+  font-size: 32px;
+  margin-top: 32px;
+}
+
+.final-score-card {
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary), #fd79a8);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.final-score-label {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.final-score-value {
+  font-size: 48px;
+  font-weight: 800;
+}
+
+.final-rounds {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.final-round-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border-left: 4px solid transparent;
+}
+.final-round-item.success {
+  border-left-color: var(--success);
+}
+.final-round-item.failure {
+  border-left-color: var(--danger);
+}
+.final-round-num {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-dim);
+  min-width: 30px;
+}
+.final-round-topic {
+  flex: 1;
+}
+.final-round-result {
+  font-size: 18px;
+}
