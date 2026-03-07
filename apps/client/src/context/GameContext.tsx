@@ -81,6 +81,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     socket.on('connect', () => dispatch({ type: 'SET_CONNECTED', payload: true }));
     socket.on('disconnect', () => dispatch({ type: 'SET_CONNECTED', payload: false }));
+    socket.on('connect_error', (err: Error) => {
+      dispatch({ type: 'SET_CONNECTED', payload: false });
+      dispatch({ type: 'SET_ERROR', payload: `サーバーに接続できません: ${err.message}` });
+    });
 
     socket.on(S2C.ROOM_UPDATED, (gs: PublicGameState) => {
       dispatch({ type: 'SET_GAME_STATE', payload: gs });
@@ -104,6 +108,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => {
       socket.off('connect');
       socket.off('disconnect');
+      socket.off('connect_error');
       socket.off(S2C.ROOM_UPDATED);
       socket.off(S2C.GAME_STATE_CHANGED);
       socket.off(S2C.YOUR_NUMBER);

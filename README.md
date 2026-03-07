@@ -292,6 +292,7 @@ ito/
   - Output Directory: `dist`
 3. Environment Variables に追加
   - `VITE_SERVER_URL` = サーバー公開URL（例: `https://ito-server.onrender.com`）
+  - Production / Preview / Development すべてに同じ値を設定
 4. Deploy を実行
 
 ### 15-3. 動作確認
@@ -303,3 +304,4 @@ ito/
 ### 注意
 
 - Vercel単体では長時間接続の Socket.IO サーバー運用に不向きなため、サーバーは別ホスティング推奨
+- `VITE_SERVER_URL` 未設定だと本番で接続先が期待とズレるため、必ず設定する
