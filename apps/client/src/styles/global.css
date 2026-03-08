@@ -173,21 +173,129 @@ body {
    Home
    ============================================================ */
 
-.logo {
-  font-size: 48px;
-  text-align: center;
-  margin-top: 48px;
+.home-screen {
+  min-height: calc(100% - 48px);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 24px;
+  padding: 20px 12px 32px;
 }
-.subtitle {
-  text-align: center;
-  color: var(--text-dim);
-  margin-bottom: 32px;
+
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 20px;
 }
+
+.home-mascot {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #f2f2f2 60%, #ddd 100%);
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 88px;
+  line-height: 1;
+}
+
+.home-logo {
+  font-size: 84px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.home-logo-i {
+  color: #39a8ff;
+}
+
+.home-logo-t {
+  color: #ffd93f;
+}
+
+.home-logo-o {
+  color: #ff6c7f;
+}
+
+.home-subtitle {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
 .menu-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
+  margin-top: 8px;
 }
+
+.btn-bone {
+  position: relative;
+  background: linear-gradient(180deg, #f8f6ef 0%, #e7e4d9 100%);
+  color: #111;
+  border-radius: 999px;
+  padding: 22px 20px;
+  font-size: 48px;
+  font-weight: 900;
+  min-height: 94px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.btn-bone::before,
+.btn-bone::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: inherit;
+  transform: translateY(-50%);
+}
+
+.btn-bone::before {
+  left: -12px;
+}
+
+.btn-bone::after {
+  right: -12px;
+}
+
+.btn-bone:hover:not(:disabled) {
+  filter: brightness(0.98);
+}
+
+.home-form {
+  margin-top: 8px;
+}
+
+.home-screen .input {
+  background: #fff;
+  border-color: #d7d7d7;
+  color: #111;
+}
+
+.home-screen .btn-text {
+  color: #555;
+}
+
+.home-screen .error {
+  margin-bottom: 4px;
+}
+
+.home-screen .connection-status {
+  color: #666;
+  margin-top: auto;
+}
+
 .form {
   display: flex;
   flex-direction: column;
