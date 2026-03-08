@@ -1,6 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function RoleIcon({ isHost }: { isHost: boolean }) {
   const src = isHost ? '/oya.png' : '/menber.png';
@@ -25,10 +25,28 @@ export function LobbyScreen() {
   const isHost = me?.isHost ?? false;
   const allReady = gs.players.length >= 1 && gs.players.every((p) => p.isReady);
   const [showSettings, setShowSettings] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
   const [settings, setSettings] = useState({
     totalRounds: gs.totalRounds,
     topicChooserMode: gs.topicChooserMode,
   });
+
+  useEffect(() => {
+    if (!pendingSave) return;
+    if (
+      gs.totalRounds === settings.totalRounds &&
+      gs.topicChooserMode === settings.topicChooserMode
+    ) {
+      setPendingSave(false);
+      setShowSettings(false);
+    }
+  }, [pendingSave, gs.totalRounds, gs.topicChooserMode, settings.totalRounds, settings.topicChooserMode]);
+
+  useEffect(() => {
+    if (state.lastError) {
+      setPendingSave(false);
+    }
+  }, [state.lastError]);
 
   const roomUrl = typeof window !== 'undefined'
     ? window.location.origin + window.location.pathname
@@ -72,9 +90,13 @@ export function LobbyScreen() {
   };
 
   const saveSettings = () => {
+    setPendingSave(true);
     actions.updateRoomSettings(settings);
-    setShowSettings(false);
   };
+
+  const topicModeLabel = gs.topicChooserMode === 'random'
+    ? '毎ラウンドランダム'
+    : '順番（ホスト→他プレイヤー）';
 
   return (
     <div className="screen lobby-screen">
@@ -93,6 +115,9 @@ export function LobbyScreen() {
           </button>
         </div>
         <p className="player-count">{gs.players.length} / 8 人が参加中</p>
+        <p className="lobby-settings-summary">
+          設定: {gs.totalRounds}ラウンド / {topicModeLabel}
+        </p>
 
         <div className="share-actions">
           <button className="btn btn-share-pill" onClick={handleCopyUrl}>
@@ -184,8 +209,8 @@ export function LobbyScreen() {
                 閉じる
               </button>
               {isHost ? (
-                <button type="button" className="btn btn-primary" onClick={saveSettings}>
-                  保存
+                <button type="button" className="btn btn-primary" onClick={saveSettings} disabled={pendingSave}>
+                  {pendingSave ? '保存中…' : '保存'}
                 </button>
               ) : null}
             </div>

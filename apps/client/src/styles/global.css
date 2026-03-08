@@ -524,6 +524,13 @@ body {
   color: #666;
 }
 
+.lobby-settings-summary {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #6f644f;
+  font-weight: 700;
+}
+
 .player-list {
   list-style: none;
   display: flex;
