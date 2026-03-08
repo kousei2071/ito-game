@@ -6,6 +6,8 @@ export interface Player {
   name: string;
   isHost: boolean;
   isReady: boolean;
+  /** 現在オンラインかどうか */
+  connected: boolean;
   /** 現ラウンドで配られた秘密の数字 (1-100) */
   secretNumber?: number;
   /** 現ラウンドで提出したヒント */

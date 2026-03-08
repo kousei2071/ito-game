@@ -40,6 +40,7 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
     name: hostName,
     isHost: true,
     isReady: true,
+    connected: true,
   };
   const state: GameState = {
     roomId,
@@ -62,11 +63,22 @@ export function joinRoom(roomId: string, socketId: string, playerName: string): 
   if (room.players.length >= 8) throw new Error('ルームが満員です');
   if (room.players.some((p) => p.id === socketId)) throw new Error('既に参加しています');
 
+  // 既存プレイヤー名とのマッチがあれば「席に戻る」とみなして再接続扱い
+  const existing = room.players.find((p) => p.name === playerName && !p.connected);
+  if (existing) {
+    existing.id = socketId;
+    existing.connected = true;
+    // 切断中は準備状態をリセット
+    existing.isReady = false;
+    return room;
+  }
+
   room.players.push({
     id: socketId,
     name: playerName,
     isHost: false,
     isReady: false,
+    connected: true,
   });
   return room;
 }
@@ -85,6 +97,29 @@ export function leaveRoom(socketId: string): { room: GameState; removed: boolean
       return { room, removed: true };
     }
     return { room, removed: false };
+  }
+  return null;
+}
+
+/** 一時的な切断（ブラウザを閉じた等）を扱う。席は残しつつオフライン扱い。 */
+export function disconnectPlayer(socketId: string): GameState | null {
+  for (const [, room] of rooms) {
+    const player = room.players.find((p) => p.id === socketId);
+    if (!player) continue;
+
+    player.connected = false;
+    player.isReady = false;
+
+    // ホストが落ちた場合は次のオンラインの人にホスト権限を移譲
+    if (player.isHost) {
+      player.isHost = false;
+      const nextHost = room.players.find((p) => p.connected && p.id !== socketId);
+      if (nextHost) {
+        nextHost.isHost = true;
+      }
+    }
+
+    return room;
   }
   return null;
 }

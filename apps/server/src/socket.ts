@@ -11,6 +11,7 @@ import {
   submitClue,
   confirmArrange,
   advanceRound,
+  disconnectPlayer,
 } from './roomManager.js';
 
 // ============================================================
@@ -70,7 +71,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   socket.on('disconnect', () => {
-    handleLeave(io, socket);
+    handleDisconnect(io, socket);
   });
 
   // ---------- room:ready ----------
@@ -206,5 +207,12 @@ function handleLeave(io: Server, socket: Socket) {
   const result = leaveRoom(socket.id);
   if (result && !result.removed) {
     broadcastState(io, result.room);
+  }
+}
+
+function handleDisconnect(io: Server, socket: Socket) {
+  const room = disconnectPlayer(socket.id);
+  if (room) {
+    broadcastState(io, room);
   }
 }
