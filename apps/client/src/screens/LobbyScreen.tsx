@@ -9,11 +9,59 @@ export function LobbyScreen() {
   const isHost = me?.isHost ?? false;
   const allReady = gs.players.length >= 1 && gs.players.every((p) => p.isReady);
 
+  const roomUrl = typeof window !== 'undefined'
+    ? window.location.origin + window.location.pathname
+    : '';
+
+  const handleCopyUrl = async () => {
+    if (!roomUrl) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(roomUrl);
+        alert('ルームのURLをコピーしました');
+      } else {
+        // 古いブラウザ向けフォールバック
+        prompt('このURLをコピーしてください', roomUrl);
+      }
+    } catch {
+      alert('コピーに失敗しました');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!roomUrl) return;
+    if ((navigator as any).share) {
+      try {
+        await (navigator as any).share({
+          title: 'ito 協力推理ゲーム',
+          text: '一緒にitoで遊びましょう！',
+          url: roomUrl,
+        });
+      } catch {
+        // ユーザーキャンセルなどは無視
+      }
+    } else {
+      await handleCopyUrl();
+    }
+  };
+
   return (
     <div className="screen lobby-screen">
       <div className="room-header">
-        <h2>ルーム: <span className="room-id">{gs.roomId}</span></h2>
-        <p className="player-count">{gs.players.length} / 8 人</p>
+        <h2>ルームID</h2>
+        <div className="room-id-card">
+          <span className="room-id">{gs.roomId}</span>
+        </div>
+        <p className="player-count">{gs.players.length} / 8 人が参加中</p>
+
+        <div className="share-actions">
+          <button className="btn btn-secondary" onClick={handleCopyUrl}>
+            URLをコピー
+          </button>
+          <button className="btn btn-secondary" onClick={handleShare}>
+            招待リンクを共有
+          </button>
+        </div>
       </div>
 
       <ul className="player-list">

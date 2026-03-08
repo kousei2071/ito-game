@@ -194,8 +194,17 @@ body {
 .room-id {
   color: var(--primary);
   font-family: monospace;
-  font-size: 28px;
-  letter-spacing: 4px;
+  font-size: 32px;
+  letter-spacing: 6px;
+}
+.room-id-card {
+  display: inline-block;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--primary);
+  background: rgba(108, 92, 231, 0.1);
 }
 .player-count {
   color: var(--text-dim);
@@ -232,6 +241,13 @@ body {
   flex-direction: column;
   gap: 8px;
   margin-top: 8px;
+}
+
+.share-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 /* ============================================================
