@@ -1,6 +1,21 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 
+function RoleIcon({ isHost }: { isHost: boolean }) {
+  const src = isHost ? '/oya.png' : '/menber.png';
+  return (
+    <img
+      src={src}
+      alt={isHost ? '親' : 'メンバー'}
+      className="player-role-icon"
+      onError={(e) => {
+        const target = e.currentTarget;
+        target.style.display = 'none';
+      }}
+    />
+  );
+}
+
 export function LobbyScreen() {
   const { state, actions } = useGame();
   const gs = state.gameState!;
@@ -48,6 +63,7 @@ export function LobbyScreen() {
   return (
     <div className="screen lobby-screen">
       <div className="room-header">
+        <p className="lobby-title">ルーム待ち</p>
         <h2>ルームID</h2>
         <div className="room-id-card">
           <span className="room-id">{gs.roomId}</span>
@@ -55,10 +71,10 @@ export function LobbyScreen() {
         <p className="player-count">{gs.players.length} / 8 人が参加中</p>
 
         <div className="share-actions">
-          <button className="btn btn-secondary" onClick={handleCopyUrl}>
+          <button className="btn btn-bone btn-bone-sm" onClick={handleCopyUrl}>
             URLをコピー
           </button>
-          <button className="btn btn-secondary" onClick={handleShare}>
+          <button className="btn btn-bone btn-bone-sm" onClick={handleShare}>
             招待リンクを共有
           </button>
         </div>
@@ -68,7 +84,8 @@ export function LobbyScreen() {
         {gs.players.map((p) => (
           <li key={p.id} className={`player-item ${p.isReady ? 'ready' : ''}`}>
             <span className="player-name">
-              {p.isHost && '👑 '}{p.name}
+              <RoleIcon isHost={p.isHost} />
+              {p.name}
             </span>
             <span className="player-status">
               {p.isReady ? '✅ 準備OK' : '⏳ 待機中'}
@@ -79,14 +96,14 @@ export function LobbyScreen() {
 
       <div className="lobby-actions">
         {!isHost && (
-          <button className="btn btn-secondary" onClick={actions.toggleReady}>
+          <button className="btn btn-bone" onClick={actions.toggleReady}>
             {me?.isReady ? '準備を取り消す' : '準備完了'}
           </button>
         )}
 
         {isHost && (
           <button
-            className="btn btn-primary"
+            className="btn btn-bone"
             onClick={actions.startGame}
             disabled={!allReady}
           >
