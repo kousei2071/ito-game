@@ -279,7 +279,10 @@ ito/
 
 ### 15-1. サーバーを先に公開
 
-1. `apps/server` を Render などにデプロイ
+1. Renderで Web Service を作成し、以下を設定
+  - Root Directory: 空欄（リポジトリルート）
+  - Build Command: `npm run render:build`
+  - Start Command: `npm run render:start`
 2. 公開URLを取得（例: `https://ito-server.onrender.com`）
 3. `GET /health` が `{"status":"ok"}` を返すことを確認
 

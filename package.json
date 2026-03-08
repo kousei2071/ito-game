@@ -10,7 +10,9 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm -w apps/server run dev",
     "dev:client": "npm -w apps/client run dev",
-    "build": "npm -w packages/shared run build && npm -w apps/server run build && npm -w apps/client run build"
+    "build": "npm -w packages/shared run build && npm -w apps/server run build && npm -w apps/client run build",
+    "render:build": "npm install && npm --prefix packages/shared run build && npm --prefix apps/server run build",
+    "render:start": "npm --prefix apps/server run start"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
