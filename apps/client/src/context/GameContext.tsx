@@ -83,7 +83,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on('disconnect', () => dispatch({ type: 'SET_CONNECTED', payload: false }));
     socket.on('connect_error', (err: Error) => {
       dispatch({ type: 'SET_CONNECTED', payload: false });
-      dispatch({ type: 'SET_ERROR', payload: `サーバーに接続できません: ${err.message}` });
+      dispatch({ type: 'SET_ERROR', payload: `サーバーに接続できません（通信環境/URL設定を確認）: ${err.message}` });
     });
 
     socket.on(S2C.ROOM_UPDATED, (gs: PublicGameState) => {
