@@ -189,6 +189,11 @@ body {
   border: 1px solid #eadfc6;
 }
 
+.topic-screen .topic-card::before,
+.topic-screen .topic-card::after {
+  display: none;
+}
+
 .topic-screen .topic-label {
   color: #8b7c60;
 }
