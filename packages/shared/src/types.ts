@@ -14,6 +14,8 @@ export interface Player {
   clue?: string;
 }
 
+export type TopicChooserMode = 'sequential' | 'random';
+
 // ============================================================
 // Game Phase
 // ============================================================
@@ -57,6 +59,8 @@ export interface GameState {
   currentRound: RoundState | null;
   roundResults: RoundResult[];
   totalRounds: number;       // 10
+  /** お題を決める人の選び方 */
+  topicChooserMode: TopicChooserMode;
   score: number;             // 累積成功数
   /** 次のラウンドでお題を決めるプレイヤーのインデックス（players配列基準） */
   topicChooserIndex: number;
@@ -81,5 +85,6 @@ export interface PublicGameState {
   currentRound: RoundState | null;
   roundResults: RoundResult[];
   totalRounds: number;
+  topicChooserMode: TopicChooserMode;
   score: number;
 }

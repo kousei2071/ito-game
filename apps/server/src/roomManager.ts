@@ -1,4 +1,4 @@
-import type { GameState, Player, RoundState, RoundResult } from '@ito/shared';
+import type { GameState, Player, RoundState, RoundResult, TopicChooserMode } from '@ito/shared';
 import { TOPICS } from '@ito/shared';
 
 // ============================================================
@@ -49,6 +49,7 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
     currentRound: null,
     roundResults: [],
     totalRounds: 10,
+    topicChooserMode: 'sequential',
     score: 0,
     topicChooserIndex: 0,
   };
@@ -143,6 +144,30 @@ export function findRoomByPlayer(socketId: string): GameState | undefined {
   return undefined;
 }
 
+export function updateRoomSettings(
+  room: GameState,
+  socketId: string,
+  settings: { totalRounds: number; topicChooserMode: TopicChooserMode },
+): GameState {
+  if (room.phase !== 'lobby') {
+    throw new Error('設定はロビーでのみ変更できます');
+  }
+
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player?.isHost) {
+    throw new Error('設定を変更できるのはホストのみです');
+  }
+
+  const allowedRounds = new Set([5, 10, 15]);
+  if (!allowedRounds.has(settings.totalRounds)) {
+    throw new Error('ラウンド数は 5 / 10 / 15 から選択してください');
+  }
+
+  room.totalRounds = settings.totalRounds;
+  room.topicChooserMode = settings.topicChooserMode;
+  return room;
+}
+
 // ============================================================
 // Game Flow
 // ============================================================
@@ -155,10 +180,16 @@ export function startNewRound(room: GameState): RoundState {
      throw new Error('プレイヤーがいません');
    }
 
-   // このラウンドのお題決定者を決定（ホスト→他プレイヤーの順でローテーション）
-   const index = room.topicChooserIndex % room.players.length;
+   // このラウンドのお題決定者を決定
+   // sequential: ホスト→他プレイヤーでローテーション
+   // random: 毎ラウンドランダム
+   const index = room.topicChooserMode === 'random'
+     ? randInt(0, room.players.length - 1)
+     : room.topicChooserIndex % room.players.length;
    const topicChooser = room.players[index];
-   room.topicChooserIndex = (index + 1) % room.players.length;
+   if (room.topicChooserMode === 'sequential') {
+     room.topicChooserIndex = (index + 1) % room.players.length;
+   }
 
   // 重複しない数字を配布
   const numbers = shuffle(Array.from({ length: 100 }, (_, i) => i + 1)).slice(0, room.players.length);

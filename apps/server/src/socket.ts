@@ -12,6 +12,7 @@ import {
   confirmArrange,
   advanceRound,
   disconnectPlayer,
+  updateRoomSettings,
 } from './roomManager.js';
 
 // ============================================================
@@ -27,6 +28,7 @@ function toPublic(room: GameState): PublicGameState {
     currentRound: room.currentRound,
     roundResults: room.roundResults,
     totalRounds: room.totalRounds,
+    topicChooserMode: room.topicChooserMode,
     score: room.score,
   };
 }
@@ -79,6 +81,21 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     const room = toggleReady(socket.id);
     if (room) broadcastState(io, room);
   });
+
+  // ---------- room:updateSettings ----------
+  socket.on(
+    C2S.ROOM_UPDATE_SETTINGS,
+    ({ totalRounds, topicChooserMode }: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => {
+      const room = findRoomByPlayer(socket.id);
+      if (!room) return emitError(socket, 'ルームが見つかりません');
+      try {
+        updateRoomSettings(room, socket.id, { totalRounds, topicChooserMode });
+        broadcastState(io, room);
+      } catch (e: any) {
+        emitError(socket, e.message);
+      }
+    },
+  );
 
   // ---------- game:start ----------
   socket.on(C2S.GAME_START, () => {

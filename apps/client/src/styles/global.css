@@ -3,16 +3,16 @@
    ============================================================ */
 
 :root {
-  --bg: #0f0f1a;
-  --surface: #1a1a2e;
-  --surface2: #252540;
-  --primary: #6c5ce7;
-  --primary-hover: #7d6ff0;
+  --bg: #f8f4ea;
+  --surface: #fffdf7;
+  --surface2: #f7efdb;
+  --primary: #ff79bf;
+  --primary-hover: #ff66b6;
   --success: #00b894;
   --danger: #e17055;
-  --text: #f0f0f0;
-  --text-dim: #a0a0b8;
-  --border: #333355;
+  --text: #2a2620;
+  --text-dim: #8b7c60;
+  --border: #eadfc6;
   --radius: 12px;
   --paper-bg: #fff;
   --paper-line: #f2ead6;
@@ -237,7 +237,7 @@ body {
   border: 1px solid var(--border);
 }
 .btn-secondary:hover:not(:disabled) {
-  background: var(--border);
+  background: #f3e7cd;
 }
 .btn-text {
   background: transparent;
@@ -492,13 +492,33 @@ body {
   letter-spacing: 4px;
 }
 .room-id-card {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 8px;
   margin-bottom: 4px;
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid #8ec9ff;
   background: #eef7ff;
+}
+
+.room-settings-btn {
+  border: 1px solid #8ec9ff;
+  background: #fff;
+  color: #258de8;
+  border-radius: 999px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.room-settings-btn:hover {
+  background: #f5faff;
 }
 .player-count {
   color: #666;
@@ -555,6 +575,34 @@ body {
   margin-top: 12px;
 }
 
+.lobby-settings-modal {
+  text-align: left;
+  gap: 10px;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-field span {
+  font-size: 13px;
+  color: #6f644f;
+  font-weight: 700;
+}
+
+.settings-note {
+  font-size: 12px;
+  color: #8b7c60;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .btn-share-pill {
   background: #e8e7df;
   color: #222;
@@ -590,10 +638,12 @@ body {
 }
 .round-badge, .score-badge {
   background: var(--surface2);
+  color: #5f553f;
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 14px;
   font-weight: 600;
+  border: 1px solid #eadfc6;
 }
 .score-badge {
   color: var(--primary);

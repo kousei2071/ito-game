@@ -64,6 +64,7 @@ interface GameContextValue {
     joinRoom: (roomId: string, playerName: string) => void;
     leaveRoom: () => void;
     toggleReady: () => void;
+    updateRoomSettings: (settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => void;
     startGame: () => void;
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
@@ -140,6 +141,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     toggleReady: useCallback(() => {
       socket.emit(C2S.ROOM_READY, {});
+    }, [socket]),
+
+    updateRoomSettings: useCallback((settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => {
+      socket.emit(C2S.ROOM_UPDATE_SETTINGS, settings);
     }, [socket]),
 
     startGame: useCallback(() => {
