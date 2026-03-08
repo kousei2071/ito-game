@@ -17,6 +17,7 @@ export interface Player {
 // ============================================================
 export type GamePhase =
   | 'lobby'    // 参加待ち
+  | 'topic'    // お題選択中
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中
   | 'result'   // ラウンド結果表示
@@ -28,6 +29,10 @@ export type GamePhase =
 export interface RoundState {
   roundNumber: number;       // 1-indexed
   topic: string;             // お題
+  /** このラウンドでお題を決めるプレイヤーID */
+  topicChooserId: string;
+  /** ランダムお題に変更した回数（最大10回） */
+  topicChangeCount: number;
   /** ヒントを提出済みのプレイヤーID */
   submittedCluePlayerIds: string[];
   /** 公開されたヒント一覧 (clueフェーズ完了後) */
@@ -51,6 +56,8 @@ export interface GameState {
   roundResults: RoundResult[];
   totalRounds: number;       // 10
   score: number;             // 累積成功数
+  /** 次のラウンドでお題を決めるプレイヤーのインデックス（players配列基準） */
+  topicChooserIndex: number;
 }
 
 export interface RoundResult {

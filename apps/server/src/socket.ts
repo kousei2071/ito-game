@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import { C2S, S2C } from '@ito/shared';
+import { C2S, S2C, TOPICS } from '@ito/shared';
 import type { PublicGameState, GameState } from '@ito/shared';
 import {
   createRoom,
@@ -100,6 +100,53 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     broadcastState(io, room);
   });
 
+  // ---------- round:setTopic ----------
+  socket.on(
+    C2S.ROUND_SET_TOPIC,
+    ({ topic, mode, finalize }: { topic?: string; mode: 'random' | 'custom'; finalize: boolean }) => {
+      const room = findRoomByPlayer(socket.id);
+      if (!room || room.phase !== 'topic' || !room.currentRound) return;
+
+      const round = room.currentRound;
+      if (round.topicChooserId !== socket.id) {
+        return emitError(socket, 'このラウンドでお題を決められるのは順番のプレイヤーだけです');
+      }
+
+      if (!finalize) {
+        // ランダムお題の更新（最大10回）
+        if (round.topicChangeCount >= 10) {
+          return emitError(socket, 'お題の更新は最大10回までです');
+        }
+        if (mode === 'random') {
+          round.topicChangeCount += 1;
+          const usedTopics = room.roundResults.map((r) => r.topic);
+          const exclude = new Set<string>([...usedTopics, round.topic]);
+          const candidates = TOPICS.filter((t) => !exclude.has(t));
+          const pool = candidates.length > 0 ? candidates : TOPICS;
+          const idx = Math.floor(Math.random() * pool.length);
+          round.topic = pool[idx];
+        }
+        broadcastState(io, room);
+        return;
+      }
+
+      // 確定
+      const finalTopic = (mode === 'custom' ? topic : round.topic) ?? '';
+      const trimmed = finalTopic.trim();
+      if (!trimmed) {
+        return emitError(socket, 'お題を入力してください');
+      }
+      round.topic = trimmed;
+      room.phase = 'clue';
+
+      io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+        roundNumber: round.roundNumber,
+        topic: round.topic,
+      });
+      broadcastState(io, room);
+    },
+  );
+
   // ---------- round:submitClue ----------
   socket.on(C2S.ROUND_SUBMIT_CLUE, ({ clue }: { clue: string }) => {
     const room = findRoomByPlayer(socket.id);
@@ -143,6 +190,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         roundNumber: room.currentRound!.roundNumber,
         topic: room.currentRound!.topic,
       });
+      // 次のラウンドもまずはお題選択フェーズ
     } else {
       io.to(room.roomId).emit(S2C.GAME_FINISHED, {
         score: room.score,

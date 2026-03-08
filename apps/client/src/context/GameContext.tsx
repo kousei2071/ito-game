@@ -68,6 +68,8 @@ interface GameContextValue {
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
     nextRound: () => void;
+    requestRandomTopic: () => void;
+    confirmTopic: (topic: string) => void;
   };
 }
 
@@ -151,6 +153,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     nextRound: useCallback(() => {
       socket.emit(C2S.ROUND_NEXT, {});
+    }, [socket]),
+
+    requestRandomTopic: useCallback(() => {
+      socket.emit(C2S.ROUND_SET_TOPIC, { mode: 'random', finalize: false });
+    }, [socket]),
+
+    confirmTopic: useCallback((topic: string) => {
+      socket.emit(C2S.ROUND_SET_TOPIC, { topic, mode: 'custom', finalize: true });
     }, [socket]),
   };
 

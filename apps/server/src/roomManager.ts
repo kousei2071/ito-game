@@ -49,6 +49,7 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
     roundResults: [],
     totalRounds: 10,
     score: 0,
+    topicChooserIndex: 0,
   };
   rooms.set(roomId, state);
   return state;
@@ -115,6 +116,15 @@ export function findRoomByPlayer(socketId: string): GameState | undefined {
 export function startNewRound(room: GameState): RoundState {
   const roundNumber = room.roundResults.length + 1;
 
+   if (room.players.length === 0) {
+     throw new Error('プレイヤーがいません');
+   }
+
+   // このラウンドのお題決定者を決定（ホスト→他プレイヤーの順でローテーション）
+   const index = room.topicChooserIndex % room.players.length;
+   const topicChooser = room.players[index];
+   room.topicChooserIndex = (index + 1) % room.players.length;
+
   // 重複しない数字を配布
   const numbers = shuffle(Array.from({ length: 100 }, (_, i) => i + 1)).slice(0, room.players.length);
   room.players.forEach((p, i) => {
@@ -132,12 +142,15 @@ export function startNewRound(room: GameState): RoundState {
   const round: RoundState = {
     roundNumber,
     topic,
+    topicChooserId: topicChooser.id,
+    topicChangeCount: 0,
     submittedCluePlayerIds: [],
     clues: [],
     arrangedOrder: [],
   };
   room.currentRound = round;
-  room.phase = 'clue';
+  // まずはお題選択フェーズから開始
+  room.phase = 'topic';
   return round;
 }
 

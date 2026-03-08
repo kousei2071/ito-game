@@ -1,6 +1,7 @@
 import { useGame } from './context/GameContext';
 import { HomeScreen } from './screens/HomeScreen';
 import { LobbyScreen } from './screens/LobbyScreen';
+import { TopicSelectScreen } from './screens/TopicSelectScreen';
 import { ClueScreen } from './screens/ClueScreen';
 import { ArrangeScreen } from './screens/ArrangeScreen';
 import { ResultScreen } from './screens/ResultScreen';
@@ -20,6 +21,8 @@ export default function App() {
   switch (gameState.phase) {
     case 'lobby':
       return <LobbyScreen />;
+    case 'topic':
+      return <TopicSelectScreen />;
     case 'clue':
       return <ClueScreen />;
     case 'arrange':

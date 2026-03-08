@@ -9,6 +9,7 @@ export const C2S = {
   ROOM_LEAVE:           'room:leave',
   ROOM_READY:           'room:ready',
   GAME_START:           'game:start',
+  ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
   ROUND_CONFIRM:        'round:confirmArrange',
@@ -38,6 +39,7 @@ export interface C2SPayloads {
   [C2S.ROOM_LEAVE]:  {};
   [C2S.ROOM_READY]:  {};
   [C2S.GAME_START]:  {};
+  [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
   [C2S.ROUND_CONFIRM]: { order: string[] };
