@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { PRESET_TOPICS } from '@ito/shared';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 
@@ -39,25 +38,24 @@ export function TopicSelectScreen() {
 
       <div className="topic-card">
         <p className="topic-label">現在のお題</p>
-        <h2 className="topic-text">{round.topic}</h2>
+        {isChooser ? (
+          <input
+            className="input"
+            value={selectedTopic}
+            onChange={(e) => setSelectedTopic(e.target.value)}
+            maxLength={40}
+            placeholder="お題を入力"
+          />
+        ) : (
+          <h2 className="topic-text">{round.topic}</h2>
+        )}
       </div>
 
       {isChooser ? (
         <div className="topic-chooser-panel">
           <p className="clue-instruction">
-            リストからお題を選ぶか、ランダム更新で候補を切り替えて「このお題で始める」を押してください。
+            自分でお題を入力するか、ランダム更新で候補を切り替えて「このお題で始める」を押してください。
           </p>
-          <select
-            className="input"
-            value={selectedTopic}
-            onChange={(e) => setSelectedTopic(e.target.value)}
-          >
-            {PRESET_TOPICS.map((topic) => (
-              <option key={topic} value={topic}>
-                {topic}
-              </option>
-            ))}
-          </select>
           <div className="topic-actions">
             <button
               className="btn btn-secondary"

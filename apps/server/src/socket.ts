@@ -1,5 +1,5 @@
 import type { Server, Socket } from 'socket.io';
-import { C2S, S2C, TOPICS, PRESET_TOPICS } from '@ito/shared';
+import { C2S, S2C, TOPICS } from '@ito/shared';
 import type { PublicGameState, GameState } from '@ito/shared';
 import {
   createRoom,
@@ -136,9 +136,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       const trimmed = finalTopic.trim();
       if (!trimmed) {
         return emitError(socket, 'お題を入力してください');
-      }
-      if (!PRESET_TOPICS.includes(trimmed)) {
-        return emitError(socket, '用意お題は presetTopics のリストにあるものだけ選べます');
       }
       round.topic = trimmed;
       room.phase = 'clue';
