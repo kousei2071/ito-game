@@ -18,7 +18,8 @@ export function ArrangeScreen() {
   const clueOf = (id: string) => round.clues.find((c) => c.playerId === id)?.clue ?? '';
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [showGuide, setShowGuide] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showMyNumberModal, setShowMyNumberModal] = useState(false);
   const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
 
   const animateReorder = (nextOrder: string[]) => {
@@ -114,28 +115,55 @@ export function ArrangeScreen() {
           : 'お題を決めた人が順番を並べ替え中です'}
       </p>
 
-      <div className="arrange-guide-toggle-wrap">
+      <div className="arrange-top-actions">
         <button
           type="button"
-          className="arrange-guide-toggle"
-          onClick={() => setShowGuide((v) => !v)}
-          aria-expanded={showGuide}
-          aria-controls="arrange-guide-panel"
+          className="arrange-my-number-btn"
+          onClick={() => setShowMyNumberModal(true)}
         >
-          {showGuide ? '説明を閉じる' : '説明を見る'}
+          自分の数字を確認
         </button>
+        <div className="arrange-guide-toggle-wrap">
+          <button
+            type="button"
+            className="arrange-guide-toggle"
+            onClick={() => setShowGuideModal(true)}
+          >
+            説明を見る
+          </button>
+        </div>
       </div>
 
-      {showGuide ? (
-        <div id="arrange-guide-panel" className="arrange-guide" aria-label="並べ方のガイド">
-          <div className="arrange-guide-row is-top">
-            <span className="arrange-guide-badge">上</span>
-            <span className="arrange-guide-value">100に近い（大きい）</span>
+      {showGuideModal ? (
+        <div className="number-modal-overlay" onClick={() => setShowGuideModal(false)}>
+          <div className="number-modal guide-modal" role="dialog" aria-modal="true" aria-label="並べ方のガイド" onClick={(e) => e.stopPropagation()}>
+            <p className="number-modal-label">並べ方のガイド</p>
+            <div className="arrange-guide">
+              <div className="arrange-guide-row is-top">
+                <span className="arrange-guide-badge">上</span>
+                <span className="arrange-guide-value">100に近い（大きい）</span>
+              </div>
+              <div className="arrange-guide-arrow">↓</div>
+              <div className="arrange-guide-row is-bottom">
+                <span className="arrange-guide-badge">下</span>
+                <span className="arrange-guide-value">1に近い（小さい）</span>
+              </div>
+            </div>
+            <button type="button" className="btn btn-primary" onClick={() => setShowGuideModal(false)}>
+              閉じる
+            </button>
           </div>
-          <div className="arrange-guide-arrow">↓</div>
-          <div className="arrange-guide-row is-bottom">
-            <span className="arrange-guide-badge">下</span>
-            <span className="arrange-guide-value">1に近い（小さい）</span>
+        </div>
+      ) : null}
+
+      {showMyNumberModal ? (
+        <div className="number-modal-overlay" onClick={() => setShowMyNumberModal(false)}>
+          <div className="number-modal" role="dialog" aria-modal="true" aria-label="自分の数字" onClick={(e) => e.stopPropagation()}>
+            <p className="number-modal-label">あなたの数字</p>
+            <p className="number-modal-value">{state.myNumber ?? '??'}</p>
+            <button type="button" className="btn btn-primary" onClick={() => setShowMyNumberModal(false)}>
+              閉じる
+            </button>
           </div>
         </div>
       ) : null}
