@@ -28,7 +28,7 @@ export function ResultScreen() {
         <h2 className="topic-text">{result.topic}</h2>
       </div>
 
-      <h3>正解順</h3>
+      <h3>正解順（上が大きい）</h3>
       <ul className="result-order">
         {result.correctOrder.map((entry, idx) => (
           <li key={entry.playerId} className="result-item">

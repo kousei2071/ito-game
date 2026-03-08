@@ -214,9 +214,9 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 export function confirmArrange(room: GameState, order: string[]): RoundResult {
   const round = room.currentRound!;
 
-  // 正解順 (number が小さい順)
+  // 正解順 (number が大きい順)
   const correctOrder = [...room.players]
-    .sort((a, b) => (a.secretNumber ?? 0) - (b.secretNumber ?? 0))
+    .sort((a, b) => (b.secretNumber ?? 0) - (a.secretNumber ?? 0))
     .map((p) => p.id);
 
   round.correctOrder = correctOrder;

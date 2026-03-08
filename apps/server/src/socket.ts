@@ -169,6 +169,9 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   socket.on(C2S.ROUND_CONFIRM, ({ order }: { order: string[] }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'arrange') return;
+    if (!room.currentRound || room.currentRound.topicChooserId !== socket.id) {
+      return emitError(socket, 'このラウンドで並びを確定できるのはお題を決めた人だけです');
+    }
 
     const result = confirmArrange(room, order);
     io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
