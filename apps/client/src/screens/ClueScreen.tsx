@@ -38,11 +38,11 @@ export function ClueScreen() {
       {!alreadySubmitted ? (
         <div className="clue-form">
           <p className="clue-instruction">
-            お題「{round.topic}」に対して、数字の大きさに応じたヒントを入力してください
+            お題「{round.topic}」に対して、数字の大きさに応じた答えを入力してください
           </p>
           <input
             className="input"
-            placeholder="ヒントを入力…"
+            placeholder="答えを入力…"
             value={clue}
             onChange={(e) => setClue(e.target.value)}
             maxLength={40}

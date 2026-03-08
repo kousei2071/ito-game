@@ -79,6 +79,21 @@ body {
   background-size: 24px 24px;
 }
 
+.clue-screen,
+.arrange-screen,
+.result-screen,
+.final-screen {
+  min-height: calc(100% - 48px);
+  padding: 16px 12px 24px;
+  border-radius: 24px;
+  color: #2a2620;
+  background-color: #fff;
+  background-image:
+    linear-gradient(to right, #f2ead6 1px, transparent 1px),
+    linear-gradient(to bottom, #f2ead6 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 .topic-chooser-panel {
   display: flex;
   flex-direction: column;
@@ -127,6 +142,31 @@ body {
 .topic-screen .score-badge {
   background: #f7f1e3;
   color: #5f553f;
+}
+
+.clue-screen .round-badge,
+.clue-screen .score-badge,
+.arrange-screen .round-badge,
+.arrange-screen .score-badge,
+.result-screen .round-badge,
+.result-screen .score-badge {
+  background: #f7f1e3;
+  color: #5f553f;
+}
+
+.clue-screen .btn-primary,
+.arrange-screen .btn-primary,
+.result-screen .btn-primary,
+.final-screen .btn-primary {
+  background: #ff79bf;
+  color: #fff;
+}
+
+.clue-screen .btn-primary:hover:not(:disabled),
+.arrange-screen .btn-primary:hover:not(:disabled),
+.result-screen .btn-primary:hover:not(:disabled),
+.final-screen .btn-primary:hover:not(:disabled) {
+  background: #ff66b6;
 }
 
 .topic-screen .topic-card {
@@ -536,21 +576,45 @@ body {
    ============================================================ */
 
 .topic-card {
+  position: relative;
   text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 2px solid #f0b6c9;
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 20px 18px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.topic-card::before,
+.topic-card::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  width: 20px;
+  height: calc(100% - 20px);
+  background: #ffd8e5;
+  border: 1px solid #f0b6c9;
+}
+
+.topic-card::before {
+  left: -10px;
+  clip-path: polygon(100% 0, 0 12%, 0 88%, 100% 100%);
+}
+
+.topic-card::after {
+  right: -10px;
+  clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%);
 }
 .topic-label {
   font-size: 12px;
-  color: var(--text-dim);
+  color: #8b7c60;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
 .topic-text {
   font-size: 24px;
   margin-top: 4px;
+  color: #2a2620;
 }
 
 /* ============================================================
@@ -559,22 +623,25 @@ body {
 
 .my-number-card {
   text-align: center;
-  background: linear-gradient(135deg, var(--primary), #a29bfe);
+  background: #fff4f9;
+  border: 2px solid #f0b6c9;
   border-radius: var(--radius);
   padding: 20px;
 }
 .number-label {
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 1;
+  color: #8b7c60;
 }
 .number-value {
   font-size: 56px;
   font-weight: 800;
+  color: #d65b9f;
 }
 
 .clue-instruction {
   font-size: 14px;
-  color: var(--text-dim);
+  color: #6f644f;
 }
 .clue-form {
   display: flex;
@@ -582,9 +649,20 @@ body {
   gap: 12px;
 }
 
+.clue-screen .input {
+  background: #fffdf7;
+  border-color: #f1e3c1;
+  color: #2a2620;
+}
+
+.clue-screen .input:focus {
+  border-color: #ff9dcd;
+  box-shadow: 0 0 0 2px rgba(255, 157, 205, 0.2);
+}
+
 .waiting {
   text-align: center;
-  color: var(--text-dim);
+  color: #6f644f;
   padding: 16px;
 }
 .waiting-count {
@@ -598,7 +676,7 @@ body {
 
 .arrange-instruction {
   font-size: 14px;
-  color: var(--text-dim);
+  color: #6f644f;
   text-align: center;
 }
 .arrange-list {
@@ -612,8 +690,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #fff;
+  border: 1px solid #eadfc6;
   border-radius: var(--radius);
 }
 .arrange-rank {
@@ -622,7 +700,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary);
+  background: #ff79bf;
   color: #fff;
   border-radius: 50%;
   font-weight: 700;
@@ -639,7 +717,7 @@ body {
   font-size: 14px;
 }
 .arrange-clue {
-  color: var(--text-dim);
+  color: #6f644f;
   font-size: 13px;
 }
 .arrange-buttons {
@@ -682,7 +760,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--surface);
+  background: #fff;
+  border: 1px solid #eadfc6;
   border-radius: var(--radius);
 }
 .result-rank {
@@ -691,7 +770,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface2);
+  background: #f7f1e3;
   border-radius: 50%;
   font-weight: 700;
   font-size: 13px;
@@ -701,7 +780,7 @@ body {
   font-weight: 600;
 }
 .result-number {
-  color: var(--primary);
+  color: #d65b9f;
   font-weight: 700;
   font-family: monospace;
 }
@@ -718,17 +797,20 @@ body {
 
 .final-score-card {
   text-align: center;
-  background: linear-gradient(135deg, var(--primary), #fd79a8);
+  background: #fff4f9;
+  border: 2px solid #f0b6c9;
   border-radius: var(--radius);
   padding: 24px;
 }
 .final-score-label {
   font-size: 14px;
-  opacity: 0.8;
+  opacity: 1;
+  color: #8b7c60;
 }
 .final-score-value {
   font-size: 48px;
   font-weight: 800;
+  color: #d65b9f;
 }
 
 .final-rounds {
@@ -742,7 +824,8 @@ body {
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: var(--surface);
+  background: #fff;
+  border: 1px solid #eadfc6;
   border-radius: var(--radius);
   border-left: 4px solid transparent;
 }
@@ -755,7 +838,7 @@ body {
 .final-round-num {
   font-weight: 700;
   font-size: 14px;
-  color: var(--text-dim);
+  color: #6f644f;
   min-width: 30px;
 }
 .final-round-topic {
