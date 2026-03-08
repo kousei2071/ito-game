@@ -19,24 +19,33 @@ export function HomeScreen() {
 
   return (
     <div className="screen home-screen">
-      <h1 className="logo">🎴 ito</h1>
-      <p className="subtitle">協力推理ゲーム</p>
+      <div className="home-hero">
+        <div className="home-mascot" aria-label="マスコット">
+          🦊
+        </div>
+        <h1 className="home-logo" aria-label="Ito logo">
+          <span className="home-logo-i">I</span>
+          <span className="home-logo-t">t</span>
+          <span className="home-logo-o">o</span>
+        </h1>
+        <p className="home-subtitle">みんなで数遊び</p>
+      </div>
 
       {state.lastError && <div className="error">{state.lastError}</div>}
 
       {mode === 'menu' && (
         <div className="menu-buttons">
-          <button className="btn btn-primary" onClick={() => setMode('create')}>
+          <button className="btn btn-bone" onClick={() => setMode('create')}>
             ルームを作成
           </button>
-          <button className="btn btn-secondary" onClick={() => setMode('join')}>
+          <button className="btn btn-bone" onClick={() => setMode('join')}>
             ルームに参加
           </button>
         </div>
       )}
 
       {mode === 'create' && (
-        <div className="form">
+        <div className="form home-form">
           <input
             className="input"
             placeholder="あなたの名前"
@@ -44,7 +53,7 @@ export function HomeScreen() {
             onChange={(e) => setName(e.target.value)}
             maxLength={12}
           />
-          <button className="btn btn-primary" onClick={handleCreate} disabled={!name.trim()}>
+          <button className="btn btn-bone" onClick={handleCreate} disabled={!name.trim()}>
             作成する
           </button>
           <button className="btn btn-text" onClick={() => setMode('menu')}>
@@ -54,7 +63,7 @@ export function HomeScreen() {
       )}
 
       {mode === 'join' && (
-        <div className="form">
+        <div className="form home-form">
           <input
             className="input"
             placeholder="あなたの名前"
@@ -69,7 +78,7 @@ export function HomeScreen() {
             onChange={(e) => setRoomId(e.target.value.toUpperCase())}
             maxLength={4}
           />
-          <button className="btn btn-primary" onClick={handleJoin} disabled={!name.trim() || !roomId.trim()}>
+          <button className="btn btn-bone" onClick={handleJoin} disabled={!name.trim() || !roomId.trim()}>
             参加する
           </button>
           <button className="btn btn-text" onClick={() => setMode('menu')}>
