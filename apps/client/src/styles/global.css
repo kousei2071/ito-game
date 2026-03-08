@@ -16,6 +16,7 @@
   --radius: 12px;
   --paper-bg: #fff;
   --paper-line: #f2ead6;
+  --app-height: 100dvh;
 }
 
 html,
@@ -36,8 +37,8 @@ body {
   font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif;
   background: var(--bg);
   color: var(--text);
-  min-height: 100%;
-  height: 100dvh;
+  min-height: var(--app-height);
+  height: var(--app-height);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -50,12 +51,24 @@ body {
 #root {
   width: 100%;
   max-width: 480px;
-  height: 100%;
+  height: var(--app-height);
   min-height: 0;
   padding: 24px 16px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  overflow-anchor: none;
+}
+
+:root.keyboard-open #root {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+:root.ios-device.keyboard-open body {
+  position: static;
+  inset: auto;
+  min-height: var(--app-height);
+  height: auto;
 }
 
 /* ============================================================
