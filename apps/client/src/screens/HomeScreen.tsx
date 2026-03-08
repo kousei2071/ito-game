@@ -1,12 +1,23 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 
+const mascotCandidates = [
+  '/mascot.png',
+  '/mascot.webp',
+  '/mascot.jpg',
+  '/mascot.jpeg',
+  '/character.png',
+  '/character.webp',
+  '/character.jpg',
+  '/character.jpeg',
+];
+
 export function HomeScreen() {
   const { state, actions } = useGame();
   const [name, setName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
-  const [mascotLoadFailed, setMascotLoadFailed] = useState(false);
+  const [mascotIndex, setMascotIndex] = useState(0);
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -22,15 +33,16 @@ export function HomeScreen() {
     <div className="screen home-screen">
       <div className="home-hero">
         <div className="home-mascot" aria-label="マスコット">
-          {!mascotLoadFailed ? (
+          {mascotIndex < mascotCandidates.length ? (
             <img
-              src="/mascot.png"
+              key={mascotCandidates[mascotIndex]}
+              src={mascotCandidates[mascotIndex]}
               alt="ito マスコット"
               className="home-mascot-image"
-              onError={() => setMascotLoadFailed(true)}
+              onError={() => setMascotIndex((prev) => prev + 1)}
             />
           ) : (
-            <span className="home-mascot-fallback">🦊</span>
+            <span className="home-mascot-fallback">画像を配置してください</span>
           )}
         </div>
         <h1 className="home-logo" aria-label="Ito logo">

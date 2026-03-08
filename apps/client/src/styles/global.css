@@ -206,8 +206,11 @@ body {
 }
 
 .home-mascot-fallback {
-  font-size: 72px;
-  line-height: 1;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #777;
+  text-align: center;
+  padding: 0 8px;
 }
 
 .home-logo {
