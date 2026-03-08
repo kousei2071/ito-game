@@ -54,26 +54,26 @@ export function TopicSelectScreen() {
       {isChooser ? (
         <div className="topic-chooser-panel">
           <p className="clue-instruction">
-            自分でお題を入力するか、ランダム更新で候補を切り替えて「このお題で始める」を押してください。
+            自分でお題を入力するか、候補を切り替えて「このお題を決める」を押してください。
           </p>
           <div className="topic-actions">
             <button
-              className="btn btn-secondary"
+              className="btn btn-arrow-pink"
               onClick={actions.requestRandomTopic}
               disabled={remainingUpdates <= 0}
             >
-              別のお題（ランダム）
+              別のお題
             </button>
             <span className="topic-updates-remaining">
               残り {remainingUpdates} 回まで変更できます
             </span>
           </div>
           <button
-            className="btn btn-primary"
+            className="btn btn-bone topic-confirm-bone"
             onClick={handleConfirm}
             disabled={!selectedTopic}
           >
-            このお題で始める
+            お題を決める 🦴
           </button>
         </div>
       ) : (

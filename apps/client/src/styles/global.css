@@ -68,6 +68,15 @@ body {
 
 .topic-screen {
   gap: 20px;
+  min-height: calc(100% - 48px);
+  padding: 16px 12px 24px;
+  border-radius: 24px;
+  color: #2a2620;
+  background-color: #fff;
+  background-image:
+    linear-gradient(to right, #f2ead6 1px, transparent 1px),
+    linear-gradient(to bottom, #f2ead6 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 .topic-chooser-panel {
@@ -83,9 +92,63 @@ body {
   gap: 8px;
 }
 
+.btn-arrow-pink {
+  position: relative;
+  background: #ff79bf;
+  color: #fff;
+  border-radius: 999px;
+  padding: 10px 18px 10px 16px;
+  font-size: 15px;
+  font-weight: 800;
+  min-height: 44px;
+  box-shadow: 0 4px 10px rgba(255, 114, 182, 0.35);
+}
+
+.btn-arrow-pink::after {
+  content: '➜';
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+.btn-arrow-pink:hover:not(:disabled) {
+  filter: brightness(1.03);
+}
+
+.topic-confirm-bone {
+  width: 100%;
+}
+
 .topic-updates-remaining {
   font-size: 12px;
   color: var(--text-dim);
+}
+
+.topic-screen .round-badge,
+.topic-screen .score-badge {
+  background: #f7f1e3;
+  color: #5f553f;
+}
+
+.topic-screen .topic-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #eadfc6;
+}
+
+.topic-screen .topic-label {
+  color: #8b7c60;
+}
+
+.topic-screen .clue-instruction,
+.topic-screen .waiting,
+.topic-screen .waiting-count,
+.topic-screen .topic-updates-remaining {
+  color: #6f644f;
+}
+
+.topic-screen .input {
+  background: #fff;
+  border-color: #dfd4ba;
+  color: #2a2620;
 }
 
 .btn {
@@ -422,6 +485,22 @@ body {
   justify-content: center;
   gap: 8px;
   margin-top: 12px;
+}
+
+.btn-share-pill {
+  background: #e8e7df;
+  color: #222;
+  border: 1px solid #d2d0c5;
+  border-radius: 999px;
+  min-height: 42px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.btn-share-pill:hover:not(:disabled) {
+  background: #e3e1d6;
 }
 
 .lobby-screen .btn-text {

@@ -71,10 +71,10 @@ export function LobbyScreen() {
         <p className="player-count">{gs.players.length} / 8 人が参加中</p>
 
         <div className="share-actions">
-          <button className="btn btn-bone btn-bone-sm" onClick={handleCopyUrl}>
+          <button className="btn btn-share-pill" onClick={handleCopyUrl}>
             URLをコピー
           </button>
-          <button className="btn btn-bone btn-bone-sm" onClick={handleShare}>
+          <button className="btn btn-share-pill" onClick={handleShare}>
             招待リンクを共有
           </button>
         </div>
