@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 
@@ -7,21 +6,12 @@ export function TopicSelectScreen() {
   const gs = state.gameState!;
   const round = gs.currentRound!;
   const socket = getSocket();
-  const me = gs.players.find((p) => p.id === socket.id);
   const isChooser = round.topicChooserId === socket.id;
-
-  const [inputValue, setInputValue] = useState(round.topic);
-
-  useEffect(() => {
-    setInputValue(round.topic);
-  }, [round.topic, round.roundNumber]);
 
   const remainingUpdates = Math.max(0, 10 - round.topicChangeCount);
 
   const handleConfirm = () => {
-    const value = inputValue.trim() || round.topic;
-    if (!value) return;
-    actions.confirmTopic(value);
+    actions.confirmTopic();
   };
 
   return (
@@ -46,16 +36,8 @@ export function TopicSelectScreen() {
       {isChooser ? (
         <div className="topic-chooser-panel">
           <p className="clue-instruction">
-            ランダムお題を試したり、自分でお題を入力してから「このお題で始める」を押してください。
+            ランダム更新で候補を切り替え、使いたいお題で「このお題で始める」を押してください。
           </p>
-          <textarea
-            className="input topic-input"
-            rows={3}
-            maxLength={40}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="自分でお題を入力してもOK"
-          />
           <div className="topic-actions">
             <button
               className="btn btn-secondary"
@@ -71,7 +53,7 @@ export function TopicSelectScreen() {
           <button
             className="btn btn-primary"
             onClick={handleConfirm}
-            disabled={!inputValue.trim() && !round.topic}
+            disabled={!round.topic}
           >
             このお題で始める
           </button>
