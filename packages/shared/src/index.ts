@@ -1,3 +1,3 @@
-export * from './types';
-export * from './events';
-export * from './topics';
+export * from './types.js';
+export * from './events.js';
+export * from './topics.js';

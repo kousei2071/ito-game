@@ -46,12 +46,12 @@ export interface C2SPayloads {
 
 // Server -> Client payloads
 export interface S2CPayloads {
-  [S2C.ROOM_UPDATED]: import('./types').PublicGameState;
-  [S2C.GAME_STATE_CHANGED]: import('./types').PublicGameState;
+  [S2C.ROOM_UPDATED]: import('./types.js').PublicGameState;
+  [S2C.GAME_STATE_CHANGED]: import('./types.js').PublicGameState;
   [S2C.ROUND_STARTED]: { roundNumber: number; topic: string };
   [S2C.ROUND_CLUES_COLLECTED]: { clues: { playerId: string; playerName: string; clue: string }[] };
-  [S2C.ROUND_RESULT]: import('./types').RoundResult;
-  [S2C.GAME_FINISHED]: { score: number; totalRounds: number; roundResults: import('./types').RoundResult[] };
+  [S2C.ROUND_RESULT]: import('./types.js').RoundResult;
+  [S2C.GAME_FINISHED]: { score: number; totalRounds: number; roundResults: import('./types.js').RoundResult[] };
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.ERROR]: { message: string };
 }
