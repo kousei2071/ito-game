@@ -6,6 +6,7 @@ export function HomeScreen() {
   const [name, setName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
+  const [mascotLoadFailed, setMascotLoadFailed] = useState(false);
 
   const handleCreate = () => {
     if (!name.trim()) return;
@@ -21,7 +22,16 @@ export function HomeScreen() {
     <div className="screen home-screen">
       <div className="home-hero">
         <div className="home-mascot" aria-label="マスコット">
-          🦊
+          {!mascotLoadFailed ? (
+            <img
+              src="/mascot.png"
+              alt="ito マスコット"
+              className="home-mascot-image"
+              onError={() => setMascotLoadFailed(true)}
+            />
+          ) : (
+            <span className="home-mascot-fallback">🦊</span>
+          )}
         </div>
         <h1 className="home-logo" aria-label="Ito logo">
           <span className="home-logo-i">I</span>
