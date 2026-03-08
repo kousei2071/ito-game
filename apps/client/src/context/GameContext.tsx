@@ -69,7 +69,7 @@ interface GameContextValue {
     confirmArrange: (order: string[]) => void;
     nextRound: () => void;
     requestRandomTopic: () => void;
-    confirmTopic: () => void;
+    confirmTopic: (topic: string) => void;
   };
 }
 
@@ -159,8 +159,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.emit(C2S.ROUND_SET_TOPIC, { mode: 'random', finalize: false });
     }, [socket]),
 
-    confirmTopic: useCallback(() => {
-      socket.emit(C2S.ROUND_SET_TOPIC, { mode: 'random', finalize: true });
+    confirmTopic: useCallback((topic: string) => {
+      socket.emit(C2S.ROUND_SET_TOPIC, { topic, mode: 'custom', finalize: true });
     }, [socket]),
   };
 
