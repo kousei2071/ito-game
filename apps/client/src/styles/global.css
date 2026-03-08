@@ -1049,3 +1049,113 @@ body {
 .final-round-result {
   font-size: 18px;
 }
+
+/* ============================================================
+   Desktop
+   ============================================================ */
+
+@media (min-width: 900px) {
+  body {
+    position: static;
+    inset: auto;
+    overflow: auto;
+    align-items: center;
+    padding: 24px;
+    background:
+      radial-gradient(circle at 14% 10%, rgba(255, 121, 191, 0.16), transparent 26%),
+      radial-gradient(circle at 86% 14%, rgba(57, 168, 255, 0.14), transparent 24%),
+      #f4f0e8;
+  }
+
+  #root {
+    max-width: 1080px;
+    width: 100%;
+    height: auto;
+    min-height: min(860px, calc(100dvh - 48px));
+    padding: 0;
+    overflow: visible;
+  }
+
+  .home-screen,
+  .lobby-screen,
+  .topic-screen,
+  .clue-screen,
+  .arrange-screen,
+  .result-screen,
+  .final-screen {
+    min-height: min(860px, calc(100dvh - 48px));
+    padding: 26px 28px 30px;
+    border-radius: 28px;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.14);
+  }
+
+  .screen {
+    gap: 18px;
+  }
+
+  .round-header,
+  .topic-card,
+  .arrange-instruction,
+  .arrange-top-actions,
+  .arrange-list,
+  .result-order,
+  .final-rounds,
+  .clue-form,
+  .my-number-card {
+    max-width: 760px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-hero {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+
+  .home-mascot {
+    width: 320px;
+    height: 320px;
+  }
+
+  .home-logo {
+    font-size: 92px;
+  }
+
+  .menu-buttons,
+  .home-form {
+    max-width: 620px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .player-list,
+  .lobby-actions,
+  .share-actions {
+    max-width: 760px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .arrange-item,
+  .result-item,
+  .final-round-item {
+    padding: 14px 18px;
+  }
+
+  .arrange-name,
+  .result-name {
+    font-size: 18px;
+  }
+
+  .arrange-clue {
+    font-size: 28px;
+    max-width: 65%;
+  }
+
+  .result-number {
+    font-size: 46px;
+  }
+}
