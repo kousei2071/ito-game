@@ -26,6 +26,39 @@ interface WordWolfSecretState {
 
 const wordWolfSecrets = new Map<string, WordWolfSecretState>();
 
+function toWordWolfTopicKey(majorityWord: string, minorityWord: string): string {
+  return `${majorityWord}__${minorityWord}`;
+}
+
+function buildWordWolfTopicPool(room: GameState): Array<{ majorityWord: string; minorityWord: string }> {
+  const fromPreset = PRESET_WORD_WOLF_TOPICS.map((topic) => ({
+    majorityWord: topic.majorityWord,
+    minorityWord: topic.minorityWord,
+  }));
+
+  const fromPlayerNames: Array<{ majorityWord: string; minorityWord: string }> = [];
+  for (let i = 0; i < room.players.length; i += 1) {
+    for (let j = i + 1; j < room.players.length; j += 1) {
+      const a = room.players[i]?.name?.trim();
+      const b = room.players[j]?.name?.trim();
+      if (!a || !b || a === b) continue;
+      fromPlayerNames.push({ majorityWord: a, minorityWord: b });
+    }
+  }
+
+  const merged = [...fromPreset, ...fromPlayerNames];
+  const seen = new Set<string>();
+  const unique: Array<{ majorityWord: string; minorityWord: string }> = [];
+  for (const topic of merged) {
+    const key = toWordWolfTopicKey(topic.majorityWord, topic.minorityWord);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(topic);
+  }
+
+  return unique;
+}
+
 function buildWordWolfExampleTalk(): { title: string; lines: string[] } {
   const prompts = [
     '（これの第一印象は？）',
@@ -352,7 +385,17 @@ export function startWordWolfRound(room: GameState): RoundState {
     throw new Error('ワードウルフは3人以上で遊べます');
   }
 
-  const pair = PRESET_WORD_WOLF_TOPICS[randInt(0, PRESET_WORD_WOLF_TOPICS.length - 1)];
+  const allTopics = buildWordWolfTopicPool(room);
+  const usedTopicKeys = new Set(
+    room.roundResults
+      .filter((r): r is WordWolfRoundResult => r.game === 'word-wolf')
+      .map((r) => toWordWolfTopicKey(r.majorityWord, r.minorityWord)),
+  );
+  const availableTopics = allTopics.filter(
+    (topic) => !usedTopicKeys.has(toWordWolfTopicKey(topic.majorityWord, topic.minorityWord)),
+  );
+  const topicPool = availableTopics.length > 0 ? availableTopics : allTopics;
+  const pair = topicPool[randInt(0, topicPool.length - 1)];
   const wolfCount =
     room.wordWolfCountMode === 'one'
       ? 1
