@@ -5,8 +5,11 @@ import { getSocket } from '../socket';
 export function ArrangeScreen() {
   const { state, actions } = useGame();
   const gs = state.gameState!;
-  const round = gs.currentRound!;
+  const round = gs.currentRound;
   const socket = getSocket();
+  if (!round || round.game !== 'ito') {
+    return <div className="screen"><p>読み込み中…</p></div>;
+  }
   const canArrange = (socket.id ?? '') === round.topicChooserId;
 
   // 初期順序: ヒント配列順

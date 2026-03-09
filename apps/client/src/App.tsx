@@ -8,6 +8,10 @@ import { ResultScreen } from './screens/ResultScreen';
 import { FinalScreen } from './screens/FinalScreen';
 import { GameSelectScreen } from './screens/GameSelectScreen';
 import { GameSettingsScreen } from './screens/GameSettingsScreen';
+import { WordWolfRevealScreen } from './screens/WordWolfRevealScreen';
+import { WordWolfTalkScreen } from './screens/WordWolfTalkScreen';
+import { WordWolfVoteScreen } from './screens/WordWolfVoteScreen';
+import { WordWolfResultScreen } from './screens/WordWolfResultScreen';
 
 export default function App() {
   const { state } = useGame();
@@ -41,6 +45,18 @@ export default function App() {
         break;
       case 'result':
         screen = <ResultScreen />;
+        break;
+      case 'wordwolf-reveal':
+        screen = <WordWolfRevealScreen />;
+        break;
+      case 'wordwolf-talk':
+        screen = <WordWolfTalkScreen />;
+        break;
+      case 'wordwolf-vote':
+        screen = <WordWolfVoteScreen />;
+        break;
+      case 'wordwolf-result':
+        screen = <WordWolfResultScreen />;
         break;
       case 'finished':
         screen = <FinalScreen />;

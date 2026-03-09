@@ -5,8 +5,11 @@ import { getSocket } from '../socket';
 export function TopicSelectScreen() {
   const { state, actions } = useGame();
   const gs = state.gameState!;
-  const round = gs.currentRound!;
+  const round = gs.currentRound;
   const socket = getSocket();
+  if (!round || round.game !== 'ito') {
+    return <div className="screen"><p>読み込み中…</p></div>;
+  }
   const isChooser = round.topicChooserId === socket.id;
   const chooserName = gs.players.find((p) => p.id === round.topicChooserId)?.name ?? '???';
   const [selectedTopic, setSelectedTopic] = useState(round.topic);

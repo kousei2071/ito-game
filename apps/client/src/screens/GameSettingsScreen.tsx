@@ -12,22 +12,39 @@ export function GameSettingsScreen() {
   const [settings, setSettings] = useState({
     totalRounds: gs.totalRounds,
     topicChooserMode: gs.topicChooserMode,
+    wordWolfTalkSeconds: gs.wordWolfTalkSeconds,
+    wordWolfCountMode: gs.wordWolfCountMode,
   });
 
   useEffect(() => {
-    setSettings({ totalRounds: gs.totalRounds, topicChooserMode: gs.topicChooserMode });
-  }, [gs.totalRounds, gs.topicChooserMode]);
+    setSettings({
+      totalRounds: gs.totalRounds,
+      topicChooserMode: gs.topicChooserMode,
+      wordWolfTalkSeconds: gs.wordWolfTalkSeconds,
+      wordWolfCountMode: gs.wordWolfCountMode,
+    });
+  }, [gs.totalRounds, gs.topicChooserMode, gs.wordWolfTalkSeconds, gs.wordWolfCountMode]);
 
   useEffect(() => {
     if (!isHost) return;
     if (
       settings.totalRounds === gs.totalRounds &&
-      settings.topicChooserMode === gs.topicChooserMode
+      settings.topicChooserMode === gs.topicChooserMode &&
+      settings.wordWolfTalkSeconds === gs.wordWolfTalkSeconds &&
+      settings.wordWolfCountMode === gs.wordWolfCountMode
     ) {
       return;
     }
     actions.updateRoomSettings(settings);
-  }, [isHost, settings, gs.totalRounds, gs.topicChooserMode, actions]);
+  }, [
+    isHost,
+    settings,
+    gs.totalRounds,
+    gs.topicChooserMode,
+    gs.wordWolfTalkSeconds,
+    gs.wordWolfCountMode,
+    actions,
+  ]);
 
   const selectedGameLabel = gs.selectedGame === 'word-wolf' ? 'ワードウルフ' : 'ito';
 
@@ -54,7 +71,11 @@ export function GameSettingsScreen() {
 
       <div className="game-members-panel">
         <p className="game-members-title">設定の説明</p>
-        <p className="settings-note">ラウンド数とお題決定者の方式を決めてから開始します。</p>
+        <p className="settings-note">
+          {gs.selectedGame === 'word-wolf'
+            ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
+            : 'ラウンド数とお題決定者の方式を決めてから開始します。'}
+        </p>
 
         <p className="game-members-title">ルーム設定</p>
         <div className="game-settings-grid">
@@ -89,6 +110,45 @@ export function GameSettingsScreen() {
               <option value="random">毎ラウンドランダム</option>
             </select>
           </label>
+
+          {gs.selectedGame === 'word-wolf' ? (
+            <>
+              <label className="settings-field">
+                <span>会話時間（秒）</span>
+                <select
+                  className="input"
+                  value={settings.wordWolfTalkSeconds}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, wordWolfTalkSeconds: Number(e.target.value) }))
+                  }
+                  disabled={!isHost}
+                >
+                  <option value={60}>60</option>
+                  <option value={120}>120</option>
+                  <option value={180}>180</option>
+                </select>
+              </label>
+
+              <label className="settings-field">
+                <span>ワードウルフ人数</span>
+                <select
+                  className="input"
+                  value={settings.wordWolfCountMode}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      wordWolfCountMode: e.target.value as 'auto' | 'one' | 'two',
+                    }))
+                  }
+                  disabled={!isHost}
+                >
+                  <option value="auto">自動（6人以上で2人）</option>
+                  <option value="one">1人</option>
+                  <option value="two">2人</option>
+                </select>
+              </label>
+            </>
+          ) : null}
         </div>
 
         {!isHost ? (

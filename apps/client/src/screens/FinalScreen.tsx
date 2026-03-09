@@ -23,7 +23,9 @@ export function FinalScreen() {
         {results.map((r) => (
           <li key={r.roundNumber} className={`final-round-item ${r.isCorrect ? 'success' : 'failure'}`}>
             <span className="final-round-num">R{r.roundNumber}</span>
-            <span className="final-round-topic">{r.topic}</span>
+            <span className="final-round-topic">
+              {r.game === 'ito' ? r.topic : `${r.majorityWord} / ${r.minorityWord}`}
+            </span>
             <span className="final-round-result">{r.isCorrect ? '✅' : '❌'}</span>
           </li>
         ))}

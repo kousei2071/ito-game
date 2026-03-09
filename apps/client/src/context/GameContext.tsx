@@ -10,6 +10,7 @@ interface State {
   connected: boolean;
   gameState: PublicGameState | null;
   myNumber: number | null;
+  myWord: string | null;
   lastError: string | null;
   notice: string | null;
   roundResult: RoundResult | null;
@@ -20,6 +21,7 @@ const initialState: State = {
   connected: false,
   gameState: null,
   myNumber: null,
+  myWord: null,
   lastError: null,
   notice: null,
   roundResult: null,
@@ -30,6 +32,7 @@ type Action =
   | { type: 'SET_CONNECTED'; payload: boolean }
   | { type: 'SET_GAME_STATE'; payload: PublicGameState }
   | { type: 'SET_MY_NUMBER'; payload: number }
+  | { type: 'SET_MY_WORD'; payload: string }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_NOTICE'; payload: string }
   | { type: 'CLEAR_NOTICE' }
@@ -46,11 +49,16 @@ function reducer(state: State, action: Action): State {
         ...state,
         gameState: action.payload,
         lastError: null,
-        roundResult: action.payload.phase === 'result' ? state.roundResult : null,
+        roundResult:
+          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result'
+            ? state.roundResult
+            : null,
         finalResult: action.payload.phase === 'finished' ? state.finalResult : null,
       };
     case 'SET_MY_NUMBER':
       return { ...state, myNumber: action.payload, roundResult: null };
+    case 'SET_MY_WORD':
+      return { ...state, myWord: action.payload, roundResult: null };
     case 'SET_ERROR':
       return { ...state, lastError: action.payload };
     case 'SET_NOTICE':
@@ -78,12 +86,20 @@ interface GameContextValue {
     joinRoom: (roomId: string, playerName: string) => void;
     leaveRoom: () => void;
     toggleReady: () => void;
-    updateRoomSettings: (settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => void;
+    updateRoomSettings: (settings: {
+      totalRounds: number;
+      topicChooserMode: 'sequential' | 'random';
+      wordWolfTalkSeconds: number;
+      wordWolfCountMode: 'auto' | 'one' | 'two';
+    }) => void;
     startGame: () => void;
     selectGame: (game: 'ito' | 'word-wolf') => void;
     returnToGameSelect: () => void;
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
+    startWordWolfTalk: () => void;
+    startWordWolfVote: () => void;
+    submitWordWolfVote: (targetPlayerId: string) => void;
     nextRound: () => void;
     requestRandomTopic: () => void;
     confirmTopic: (topic: string) => void;
@@ -117,6 +133,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on(S2C.YOUR_NUMBER, ({ secretNumber }: { secretNumber: number }) => {
       dispatch({ type: 'SET_MY_NUMBER', payload: secretNumber });
     });
+    socket.on(S2C.YOUR_WORD, ({ word }: { word: string }) => {
+      dispatch({ type: 'SET_MY_WORD', payload: word });
+    });
     socket.on(S2C.ROUND_RESULT, (result: RoundResult) => {
       dispatch({ type: 'SET_ROUND_RESULT', payload: result });
     });
@@ -137,6 +156,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off(S2C.ROOM_UPDATED);
       socket.off(S2C.GAME_STATE_CHANGED);
       socket.off(S2C.YOUR_NUMBER);
+      socket.off(S2C.YOUR_WORD);
       socket.off(S2C.ROUND_RESULT);
       socket.off(S2C.GAME_FINISHED);
       socket.off(S2C.ERROR);
@@ -171,7 +191,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.emit(C2S.ROOM_READY, {});
     }, [socket]),
 
-    updateRoomSettings: useCallback((settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => {
+    updateRoomSettings: useCallback((settings: {
+      totalRounds: number;
+      topicChooserMode: 'sequential' | 'random';
+      wordWolfTalkSeconds: number;
+      wordWolfCountMode: 'auto' | 'one' | 'two';
+    }) => {
       socket.emit(C2S.ROOM_UPDATE_SETTINGS, settings);
     }, [socket]),
 
@@ -193,6 +218,18 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     confirmArrange: useCallback((order: string[]) => {
       socket.emit(C2S.ROUND_CONFIRM, { order });
+    }, [socket]),
+
+    startWordWolfTalk: useCallback(() => {
+      socket.emit(C2S.WORDWOLF_START_TALK, {});
+    }, [socket]),
+
+    startWordWolfVote: useCallback(() => {
+      socket.emit(C2S.WORDWOLF_START_VOTE, {});
+    }, [socket]),
+
+    submitWordWolfVote: useCallback((targetPlayerId: string) => {
+      socket.emit(C2S.WORDWOLF_SUBMIT_VOTE, { targetPlayerId });
     }, [socket]),
 
     nextRound: useCallback(() => {
