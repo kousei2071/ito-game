@@ -150,8 +150,9 @@ export function updateRoomSettings(
   socketId: string,
   settings: { totalRounds: number; topicChooserMode: TopicChooserMode },
 ): GameState {
-  if (room.phase !== 'lobby') {
-    throw new Error('設定はロビーでのみ変更できます');
+  const allowedPhases = new Set(['lobby', 'game-select', 'game-settings']);
+  if (!allowedPhases.has(room.phase)) {
+    throw new Error('設定は準備フェーズでのみ変更できます');
   }
 
   const player = room.players.find((p) => p.id === socketId);

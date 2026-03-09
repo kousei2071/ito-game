@@ -1,6 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function GameSettingsScreen() {
   const { state, actions } = useGame();
@@ -13,6 +13,21 @@ export function GameSettingsScreen() {
     totalRounds: gs.totalRounds,
     topicChooserMode: gs.topicChooserMode,
   });
+
+  useEffect(() => {
+    setSettings({ totalRounds: gs.totalRounds, topicChooserMode: gs.topicChooserMode });
+  }, [gs.totalRounds, gs.topicChooserMode]);
+
+  useEffect(() => {
+    if (!isHost) return;
+    if (
+      settings.totalRounds === gs.totalRounds &&
+      settings.topicChooserMode === gs.topicChooserMode
+    ) {
+      return;
+    }
+    actions.updateRoomSettings(settings);
+  }, [isHost, settings, gs.totalRounds, gs.topicChooserMode, actions]);
 
   const selectedGameLabel = gs.selectedGame === 'word-wolf' ? 'ワードウルフ' : 'ito';
 
@@ -70,13 +85,9 @@ export function GameSettingsScreen() {
           </label>
         </div>
 
-        {isHost ? (
-          <button type="button" className="btn btn-secondary" onClick={() => actions.updateRoomSettings(settings)}>
-            設定を保存
-          </button>
-        ) : (
+        {!isHost ? (
           <p className="settings-note">ホストが設定を調整中です</p>
-        )}
+        ) : null}
       </div>
 
       <button type="button" className="btn btn-bone" onClick={actions.startGame} disabled={!isHost}>
