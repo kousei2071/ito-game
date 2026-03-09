@@ -42,7 +42,13 @@ function reducer(state: State, action: Action): State {
     case 'SET_CONNECTED':
       return { ...state, connected: action.payload };
     case 'SET_GAME_STATE':
-      return { ...state, gameState: action.payload, lastError: null };
+      return {
+        ...state,
+        gameState: action.payload,
+        lastError: null,
+        roundResult: action.payload.phase === 'result' ? state.roundResult : null,
+        finalResult: action.payload.phase === 'finished' ? state.finalResult : null,
+      };
     case 'SET_MY_NUMBER':
       return { ...state, myNumber: action.payload, roundResult: null };
     case 'SET_ERROR':
