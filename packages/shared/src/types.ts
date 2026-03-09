@@ -15,12 +15,14 @@ export interface Player {
 }
 
 export type TopicChooserMode = 'sequential' | 'random';
+export type GameType = 'ito' | 'word-wolf';
 
 // ============================================================
 // Game Phase
 // ============================================================
 export type GamePhase =
   | 'lobby'    // 参加待ち
+  | 'game-select' // ゲーム選択
   | 'topic'    // お題選択中
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中
@@ -56,6 +58,8 @@ export interface GameState {
   roomId: string;
   players: Player[];
   phase: GamePhase;
+  /** 選択中 or 選択済みのゲーム */
+  selectedGame: GameType | null;
   currentRound: RoundState | null;
   roundResults: RoundResult[];
   totalRounds: number;       // 10
@@ -82,6 +86,7 @@ export interface PublicGameState {
   roomId: string;
   players: PublicPlayer[];
   phase: GamePhase;
+  selectedGame: GameType | null;
   currentRound: RoundState | null;
   roundResults: RoundResult[];
   totalRounds: number;

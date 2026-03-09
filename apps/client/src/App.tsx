@@ -6,6 +6,7 @@ import { ClueScreen } from './screens/ClueScreen';
 import { ArrangeScreen } from './screens/ArrangeScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { FinalScreen } from './screens/FinalScreen';
+import { GameSelectScreen } from './screens/GameSelectScreen';
 
 export default function App() {
   const { state } = useGame();
@@ -21,6 +22,8 @@ export default function App() {
   switch (gameState.phase) {
     case 'lobby':
       return <LobbyScreen />;
+    case 'game-select':
+      return <GameSelectScreen />;
     case 'topic':
       return <TopicSelectScreen />;
     case 'clue':

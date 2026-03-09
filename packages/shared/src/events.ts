@@ -10,6 +10,7 @@ export const C2S = {
   ROOM_READY:           'room:ready',
   ROOM_UPDATE_SETTINGS: 'room:updateSettings',
   GAME_START:           'game:start',
+  GAME_SELECT:          'game:select',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -41,6 +42,7 @@ export interface C2SPayloads {
   [C2S.ROOM_READY]:  {};
   [C2S.ROOM_UPDATE_SETTINGS]: { totalRounds: number; topicChooserMode: import('./types.js').TopicChooserMode };
   [C2S.GAME_START]:  {};
+  [C2S.GAME_SELECT]: { game: import('./types.js').GameType };
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]

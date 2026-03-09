@@ -1,4 +1,4 @@
-import type { GameState, Player, RoundState, RoundResult, TopicChooserMode } from '@ito/shared';
+import type { GameState, Player, RoundState, RoundResult, TopicChooserMode, GameType } from '@ito/shared';
 import { TOPICS } from '@ito/shared';
 
 // ============================================================
@@ -46,6 +46,7 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
     roomId,
     players: [host],
     phase: 'lobby',
+    selectedGame: null,
     currentRound: null,
     roundResults: [],
     totalRounds: 10,
@@ -166,6 +167,17 @@ export function updateRoomSettings(
   room.totalRounds = settings.totalRounds;
   room.topicChooserMode = settings.topicChooserMode;
   return room;
+}
+
+export function moveToGameSelect(room: GameState): GameState {
+  room.phase = 'game-select';
+  room.selectedGame = null;
+  return room;
+}
+
+export function startSelectedGame(room: GameState, game: GameType): RoundState {
+  room.selectedGame = game;
+  return startNewRound(room);
 }
 
 // ============================================================

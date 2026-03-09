@@ -1,6 +1,5 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-import { useEffect, useState } from 'react';
 
 function RoleIcon({ isHost }: { isHost: boolean }) {
   const src = isHost ? '/oya.png' : '/menber.png';
@@ -24,29 +23,6 @@ export function LobbyScreen() {
   const me = gs.players.find((p) => p.id === socket.id);
   const isHost = me?.isHost ?? false;
   const allReady = gs.players.length >= 1 && gs.players.every((p) => p.isReady);
-  const [showSettings, setShowSettings] = useState(false);
-  const [pendingSave, setPendingSave] = useState(false);
-  const [settings, setSettings] = useState({
-    totalRounds: gs.totalRounds,
-    topicChooserMode: gs.topicChooserMode,
-  });
-
-  useEffect(() => {
-    if (!pendingSave) return;
-    if (
-      gs.totalRounds === settings.totalRounds &&
-      gs.topicChooserMode === settings.topicChooserMode
-    ) {
-      setPendingSave(false);
-      setShowSettings(false);
-    }
-  }, [pendingSave, gs.totalRounds, gs.topicChooserMode, settings.totalRounds, settings.topicChooserMode]);
-
-  useEffect(() => {
-    if (state.lastError) {
-      setPendingSave(false);
-    }
-  }, [state.lastError]);
 
   const roomUrl = typeof window !== 'undefined'
     ? window.location.origin + window.location.pathname
@@ -84,16 +60,6 @@ export function LobbyScreen() {
     }
   };
 
-  const openSettings = () => {
-    setSettings({ totalRounds: gs.totalRounds, topicChooserMode: gs.topicChooserMode });
-    setShowSettings(true);
-  };
-
-  const saveSettings = () => {
-    setPendingSave(true);
-    actions.updateRoomSettings(settings);
-  };
-
   const topicModeLabel = gs.topicChooserMode === 'random'
     ? '毎ラウンドランダム'
     : '順番（ホスト→他プレイヤー）';
@@ -105,14 +71,6 @@ export function LobbyScreen() {
         <h2>ルームID</h2>
         <div className="room-id-card">
           <span className="room-id">{gs.roomId}</span>
-          <button
-            type="button"
-            className="room-settings-btn"
-            onClick={openSettings}
-            aria-label="ルーム設定"
-          >
-            ⚙
-          </button>
         </div>
         <p className="player-count">{gs.players.length} / 8 人が参加中</p>
         <p className="lobby-settings-summary">
@@ -156,7 +114,7 @@ export function LobbyScreen() {
             onClick={actions.startGame}
             disabled={!allReady}
           >
-            {allReady ? 'ゲーム開始！' : '全員の準備を待っています…'}
+            {allReady ? 'ゲームを始める' : '全員の準備を待っています…'}
           </button>
         )}
 
@@ -166,57 +124,6 @@ export function LobbyScreen() {
       </div>
 
       {state.lastError && <div className="error">{state.lastError}</div>}
-
-      {showSettings ? (
-        <div className="number-modal-overlay" onClick={() => setShowSettings(false)}>
-          <div className="number-modal lobby-settings-modal" role="dialog" aria-modal="true" aria-label="ルーム設定" onClick={(e) => e.stopPropagation()}>
-            <p className="number-modal-label">ルーム設定</p>
-
-            <label className="settings-field">
-              <span>ラウンド数</span>
-              <select
-                className="input"
-                value={settings.totalRounds}
-                onChange={(e) => setSettings((prev) => ({ ...prev, totalRounds: Number(e.target.value) }))}
-                disabled={!isHost}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-              </select>
-            </label>
-
-            <label className="settings-field">
-              <span>お題決定者</span>
-              <select
-                className="input"
-                value={settings.topicChooserMode}
-                onChange={(e) => setSettings((prev) => ({
-                  ...prev,
-                  topicChooserMode: e.target.value as 'sequential' | 'random',
-                }))}
-                disabled={!isHost}
-              >
-                <option value="sequential">順番（ホスト→他プレイヤー）</option>
-                <option value="random">毎ラウンドランダム</option>
-              </select>
-            </label>
-
-            {!isHost ? <p className="settings-note">ホストのみ変更できます</p> : null}
-
-            <div className="settings-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowSettings(false)}>
-                閉じる
-              </button>
-              {isHost ? (
-                <button type="button" className="btn btn-primary" onClick={saveSettings} disabled={pendingSave}>
-                  {pendingSave ? '保存中…' : '保存'}
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

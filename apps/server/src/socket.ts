@@ -8,6 +8,8 @@ import {
   toggleReady,
   findRoomByPlayer,
   startNewRound,
+  moveToGameSelect,
+  startSelectedGame,
   submitClue,
   confirmArrange,
   advanceRound,
@@ -25,6 +27,7 @@ function toPublic(room: GameState): PublicGameState {
     roomId: room.roomId,
     players: room.players.map(({ secretNumber, ...rest }) => rest),
     phase: room.phase,
+    selectedGame: room.selectedGame,
     currentRound: room.currentRound,
     roundResults: room.roundResults,
     totalRounds: room.totalRounds,
@@ -105,7 +108,18 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     if (!player?.isHost) return emitError(socket, 'ホストのみ開始できます');
     if (room.players.length < 1) return emitError(socket, 'プレイヤーがいません');
 
-    const round = startNewRound(room);
+    moveToGameSelect(room);
+    broadcastState(io, room);
+  });
+
+  // ---------- game:select ----------
+  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'word-wolf' }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'game-select') return;
+    const player = room.players.find((p) => p.id === socket.id);
+    if (!player?.isHost) return emitError(socket, 'ホストのみ選択できます');
+
+    const round = startSelectedGame(room, game);
 
     // 各プレイヤーに自分の数字を通知
     room.players.forEach((p) => {

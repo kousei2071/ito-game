@@ -66,6 +66,7 @@ interface GameContextValue {
     toggleReady: () => void;
     updateRoomSettings: (settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => void;
     startGame: () => void;
+    selectGame: (game: 'ito' | 'word-wolf') => void;
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
     nextRound: () => void;
@@ -149,6 +150,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     startGame: useCallback(() => {
       socket.emit(C2S.GAME_START, {});
+    }, [socket]),
+
+    selectGame: useCallback((game: 'ito' | 'word-wolf') => {
+      socket.emit(C2S.GAME_SELECT, { game });
     }, [socket]),
 
     submitClue: useCallback((clue: string) => {

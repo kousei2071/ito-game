@@ -45,10 +45,10 @@ export function HomeScreen() {
             <span className="home-mascot-fallback">画像を配置してください</span>
           )}
         </div>
-        <h1 className="home-logo" aria-label="Ito logo">
-          <span className="home-logo-i">I</span>
-          <span className="home-logo-t">t</span>
-          <span className="home-logo-o">o</span>
+        <h1 className="home-logo" aria-label="Fremu logo">
+          <span className="home-logo-i">F</span>
+          <span className="home-logo-t">r</span>
+          <span className="home-logo-o">emu</span>
         </h1>
         <p className="home-subtitle">みんなで数遊び</p>
       </div>
