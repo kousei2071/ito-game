@@ -29,7 +29,7 @@ export function WordWolfResultScreen() {
       </div>
 
       <div className={`result-status-pop ${result.isCorrect ? 'success' : 'failure'}`}>
-        <h2>{result.isCorrect ? '市民の勝ち！' : 'ワードウルフの勝ち！'}</h2>
+        <h2>{result.isCorrect ? '市民の勝ち！' : 'ウルフの勝ち！'}</h2>
       </div>
 
       <div className="game-members-panel">
@@ -37,8 +37,8 @@ export function WordWolfResultScreen() {
         <p className="settings-note">{result.votedPlayerName}</p>
 
         <p className="game-members-title">お題ワード</p>
-        <p className="settings-note">多数派: {result.minorityWord}</p>
-        <p className="settings-note">少数派: {result.majorityWord}</p>
+        <p className="settings-note">多数派: {result.majorityWord}</p>
+        <p className="settings-note">少数派: {result.minorityWord}</p>
 
         <p className="game-members-title">ワードウルフ</p>
         <p className="settings-note">{result.wolfPlayerNames.join(' / ')}</p>

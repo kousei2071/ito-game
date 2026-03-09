@@ -10,7 +10,7 @@ import type {
   ItoRoundResult,
   WordWolfRoundResult,
 } from '@ito/shared';
-import { TOPICS, WORD_WOLF_TOPIC_PAIRS } from '@ito/shared';
+import { TOPICS, PRESET_WORD_WOLF_TOPICS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -352,7 +352,7 @@ export function startWordWolfRound(room: GameState): RoundState {
     throw new Error('ワードウルフは3人以上で遊べます');
   }
 
-  const pair = WORD_WOLF_TOPIC_PAIRS[randInt(0, WORD_WOLF_TOPIC_PAIRS.length - 1)];
+  const pair = PRESET_WORD_WOLF_TOPICS[randInt(0, PRESET_WORD_WOLF_TOPICS.length - 1)];
   const wolfCount =
     room.wordWolfCountMode === 'one'
       ? 1
@@ -367,12 +367,12 @@ export function startWordWolfRound(room: GameState): RoundState {
   room.players.forEach((p) => {
     p.secretNumber = undefined;
     p.clue = undefined;
-    p.secretWord = wolfIds.has(p.id) ? pair.minority : pair.majority;
+    p.secretWord = wolfIds.has(p.id) ? pair.minorityWord : pair.majorityWord;
   });
 
   wordWolfSecrets.set(room.roomId, {
-    majorityWord: pair.majority,
-    minorityWord: pair.minority,
+    majorityWord: pair.majorityWord,
+    minorityWord: pair.minorityWord,
     wolfPlayerIds: wolfIds,
     votes: new Map<string, string>(),
   });
