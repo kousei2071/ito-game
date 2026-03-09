@@ -43,7 +43,7 @@ export function HomeScreen() {
             onClick={() => setSelectedIconId(iconId)}
             aria-label={`アイコン ${iconId}`}
           >
-            <PlayerIcon playerIconId={iconId} size={24} />
+            <PlayerIcon playerIconId={iconId} size={30} />
           </button>
         ))}
       </div>

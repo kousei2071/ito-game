@@ -214,7 +214,6 @@ export function ArrangeScreen() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <span className="arrange-rank">{idx + 1}</span>
             <div className="arrange-info">
               {playerOf(id) ? (
                 <PlayerIdentity player={playerOf(id)!} className="arrange-name" />

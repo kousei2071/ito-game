@@ -7,11 +7,11 @@ export function iconSrc(playerIconId: string): string {
   return `/${playerIconId}.png`;
 }
 
-export function PlayerIcon({ playerIconId, size = 22 }: { playerIconId: string; size?: number }) {
+export function PlayerIcon({ playerIconId, size = 36 }: { playerIconId: string; size?: number }) {
   return (
     <span
       className="player-icon-circle"
-      style={{ width: size + 8, height: size + 8 }}
+      style={{ width: size + 6, height: size + 6 }}
       aria-hidden="true"
     >
       <img
