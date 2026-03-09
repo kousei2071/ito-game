@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import { C2S, S2C, TOPICS } from '@ito/shared';
-import type { PublicGameState, GameState } from '@ito/shared';
+import type { PublicGameState, GameState, ItoRoundResult } from '@ito/shared';
 import {
   createRoom,
   joinRoom,
@@ -13,6 +13,9 @@ import {
   selectGame,
   returnToGameSelect,
   startSelectedGame,
+  startWordWolfTalk,
+  startWordWolfVote,
+  submitWordWolfVote,
   submitClue,
   confirmArrange,
   advanceRound,
@@ -28,7 +31,7 @@ import {
 function toPublic(room: GameState): PublicGameState {
   return {
     roomId: room.roomId,
-    players: room.players.map(({ secretNumber, ...rest }) => rest),
+    players: room.players.map(({ secretNumber, secretWord, ...rest }) => rest),
     phase: room.phase,
     selectedGame: room.selectedGame,
     currentRound: room.currentRound,
@@ -36,6 +39,8 @@ function toPublic(room: GameState): PublicGameState {
     totalRounds: room.totalRounds,
     topicChooserMode: room.topicChooserMode,
     score: room.score,
+    wordWolfTalkSeconds: room.wordWolfTalkSeconds,
+    wordWolfCountMode: room.wordWolfCountMode,
   };
 }
 
@@ -91,11 +96,26 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   // ---------- room:updateSettings ----------
   socket.on(
     C2S.ROOM_UPDATE_SETTINGS,
-    ({ totalRounds, topicChooserMode }: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => {
+    ({
+      totalRounds,
+      topicChooserMode,
+      wordWolfTalkSeconds,
+      wordWolfCountMode,
+    }: {
+      totalRounds: number;
+      topicChooserMode: 'sequential' | 'random';
+      wordWolfTalkSeconds: number;
+      wordWolfCountMode: 'auto' | 'one' | 'two';
+    }) => {
       const room = findRoomByPlayer(socket.id);
       if (!room) return emitError(socket, 'ルームが見つかりません');
       try {
-        updateRoomSettings(room, socket.id, { totalRounds, topicChooserMode });
+        updateRoomSettings(room, socket.id, {
+          totalRounds,
+          topicChooserMode,
+          wordWolfTalkSeconds,
+          wordWolfCountMode,
+        });
         broadcastState(io, room);
       } catch (e: any) {
         emitError(socket, e.message);
@@ -131,15 +151,27 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (!room.selectedGame) {
         return emitError(socket, 'ゲームを選択してください');
       }
-      const round = startSelectedGame(room, room.selectedGame);
+      let round;
+      try {
+        round = startSelectedGame(room, room.selectedGame);
+      } catch (e: any) {
+        emitError(socket, e.message);
+        return;
+      }
 
-      room.players.forEach((p) => {
-        io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
-      });
-      io.to(room.roomId).emit(S2C.ROUND_STARTED, {
-        roundNumber: round.roundNumber,
-        topic: round.topic,
-      });
+      if (round.game === 'ito') {
+        room.players.forEach((p) => {
+          io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
+        });
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: round.roundNumber,
+          topic: round.topic,
+        });
+      } else {
+        room.players.forEach((p) => {
+          io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });
+        });
+      }
       broadcastState(io, room);
       return;
     }
@@ -180,6 +212,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (!room || room.phase !== 'topic' || !room.currentRound) return;
 
       const round = room.currentRound;
+      if (round.game !== 'ito') return;
       if (round.topicChooserId !== socket.id) {
         return emitError(socket, 'このラウンドでお題を決められるのは順番のプレイヤーだけです');
       }
@@ -191,7 +224,9 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         }
         if (mode === 'random') {
           round.topicChangeCount += 1;
-          const usedTopics = room.roundResults.map((r) => r.topic);
+          const usedTopics = room.roundResults
+            .filter((r): r is ItoRoundResult => r.game === 'ito')
+            .map((r) => r.topic);
           const exclude = new Set<string>([...usedTopics, round.topic]);
           const candidates = TOPICS.filter((t) => !exclude.has(t));
           const pool = candidates.length > 0 ? candidates : TOPICS;
@@ -226,8 +261,13 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
 
     const phaseChanged = submitClue(room, socket.id, clue);
     if (phaseChanged) {
+      const currentRound = room.currentRound;
+      if (!currentRound || currentRound.game !== 'ito') {
+        broadcastState(io, room);
+        return;
+      }
       // 全員のヒントを公開
-      const clues = room.currentRound!.clues.map((c) => ({
+      const clues = currentRound.clues.map((c) => ({
         ...c,
         playerName: room.players.find((p) => p.id === c.playerId)?.name ?? '',
       }));
@@ -240,7 +280,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   socket.on(C2S.ROUND_CONFIRM, ({ order }: { order: string[] }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'arrange') return;
-    if (!room.currentRound || room.currentRound.topicChooserId !== socket.id) {
+    if (!room.currentRound || room.currentRound.game !== 'ito' || room.currentRound.topicChooserId !== socket.id) {
       return emitError(socket, 'このラウンドで並びを確定できるのはお題を決めた人だけです');
     }
 
@@ -250,6 +290,42 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- round:next ----------
+  socket.on(C2S.WORDWOLF_START_TALK, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      startWordWolfTalk(room, socket.id);
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
+  socket.on(C2S.WORDWOLF_START_VOTE, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      startWordWolfVote(room, socket.id);
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
+  socket.on(C2S.WORDWOLF_SUBMIT_VOTE, ({ targetPlayerId }: { targetPlayerId: string }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      const result = submitWordWolfVote(room, socket.id, targetPlayerId);
+      if (result) {
+        io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+      }
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
   socket.on(C2S.ROUND_NEXT, () => {
     const room = findRoomByPlayer(socket.id);
     if (!room) return;
@@ -258,14 +334,20 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
 
     const status = advanceRound(room);
     if (status === 'next') {
-      room.players.forEach((p) => {
-        io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
-      });
-      io.to(room.roomId).emit(S2C.ROUND_STARTED, {
-        roundNumber: room.currentRound!.roundNumber,
-        topic: room.currentRound!.topic,
-      });
-      // 次のラウンドもまずはお題選択フェーズ
+      if (room.currentRound?.game === 'ito') {
+        room.players.forEach((p) => {
+          io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
+        });
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: room.currentRound.roundNumber,
+          topic: room.currentRound.topic,
+        });
+        // 次のラウンドもまずはお題選択フェーズ
+      } else {
+        room.players.forEach((p) => {
+          io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });
+        });
+      }
     } else {
       io.to(room.roomId).emit(S2C.GAME_FINISHED, {
         score: room.score,

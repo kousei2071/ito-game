@@ -1,10 +1,30 @@
-import type { GameState, Player, RoundState, RoundResult, TopicChooserMode, GameType } from '@ito/shared';
-import { TOPICS } from '@ito/shared';
+import type {
+  GameState,
+  Player,
+  RoundState,
+  RoundResult,
+  TopicChooserMode,
+  GameType,
+  WordWolfCountMode,
+  ItoRoundState,
+  ItoRoundResult,
+  WordWolfRoundResult,
+} from '@ito/shared';
+import { TOPICS, WORD_WOLF_TOPIC_PAIRS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
 // ============================================================
 const rooms = new Map<string, GameState>();
+
+interface WordWolfSecretState {
+  majorityWord: string;
+  minorityWord: string;
+  wolfPlayerIds: Set<string>;
+  votes: Map<string, string>;
+}
+
+const wordWolfSecrets = new Map<string, WordWolfSecretState>();
 
 /** 4桁のルームID生成 */
 function generateRoomId(): string {
@@ -53,6 +73,8 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
     topicChooserMode: 'sequential',
     score: 0,
     topicChooserIndex: 0,
+    wordWolfTalkSeconds: 120,
+    wordWolfCountMode: 'auto',
   };
   rooms.set(roomId, state);
   return state;
@@ -148,7 +170,12 @@ export function findRoomByPlayer(socketId: string): GameState | undefined {
 export function updateRoomSettings(
   room: GameState,
   socketId: string,
-  settings: { totalRounds: number; topicChooserMode: TopicChooserMode },
+  settings: {
+    totalRounds: number;
+    topicChooserMode: TopicChooserMode;
+    wordWolfTalkSeconds: number;
+    wordWolfCountMode: WordWolfCountMode;
+  },
 ): GameState {
   const allowedPhases = new Set(['lobby', 'game-select', 'game-settings']);
   if (!allowedPhases.has(room.phase)) {
@@ -165,8 +192,20 @@ export function updateRoomSettings(
     throw new Error('ラウンド数は 5 / 10 / 15 から選択してください');
   }
 
+  const allowedTalkSeconds = new Set([60, 120, 180]);
+  if (!allowedTalkSeconds.has(settings.wordWolfTalkSeconds)) {
+    throw new Error('会話時間は 60 / 120 / 180 から選択してください');
+  }
+
+  const allowedWolfCountMode = new Set<WordWolfCountMode>(['auto', 'one', 'two']);
+  if (!allowedWolfCountMode.has(settings.wordWolfCountMode)) {
+    throw new Error('ワードウルフ人数設定が不正です');
+  }
+
   room.totalRounds = settings.totalRounds;
   room.topicChooserMode = settings.topicChooserMode;
+  room.wordWolfTalkSeconds = settings.wordWolfTalkSeconds;
+  room.wordWolfCountMode = settings.wordWolfCountMode;
   return room;
 }
 
@@ -221,14 +260,19 @@ export function returnToGameSelect(room: GameState, socketId: string): string {
   }
   room.players.forEach((p) => {
     p.secretNumber = undefined;
+    p.secretWord = undefined;
     p.clue = undefined;
   });
+  wordWolfSecrets.delete(room.roomId);
 
   return player.name;
 }
 
 export function startSelectedGame(room: GameState, game: GameType): RoundState {
   room.selectedGame = game;
+  if (game === 'word-wolf') {
+    return startWordWolfRound(room);
+  }
   return startNewRound(room);
 }
 
@@ -263,13 +307,16 @@ export function startNewRound(room: GameState): RoundState {
   });
 
   // お題
-  const usedTopics = room.roundResults.map((r) => r.topic);
+  const usedTopics = room.roundResults
+    .filter((r): r is ItoRoundResult => r.game === 'ito')
+    .map((r) => r.topic);
   const available = TOPICS.filter((t) => !usedTopics.includes(t));
   const topic = available.length > 0
     ? available[randInt(0, available.length - 1)]
     : TOPICS[randInt(0, TOPICS.length - 1)];
 
-  const round: RoundState = {
+  const round: ItoRoundState = {
+    game: 'ito',
     roundNumber,
     topic,
     topicChooserId: topicChooser.id,
@@ -284,10 +331,55 @@ export function startNewRound(room: GameState): RoundState {
   return round;
 }
 
+export function startWordWolfRound(room: GameState): RoundState {
+  const roundNumber = room.roundResults.length + 1;
+
+  if (room.players.length < 3) {
+    throw new Error('ワードウルフは3人以上で遊べます');
+  }
+
+  const pair = WORD_WOLF_TOPIC_PAIRS[randInt(0, WORD_WOLF_TOPIC_PAIRS.length - 1)];
+  const wolfCount =
+    room.wordWolfCountMode === 'one'
+      ? 1
+      : room.wordWolfCountMode === 'two'
+        ? 2
+        : room.players.length >= 6
+          ? 2
+          : 1;
+  const shuffledPlayers = shuffle(room.players.map((p) => p.id));
+  const wolfIds = new Set(shuffledPlayers.slice(0, wolfCount));
+
+  room.players.forEach((p) => {
+    p.secretNumber = undefined;
+    p.clue = undefined;
+    p.secretWord = wolfIds.has(p.id) ? pair.minority : pair.majority;
+  });
+
+  wordWolfSecrets.set(room.roomId, {
+    majorityWord: pair.majority,
+    minorityWord: pair.minority,
+    wolfPlayerIds: wolfIds,
+    votes: new Map<string, string>(),
+  });
+
+  const round: RoundState = {
+    game: 'word-wolf',
+    roundNumber,
+    talkSeconds: room.wordWolfTalkSeconds,
+    voteSubmittedPlayerIds: [],
+  };
+
+  room.currentRound = round;
+  room.phase = 'wordwolf-reveal';
+  return round;
+}
+
 /** ヒント提出 */
 export function submitClue(room: GameState, socketId: string, clue: string): boolean {
   const round = room.currentRound;
   if (!round || room.phase !== 'clue') return false;
+  if (round.game !== 'ito') return false;
   if (round.submittedCluePlayerIds.includes(socketId)) return false;
 
   const player = room.players.find((p) => p.id === socketId);
@@ -307,7 +399,7 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
 /** 並び替え確定 → 判定 */
 export function confirmArrange(room: GameState, order: string[]): RoundResult {
-  const round = room.currentRound!;
+  const round = room.currentRound as ItoRoundState;
 
   // 正解順 (number が大きい順)
   const correctOrder = [...room.players]
@@ -323,7 +415,8 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult {
 
   room.phase = 'result';
 
-  const result: RoundResult = {
+  const result: ItoRoundResult = {
+    game: 'ito',
     roundNumber: round.roundNumber,
     topic: round.topic,
     isCorrect,
@@ -336,12 +429,112 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult {
   return result;
 }
 
+export function startWordWolfTalk(room: GameState, socketId: string): void {
+  if (room.phase !== 'wordwolf-reveal') {
+    throw new Error('このフェーズでは開始できません');
+  }
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player?.isHost) {
+    throw new Error('ホストのみ開始できます');
+  }
+  room.phase = 'wordwolf-talk';
+}
+
+export function startWordWolfVote(room: GameState, socketId: string): void {
+  if (room.phase !== 'wordwolf-talk') {
+    throw new Error('このフェーズでは投票に進めません');
+  }
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player?.isHost) {
+    throw new Error('ホストのみ投票フェーズに進めます');
+  }
+  room.phase = 'wordwolf-vote';
+}
+
+export function submitWordWolfVote(
+  room: GameState,
+  socketId: string,
+  targetPlayerId: string,
+): WordWolfRoundResult | null {
+  if (room.phase !== 'wordwolf-vote') return null;
+  const round = room.currentRound;
+  if (!round || round.game !== 'word-wolf') return null;
+
+  const secret = wordWolfSecrets.get(room.roomId);
+  if (!secret) return null;
+
+  if (secret.votes.has(socketId)) {
+    throw new Error('すでに投票済みです');
+  }
+  if (!room.players.some((p) => p.id === targetPlayerId)) {
+    throw new Error('投票先のプレイヤーが見つかりません');
+  }
+
+  secret.votes.set(socketId, targetPlayerId);
+  round.voteSubmittedPlayerIds.push(socketId);
+
+  if (round.voteSubmittedPlayerIds.length < room.players.length) {
+    return null;
+  }
+
+  const voteCount = new Map<string, number>();
+  for (const target of secret.votes.values()) {
+    voteCount.set(target, (voteCount.get(target) ?? 0) + 1);
+  }
+
+  let maxVote = -1;
+  let topTargets: string[] = [];
+  for (const [target, count] of voteCount.entries()) {
+    if (count > maxVote) {
+      maxVote = count;
+      topTargets = [target];
+    } else if (count === maxVote) {
+      topTargets.push(target);
+    }
+  }
+
+  const votedPlayerId = topTargets[randInt(0, topTargets.length - 1)];
+  const votedPlayer = room.players.find((p) => p.id === votedPlayerId);
+  const villageWon = !secret.wolfPlayerIds.has(votedPlayerId);
+  if (villageWon) {
+    room.score += 1;
+  }
+
+  round.votedPlayerId = votedPlayerId;
+  round.votedPlayerName = votedPlayer?.name ?? '???';
+  round.wolfPlayerNames = room.players
+    .filter((p) => secret.wolfPlayerIds.has(p.id))
+    .map((p) => p.name);
+  round.majorityWord = secret.majorityWord;
+  round.minorityWord = secret.minorityWord;
+  round.villageWon = villageWon;
+
+  const result: WordWolfRoundResult = {
+    game: 'word-wolf',
+    roundNumber: round.roundNumber,
+    majorityWord: secret.majorityWord,
+    minorityWord: secret.minorityWord,
+    votedPlayerName: votedPlayer?.name ?? '???',
+    wolfPlayerNames: round.wolfPlayerNames,
+    isCorrect: villageWon,
+  };
+
+  room.roundResults.push(result);
+  room.phase = 'wordwolf-result';
+  return result;
+}
+
 /** 次のラウンドへ or 終了 */
 export function advanceRound(room: GameState): 'next' | 'finished' {
   if (room.roundResults.length >= room.totalRounds) {
     room.phase = 'finished';
     return 'finished';
   }
-  startNewRound(room);
+
+  if (room.selectedGame === 'word-wolf') {
+    startWordWolfRound(room);
+  } else {
+    startNewRound(room);
+  }
   return 'next';
 }
