@@ -32,9 +32,9 @@ export function PlayerIdentity({
   className?: string;
 }) {
   return (
-    <span className={className ?? 'player-identity'}>
+    <span className={className ? `player-identity ${className}` : 'player-identity'}>
       <PlayerIcon playerIconId={player.playerIconId} />
-      <span>{player.name}</span>
+      <span className="player-identity-name">{player.name}</span>
     </span>
   );
 }

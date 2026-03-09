@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function TopicSelectScreen() {
   const { state, actions } = useGame();
@@ -45,9 +44,7 @@ export function TopicSelectScreen() {
 
       <div className="topic-card">
         <p className="topic-label">お題を決めるひと</p>
-        <h2 className="topic-text">
-          {chooser ? <PlayerIdentity player={chooser} className="player-identity topic-chooser-identity" /> : chooserName}
-        </h2>
+        <h2 className="topic-text topic-chooser-name-only-visible">{chooserName}</h2>
       </div>
 
       <div className="topic-card">
@@ -93,8 +90,7 @@ export function TopicSelectScreen() {
       ) : (
         <div className="waiting">
           <p>
-            {chooser ? <PlayerIdentity player={chooser} className="player-identity" /> : chooserName}
-            がお題を決めています…
+            「{chooserName}」がお題を決めています…
           </p>
           <p className="waiting-count">
             ランダムお題の変更は最大10回までです

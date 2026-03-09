@@ -828,15 +828,20 @@ body {
 .player-name {
   color: #2a2620;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .player-identity {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.player-identity-name {
+  line-height: 1.1;
+  letter-spacing: 0.01em;
 }
 
 .player-icon-circle {
@@ -1397,8 +1402,42 @@ body {
 
 .topic-chooser-identity {
   justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  text-align: center;
+}
+
+.topic-chooser-identity .player-identity-name {
   font-size: 28px;
   font-weight: 900;
+  line-height: 1;
+}
+
+.topic-chooser-icon-wrap {
+  display: none;
+}
+
+.topic-chooser-icon-only {
+  display: none;
+}
+
+.topic-chooser-icon-only .player-identity-name {
+  display: none;
+}
+
+.topic-chooser-name-only {
+  display: none;
+}
+
+.topic-chooser-name-only-visible {
+  text-align: center;
+}
+
+.topic-chooser-inline {
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
 }
 
 .wordwolf-result-wolf-list {
