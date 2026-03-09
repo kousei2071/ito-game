@@ -10,7 +10,7 @@ import type {
   ItoRoundResult,
   WordWolfRoundResult,
 } from '@ito/shared';
-import { TOPICS, PRESET_WORD_WOLF_TOPICS } from '@ito/shared';
+import { TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -60,16 +60,13 @@ function buildWordWolfTopicPool(room: GameState): Array<{ majorityWord: string; 
 }
 
 function buildWordWolfExampleTalk(): { title: string; lines: string[] } {
-  const prompts = [
-    '（これの第一印象は？）',
-    '（あなたはこれを好きですか？）',
-    '（どんな時にこれを使いますか？）',
-    '（これを一言で表すと？）',
-  ];
+  const prompts = PRESET_WORD_WOLF_EXAMPLE_TALKS;
+  const fallback = '（これの第一印象は？）';
+  const line = prompts.length > 0 ? prompts[randInt(0, prompts.length - 1)] : fallback;
 
   return {
     title: 'AI例トーク',
-    lines: [prompts[randInt(0, prompts.length - 1)]],
+    lines: [line],
   };
 }
 
