@@ -15,6 +15,7 @@ import {
   startSelectedGame,
   startWordWolfTalk,
   startWordWolfVote,
+  getWordWolfExampleTalk,
   submitWordWolfVote,
   submitClue,
   confirmArrange,
@@ -321,6 +322,17 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
       }
       broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
+  socket.on(C2S.WORDWOLF_REQUEST_EXAMPLE_TALK, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      const payload = getWordWolfExampleTalk(room, socket.id);
+      io.to(room.roomId).emit(S2C.WORDWOLF_EXAMPLE_TALK, payload);
     } catch (e: any) {
       emitError(socket, e.message);
     }
