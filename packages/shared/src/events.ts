@@ -34,6 +34,7 @@ export const S2C = {
   YOUR_NUMBER:          'round:yourNumber',
   YOUR_WORD:            'wordwolf:yourWord',
   WORDWOLF_EXAMPLE_TALK:'wordwolf:exampleTalk',
+  ROOM_CLOSED:          'room:closed',
   ERROR:                'error:message',
   NOTICE:               'notice:message',
 } as const;
@@ -79,6 +80,7 @@ export interface S2CPayloads {
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.YOUR_WORD]: { word: string };
   [S2C.WORDWOLF_EXAMPLE_TALK]: { title: string; lines: string[] };
+  [S2C.ROOM_CLOSED]: { message: string };
   [S2C.ERROR]: { message: string };
   [S2C.NOTICE]: { message: string };
 }

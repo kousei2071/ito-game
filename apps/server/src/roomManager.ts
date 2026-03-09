@@ -26,6 +26,10 @@ interface WordWolfSecretState {
 
 const wordWolfSecrets = new Map<string, WordWolfSecretState>();
 
+export type PlayerExitResult =
+  | { kind: 'room-closed'; roomId: string; actorName: string }
+  | { kind: 'state-updated'; room: GameState; actorName: string; forcedToGameSelect: boolean };
+
 function toWordWolfTopicKey(majorityWord: string, minorityWord: string): string {
   return `${majorityWord}__${minorityWord}`;
 }
@@ -151,45 +155,84 @@ export function joinRoom(roomId: string, socketId: string, playerName: string): 
   return room;
 }
 
-export function leaveRoom(socketId: string): { room: GameState; removed: boolean } | null {
+function resetGameProgressToSelect(room: GameState): void {
+  room.phase = 'game-select';
+  room.currentRound = null;
+  room.roundResults = [];
+  room.score = 0;
+  room.topicChooserIndex = 0;
+  if (!room.selectedGame) {
+    room.selectedGame = 'ito';
+  }
+  room.players.forEach((p) => {
+    p.secretNumber = undefined;
+    p.secretWord = undefined;
+    p.clue = undefined;
+  });
+  wordWolfSecrets.delete(room.roomId);
+}
+
+function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
+  const round = room.currentRound;
+  if (!round || round.game !== 'ito') return;
+
+  round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
+  round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
+  round.arrangedOrder = round.arrangedOrder.filter((id) => id !== removedPlayerId);
+  if (round.correctOrder) {
+    round.correctOrder = round.correctOrder.filter((id) => id !== removedPlayerId);
+  }
+
+  if (round.topicChooserId === removedPlayerId) {
+    round.topicChooserId = room.players[0]?.id ?? '';
+  }
+
+  if (room.phase === 'clue' && round.submittedCluePlayerIds.length >= room.players.length) {
+    room.phase = 'arrange';
+  }
+}
+
+export function leaveRoom(socketId: string): PlayerExitResult | null {
   for (const [, room] of rooms) {
     const idx = room.players.findIndex((p) => p.id === socketId);
     if (idx === -1) continue;
+    const leavingPlayer = room.players[idx];
     room.players.splice(idx, 1);
-    // ホストが抜けた場合
-    if (room.players.length > 0 && !room.players.some((p) => p.isHost)) {
-      room.players[0].isHost = true;
-    }
-    if (room.players.length === 0) {
+
+    if (leavingPlayer.isHost) {
+      wordWolfSecrets.delete(room.roomId);
       rooms.delete(room.roomId);
-      return { room, removed: true };
+      return { kind: 'room-closed', roomId: room.roomId, actorName: leavingPlayer.name };
     }
-    return { room, removed: false };
+
+    if (room.players.length === 0) {
+      wordWolfSecrets.delete(room.roomId);
+      rooms.delete(room.roomId);
+      return { kind: 'room-closed', roomId: room.roomId, actorName: leavingPlayer.name };
+    }
+
+    let forcedToGameSelect = false;
+    const isWordWolfInGamePhase =
+      room.selectedGame === 'word-wolf'
+      && room.phase !== 'lobby'
+      && room.phase !== 'game-select'
+      && room.phase !== 'game-settings';
+
+    if (isWordWolfInGamePhase) {
+      resetGameProgressToSelect(room);
+      forcedToGameSelect = true;
+    } else {
+      applyItoExitAdjustments(room, leavingPlayer.id);
+    }
+
+    return { kind: 'state-updated', room, actorName: leavingPlayer.name, forcedToGameSelect };
   }
   return null;
 }
 
-/** 一時的な切断（ブラウザを閉じた等）を扱う。席は残しつつオフライン扱い。 */
-export function disconnectPlayer(socketId: string): GameState | null {
-  for (const [, room] of rooms) {
-    const player = room.players.find((p) => p.id === socketId);
-    if (!player) continue;
-
-    player.connected = false;
-    player.isReady = false;
-
-    // ホストが落ちた場合は次のオンラインの人にホスト権限を移譲
-    if (player.isHost) {
-      player.isHost = false;
-      const nextHost = room.players.find((p) => p.connected && p.id !== socketId);
-      if (nextHost) {
-        nextHost.isHost = true;
-      }
-    }
-
-    return room;
-  }
-  return null;
+/** 切断時は離脱と同等に扱い、ゲームから除外する。 */
+export function disconnectPlayer(socketId: string): PlayerExitResult | null {
+  return leaveRoom(socketId);
 }
 
 export function toggleReady(socketId: string): GameState | null {
@@ -294,20 +337,7 @@ export function returnToGameSelect(room: GameState, socketId: string): string {
     throw new Error('プレイヤーが見つかりません');
   }
 
-  room.phase = 'game-select';
-  room.currentRound = null;
-  room.roundResults = [];
-  room.score = 0;
-  room.topicChooserIndex = 0;
-  if (!room.selectedGame) {
-    room.selectedGame = 'ito';
-  }
-  room.players.forEach((p) => {
-    p.secretNumber = undefined;
-    p.secretWord = undefined;
-    p.clue = undefined;
-  });
-  wordWolfSecrets.delete(room.roomId);
+  resetGameProgressToSelect(room);
 
   return player.name;
 }

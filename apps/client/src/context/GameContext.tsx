@@ -162,6 +162,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on(S2C.WORDWOLF_EXAMPLE_TALK, ({ title, lines }: { title: string; lines: string[] }) => {
       dispatch({ type: 'SET_WORDWOLF_EXAMPLE_TALK', payload: { title, lines } });
     });
+    socket.on(S2C.ROOM_CLOSED, ({ message }: { message: string }) => {
+      dispatch({ type: 'RESET' });
+      dispatch({ type: 'SET_ERROR', payload: message });
+    });
 
     return () => {
       socket.off('connect');
@@ -176,6 +180,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off(S2C.ERROR);
       socket.off(S2C.NOTICE);
       socket.off(S2C.WORDWOLF_EXAMPLE_TALK);
+      socket.off(S2C.ROOM_CLOSED);
     };
   }, [socket]);
 

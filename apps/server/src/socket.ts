@@ -22,6 +22,7 @@ import {
   advanceRound,
   disconnectPlayer,
   updateRoomSettings,
+  type PlayerExitResult,
 } from './roomManager.js';
 
 // ============================================================
@@ -372,15 +373,32 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
 }
 
 function handleLeave(io: Server, socket: Socket) {
-  const result = leaveRoom(socket.id);
-  if (result && !result.removed) {
-    broadcastState(io, result.room);
+  for (const roomId of socket.rooms) {
+    if (roomId !== socket.id) {
+      socket.leave(roomId);
+    }
   }
+  const result = leaveRoom(socket.id);
+  handlePlayerExitResult(io, result);
 }
 
 function handleDisconnect(io: Server, socket: Socket) {
-  const room = disconnectPlayer(socket.id);
-  if (room) {
-    broadcastState(io, room);
+  const result = disconnectPlayer(socket.id);
+  handlePlayerExitResult(io, result);
+}
+
+function handlePlayerExitResult(io: Server, result: PlayerExitResult | null) {
+  if (!result) return;
+
+  if (result.kind === 'room-closed') {
+    io.to(result.roomId).emit(S2C.ROOM_CLOSED, { message: 'ホストが退出したためルームを終了しました' });
+    return;
   }
+
+  if (result.forcedToGameSelect) {
+    io.to(result.room.roomId).emit(S2C.NOTICE, {
+      message: `${result.actorName}が退出したためゲーム選択に戻りました`,
+    });
+  }
+  broadcastState(io, result.room);
 }
