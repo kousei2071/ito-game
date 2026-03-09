@@ -53,6 +53,7 @@ function reducer(state: State, action: Action): State {
         ...state,
         gameState: action.payload,
         lastError: null,
+        wordWolfExampleTalk: action.payload.phase === 'wordwolf-talk' ? state.wordWolfExampleTalk : null,
         roundResult:
           action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result'
             ? state.roundResult

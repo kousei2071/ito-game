@@ -396,14 +396,17 @@ export function startWordWolfRound(room: GameState): RoundState {
   );
   const topicPool = availableTopics.length > 0 ? availableTopics : allTopics;
   const pair = topicPool[randInt(0, topicPool.length - 1)];
-  const wolfCount =
+  const requestedWolfCount =
     room.wordWolfCountMode === 'one'
       ? 1
       : room.wordWolfCountMode === 'two'
         ? 2
-        : room.players.length >= 6
-          ? 1
-          : 2;
+        : room.players.length >= 5
+          ? 2
+          : 1;
+  // 少数派がワードウルフになるよう、常に半数未満に丸める
+  const maxMinorityWolfCount = Math.max(1, Math.floor((room.players.length - 1) / 2));
+  const wolfCount = Math.min(requestedWolfCount, maxMinorityWolfCount);
   const shuffledPlayers = shuffle(room.players.map((p) => p.id));
   const wolfIds = new Set(shuffledPlayers.slice(0, wolfCount));
 
@@ -561,15 +564,17 @@ export function submitWordWolfVote(
     }
   }
 
-  const votedPlayerId = topTargets[randInt(0, topTargets.length - 1)];
-  const votedPlayer = room.players.find((p) => p.id === votedPlayerId);
-  const villageWon = !secret.wolfPlayerIds.has(votedPlayerId);
+  const isTie = topTargets.length !== 1;
+  const votedPlayerId = isTie ? undefined : topTargets[0];
+  const votedPlayer = votedPlayerId ? room.players.find((p) => p.id === votedPlayerId) : undefined;
+  // 市民勝利は「選ばれた人がウルフだった」場合のみ
+  const villageWon = votedPlayerId ? secret.wolfPlayerIds.has(votedPlayerId) : false;
   if (villageWon) {
     room.score += 1;
   }
 
   round.votedPlayerId = votedPlayerId;
-  round.votedPlayerName = votedPlayer?.name ?? '???';
+  round.votedPlayerName = votedPlayer?.name ?? '投票なし';
   round.wolfPlayerNames = room.players
     .filter((p) => secret.wolfPlayerIds.has(p.id))
     .map((p) => p.name);
@@ -582,7 +587,7 @@ export function submitWordWolfVote(
     roundNumber: round.roundNumber,
     majorityWord: secret.majorityWord,
     minorityWord: secret.minorityWord,
-    votedPlayerName: votedPlayer?.name ?? '???',
+    votedPlayerName: votedPlayer?.name ?? '投票なし',
     wolfPlayerNames: round.wolfPlayerNames,
     isCorrect: villageWon,
   };

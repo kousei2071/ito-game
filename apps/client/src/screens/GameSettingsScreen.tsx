@@ -124,7 +124,7 @@ export function GameSettingsScreen() {
                   }
                   disabled={!isHost}
                 >
-                  <option value="auto">自動（少人数で2人 / 6人以上で1人）</option>
+                  <option value="auto">自動（4人以下で1人 / 5人以上で2人）</option>
                   <option value="one">1人</option>
                   <option value="two">2人</option>
                 </select>
