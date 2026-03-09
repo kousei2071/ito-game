@@ -18,8 +18,11 @@ export function GameSettingsScreen() {
 
   return (
     <div className="screen game-settings-screen">
-      <div className="round-header">
+      <div className="round-header round-header-with-back">
         <span className="round-badge">設定</span>
+        <button type="button" className="btn btn-back-select" onClick={actions.returnToGameSelect}>
+          ゲーム選択へ戻る
+        </button>
         <span className="score-badge">{gs.players.length}人</span>
       </div>
 
@@ -80,7 +83,7 @@ export function GameSettingsScreen() {
         GAME START
       </button>
 
-      {!isHost ? <p className="waiting">ホストが開始するのを待っています…</p> : null}
+      {!isHost ? <p className="waiting">だれでもゲーム選択へ戻せます。ホストが開始するのを待っています…</p> : null}
       {state.lastError ? <div className="error">{state.lastError}</div> : null}
     </div>
   );

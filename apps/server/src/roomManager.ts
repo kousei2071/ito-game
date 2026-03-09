@@ -204,6 +204,28 @@ export function moveToGameSettings(room: GameState, socketId: string): GameState
   return room;
 }
 
+export function returnToGameSelect(room: GameState, socketId: string): string {
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player) {
+    throw new Error('プレイヤーが見つかりません');
+  }
+
+  room.phase = 'game-select';
+  room.currentRound = null;
+  room.roundResults = [];
+  room.score = 0;
+  room.topicChooserIndex = 0;
+  if (!room.selectedGame) {
+    room.selectedGame = 'ito';
+  }
+  room.players.forEach((p) => {
+    p.secretNumber = undefined;
+    p.clue = undefined;
+  });
+
+  return player.name;
+}
+
 export function startSelectedGame(room: GameState, game: GameType): RoundState {
   room.selectedGame = game;
   return startNewRound(room);

@@ -13,31 +13,47 @@ export default function App() {
   const { state } = useGame();
   const { gameState, finalResult } = state;
 
-  // 最終結果
-  if (finalResult) return <FinalScreen />;
+  let screen = <HomeScreen />;
 
-  // ゲーム未参加
-  if (!gameState) return <HomeScreen />;
-
-  // フェーズに応じた画面
-  switch (gameState.phase) {
-    case 'lobby':
-      return <LobbyScreen />;
-    case 'game-select':
-      return <GameSelectScreen />;
-    case 'game-settings':
-      return <GameSettingsScreen />;
-    case 'topic':
-      return <TopicSelectScreen />;
-    case 'clue':
-      return <ClueScreen />;
-    case 'arrange':
-      return <ArrangeScreen />;
-    case 'result':
-      return <ResultScreen />;
-    case 'finished':
-      return <FinalScreen />;
-    default:
-      return <HomeScreen />;
+  if (finalResult) {
+    screen = <FinalScreen />;
+  } else if (!gameState) {
+    screen = <HomeScreen />;
+  } else {
+    switch (gameState.phase) {
+      case 'lobby':
+        screen = <LobbyScreen />;
+        break;
+      case 'game-select':
+        screen = <GameSelectScreen />;
+        break;
+      case 'game-settings':
+        screen = <GameSettingsScreen />;
+        break;
+      case 'topic':
+        screen = <TopicSelectScreen />;
+        break;
+      case 'clue':
+        screen = <ClueScreen />;
+        break;
+      case 'arrange':
+        screen = <ArrangeScreen />;
+        break;
+      case 'result':
+        screen = <ResultScreen />;
+        break;
+      case 'finished':
+        screen = <FinalScreen />;
+        break;
+      default:
+        screen = <HomeScreen />;
+    }
   }
+
+  return (
+    <>
+      {state.notice ? <div className="global-notice">{state.notice}</div> : null}
+      {screen}
+    </>
+  );
 }

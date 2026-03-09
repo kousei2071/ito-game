@@ -11,6 +11,7 @@ import {
   moveToGameSelect,
   moveToGameSettings,
   selectGame,
+  returnToGameSelect,
   startSelectedGame,
   submitClue,
   confirmArrange,
@@ -152,6 +153,19 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     if (!room || room.phase !== 'game-select') return;
     try {
       selectGame(room, socket.id, game);
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
+  // ---------- game:returnToSelect ----------
+  socket.on(C2S.GAME_RETURN_TO_SELECT, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return emitError(socket, 'ルームが見つかりません');
+    try {
+      const actorName = returnToGameSelect(room, socket.id);
+      io.to(room.roomId).emit(S2C.NOTICE, { message: `${actorName}がゲームを終了しました` });
       broadcastState(io, room);
     } catch (e: any) {
       emitError(socket, e.message);

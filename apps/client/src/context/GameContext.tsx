@@ -11,6 +11,7 @@ interface State {
   gameState: PublicGameState | null;
   myNumber: number | null;
   lastError: string | null;
+  notice: string | null;
   roundResult: RoundResult | null;
   finalResult: { score: number; totalRounds: number; roundResults: RoundResult[] } | null;
 }
@@ -20,6 +21,7 @@ const initialState: State = {
   gameState: null,
   myNumber: null,
   lastError: null,
+  notice: null,
   roundResult: null,
   finalResult: null,
 };
@@ -29,6 +31,8 @@ type Action =
   | { type: 'SET_GAME_STATE'; payload: PublicGameState }
   | { type: 'SET_MY_NUMBER'; payload: number }
   | { type: 'SET_ERROR'; payload: string }
+  | { type: 'SET_NOTICE'; payload: string }
+  | { type: 'CLEAR_NOTICE' }
   | { type: 'SET_ROUND_RESULT'; payload: RoundResult }
   | { type: 'SET_FINAL_RESULT'; payload: { score: number; totalRounds: number; roundResults: RoundResult[] } }
   | { type: 'RESET' };
@@ -43,6 +47,10 @@ function reducer(state: State, action: Action): State {
       return { ...state, myNumber: action.payload, roundResult: null };
     case 'SET_ERROR':
       return { ...state, lastError: action.payload };
+    case 'SET_NOTICE':
+      return { ...state, notice: action.payload };
+    case 'CLEAR_NOTICE':
+      return { ...state, notice: null };
     case 'SET_ROUND_RESULT':
       return { ...state, roundResult: action.payload };
     case 'SET_FINAL_RESULT':
@@ -67,6 +75,7 @@ interface GameContextValue {
     updateRoomSettings: (settings: { totalRounds: number; topicChooserMode: 'sequential' | 'random' }) => void;
     startGame: () => void;
     selectGame: (game: 'ito' | 'word-wolf') => void;
+    returnToGameSelect: () => void;
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
     nextRound: () => void;
@@ -111,6 +120,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on(S2C.ERROR, ({ message }: { message: string }) => {
       dispatch({ type: 'SET_ERROR', payload: message });
     });
+    socket.on(S2C.NOTICE, ({ message }: { message: string }) => {
+      dispatch({ type: 'SET_NOTICE', payload: message });
+    });
 
     return () => {
       socket.off('connect');
@@ -122,8 +134,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off(S2C.ROUND_RESULT);
       socket.off(S2C.GAME_FINISHED);
       socket.off(S2C.ERROR);
+      socket.off(S2C.NOTICE);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!state.notice) return;
+    const timer = window.setTimeout(() => {
+      dispatch({ type: 'CLEAR_NOTICE' });
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [state.notice]);
 
   // ---------- Actions ----------
   const actions = {
@@ -154,6 +175,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     selectGame: useCallback((game: 'ito' | 'word-wolf') => {
       socket.emit(C2S.GAME_SELECT, { game });
+    }, [socket]),
+
+    returnToGameSelect: useCallback(() => {
+      socket.emit(C2S.GAME_RETURN_TO_SELECT, {});
     }, [socket]),
 
     submitClue: useCallback((clue: string) => {

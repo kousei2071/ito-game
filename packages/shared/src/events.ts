@@ -11,6 +11,7 @@ export const C2S = {
   ROOM_UPDATE_SETTINGS: 'room:updateSettings',
   GAME_START:           'game:start',
   GAME_SELECT:          'game:select',
+  GAME_RETURN_TO_SELECT:'game:returnToSelect',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -28,6 +29,7 @@ export const S2C = {
   GAME_FINISHED:        'game:finished',
   YOUR_NUMBER:          'round:yourNumber',
   ERROR:                'error:message',
+  NOTICE:               'notice:message',
 } as const;
 
 // ============================================================
@@ -43,6 +45,7 @@ export interface C2SPayloads {
   [C2S.ROOM_UPDATE_SETTINGS]: { totalRounds: number; topicChooserMode: import('./types.js').TopicChooserMode };
   [C2S.GAME_START]:  {};
   [C2S.GAME_SELECT]: { game: import('./types.js').GameType };
+  [C2S.GAME_RETURN_TO_SELECT]: {};
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
@@ -60,4 +63,5 @@ export interface S2CPayloads {
   [S2C.GAME_FINISHED]: { score: number; totalRounds: number; roundResults: import('./types.js').RoundResult[] };
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.ERROR]: { message: string };
+  [S2C.NOTICE]: { message: string };
 }

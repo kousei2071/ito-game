@@ -11,6 +11,10 @@ export function FinalScreen() {
 
   return (
     <div className="screen final-screen">
+      <button type="button" className="btn btn-back-select" onClick={actions.returnToGameSelect}>
+        ゲーム選択へ戻る
+      </button>
+
       <h1 className="final-title">🏆 ゲーム終了！</h1>
 
       <div className="final-score-card">

@@ -24,8 +24,11 @@ export function TopicSelectScreen() {
 
   return (
     <div className="screen topic-screen">
-      <div className="round-header">
+      <div className="round-header round-header-with-back">
         <span className="round-badge">Round {round.roundNumber} / {gs.totalRounds}</span>
+        <button type="button" className="btn btn-back-select" onClick={actions.returnToGameSelect}>
+          ゲーム選択へ戻る
+        </button>
         <span className="score-badge">スコア: {gs.score}</span>
       </div>
 
