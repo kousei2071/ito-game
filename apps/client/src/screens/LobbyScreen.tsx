@@ -48,8 +48,8 @@ export function LobbyScreen() {
     if ((navigator as any).share) {
       try {
         await (navigator as any).share({
-          title: 'ito 協力推理ゲーム',
-          text: '一緒にitoで遊びましょう！',
+          title: 'fremu',
+          text: '一緒にfremuで遊びましょう！',
           url: roomUrl,
         });
       } catch {
