@@ -35,8 +35,14 @@ export function GameSettingsScreen() {
     <div className="screen game-settings-screen">
       <div className="round-header round-header-with-back">
         <span className="round-badge">設定</span>
-        <button type="button" className="btn btn-back-select" onClick={actions.returnToGameSelect}>
-          ゲーム選択へ戻る
+        <button
+          type="button"
+          className="btn btn-back-select"
+          onClick={actions.returnToGameSelect}
+          aria-label="ゲーム選択へ戻る"
+          title="ゲーム選択へ戻る"
+        >
+          ←
         </button>
         <span className="score-badge">{gs.players.length}人</span>
       </div>

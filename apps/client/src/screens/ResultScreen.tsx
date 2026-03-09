@@ -22,8 +22,14 @@ export function ResultScreen() {
     <div className={`screen result-screen ${result.isCorrect ? 'is-success' : 'is-failure'}`}>
       <div className="round-header round-header-with-back">
         <span className="round-badge">Round {result.roundNumber} / {gs.totalRounds}</span>
-        <button type="button" className="btn btn-back-select" onClick={actions.returnToGameSelect}>
-          ゲーム選択へ戻る
+        <button
+          type="button"
+          className="btn btn-back-select"
+          onClick={actions.returnToGameSelect}
+          aria-label="ゲーム選択へ戻る"
+          title="ゲーム選択へ戻る"
+        >
+          ←
         </button>
         <span className="score-badge">スコア: {gs.score}</span>
       </div>

@@ -468,6 +468,9 @@ body {
 }
 
 .btn-back-select {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   align-self: flex-end;
   position: sticky;
   top: 8px;
@@ -475,11 +478,14 @@ body {
   background: #fff;
   color: #6f644f;
   border: 1px solid #eadfc6;
-  border-radius: 999px;
-  font-size: 12px;
+  border-radius: 50%;
+  font-size: 18px;
   font-weight: 700;
-  padding: 6px 12px;
-  min-height: 32px;
+  line-height: 1;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
 }
 
 .btn-back-select:hover:not(:disabled) {
