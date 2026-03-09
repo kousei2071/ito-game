@@ -131,7 +131,8 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
 export function joinRoom(roomId: string, socketId: string, playerName: string): GameState {
   const room = rooms.get(roomId);
   if (!room) throw new Error('ルームが存在しません');
-  if (room.phase !== 'lobby') throw new Error('ゲームが既に開始されています');
+  const joinablePhases = new Set(['lobby', 'game-select', 'game-settings']);
+  if (!joinablePhases.has(room.phase)) throw new Error('ゲーム中は参加できません');
   if (room.players.length >= 8) throw new Error('ルームが満員です');
   if (room.players.some((p) => p.id === socketId)) throw new Error('既に参加しています');
 

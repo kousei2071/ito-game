@@ -31,8 +31,9 @@ export function GameSelectScreen() {
 
   return (
     <div className="screen game-select-screen">
-      <div className="round-header">
+      <div className="round-header round-header-with-room-id">
         <span className="round-badge">ゲーム選択</span>
+        <span className="room-id-badge">{gs.roomId}</span>
         <span className="score-badge">{gs.players.length}人</span>
       </div>
 

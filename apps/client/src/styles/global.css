@@ -894,6 +894,36 @@ body {
 .round-header-with-back .score-badge {
   margin-left: auto;
 }
+
+.round-header-with-room-id {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.round-header-with-room-id .round-badge {
+  justify-self: start;
+}
+
+.round-header-with-room-id .room-id-badge {
+  justify-self: center;
+}
+
+.round-header-with-room-id .score-badge {
+  justify-self: end;
+}
+
+.room-id-badge {
+  background: #eef7ff;
+  color: #258de8;
+  border: 1px solid #8ec9ff;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
 .round-badge, .score-badge {
   background: var(--surface2);
   color: #5f553f;
