@@ -1,6 +1,6 @@
 import type { PublicPlayer } from '@ito/shared';
 
-export const AVAILABLE_PLAYER_ICONS = ['icon1', 'icon2', 'icon3', 'icon4', 'icon5', 'icon6', 'icon7', 'icon8', 'icon9'] as const;
+export const AVAILABLE_PLAYER_ICONS = ['icon1', 'icon2', 'icon3', 'icon4', 'icon5', 'icon6', 'icon7', 'icon8', 'icon9', 'icon10', 'icon11', 'icon12'] as const;
 export type PlayerIconId = (typeof AVAILABLE_PLAYER_ICONS)[number];
 
 export function iconSrc(playerIconId: string): string {

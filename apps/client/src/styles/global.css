@@ -845,6 +845,7 @@ body {
   justify-content: center;
   border-radius: 50%;
   background: #fdf8f1;
+  border: 2px solid #b8b8b8;
   flex-shrink: 0;
 }
 
