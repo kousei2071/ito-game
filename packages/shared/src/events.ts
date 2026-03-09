@@ -15,6 +15,7 @@ export const C2S = {
   WORDWOLF_START_TALK:  'wordwolf:startTalk',
   WORDWOLF_START_VOTE:  'wordwolf:startVote',
   WORDWOLF_SUBMIT_VOTE: 'wordwolf:submitVote',
+  WORDWOLF_REQUEST_EXAMPLE_TALK: 'wordwolf:requestExampleTalk',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -32,6 +33,7 @@ export const S2C = {
   GAME_FINISHED:        'game:finished',
   YOUR_NUMBER:          'round:yourNumber',
   YOUR_WORD:            'wordwolf:yourWord',
+  WORDWOLF_EXAMPLE_TALK:'wordwolf:exampleTalk',
   ERROR:                'error:message',
   NOTICE:               'notice:message',
 } as const;
@@ -58,6 +60,7 @@ export interface C2SPayloads {
   [C2S.WORDWOLF_START_TALK]: {};
   [C2S.WORDWOLF_START_VOTE]: {};
   [C2S.WORDWOLF_SUBMIT_VOTE]: { targetPlayerId: string };
+  [C2S.WORDWOLF_REQUEST_EXAMPLE_TALK]: {};
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
@@ -75,6 +78,7 @@ export interface S2CPayloads {
   [S2C.GAME_FINISHED]: { score: number; totalRounds: number; roundResults: import('./types.js').RoundResult[] };
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.YOUR_WORD]: { word: string };
+  [S2C.WORDWOLF_EXAMPLE_TALK]: { title: string; lines: string[] };
   [S2C.ERROR]: { message: string };
   [S2C.NOTICE]: { message: string };
 }
