@@ -26,27 +26,17 @@ interface WordWolfSecretState {
 
 const wordWolfSecrets = new Map<string, WordWolfSecretState>();
 
-function buildWordWolfExampleTalk(majorityWord: string, minorityWord: string): { title: string; lines: string[] } {
-  const openers = [
-    'AI司会: そのワードを直接言わずに、使う場面から話してみよう。',
-    'AI司会: まずは第一印象だけを短く共有してみよう。',
-    'AI司会: 具体名を避けて、似ているものを挙げてみよう。',
-  ];
+function buildWordWolfExampleTalk(): { title: string; lines: string[] } {
   const prompts = [
-    'A: 私のは日常でよく見かけるイメージ。',
-    'B: 私のは使うタイミングが少し限定されるかも。',
-    'C: 形や用途の話をすると違いが見えそう。',
-    'D: 連想する場所が人によって分かれそうだね。',
+    '（これの第一印象は？）',
+    '（あなたはこれを好きですか？）',
+    '（どんな時にこれを使いますか？）',
+    '（これを一言で表すと？）',
   ];
 
   return {
     title: 'AI例トーク',
-    lines: [
-      openers[randInt(0, openers.length - 1)],
-      prompts[randInt(0, prompts.length - 1)],
-      prompts[randInt(0, prompts.length - 1)],
-      `AIヒント: 今回の組み合わせは「${majorityWord} / ${minorityWord}」系。直接名詞は言わずに会話を続けよう。`,
-    ],
+    lines: [prompts[randInt(0, prompts.length - 1)]],
   };
 }
 
@@ -483,11 +473,7 @@ export function getWordWolfExampleTalk(room: GameState, socketId: string): { tit
   if (!player?.isHost) {
     throw new Error('例トークを出せるのはホストのみです');
   }
-  const secret = wordWolfSecrets.get(room.roomId);
-  if (!secret) {
-    throw new Error('例トークを作成できませんでした');
-  }
-  return buildWordWolfExampleTalk(secret.majorityWord, secret.minorityWord);
+  return buildWordWolfExampleTalk();
 }
 
 export function submitWordWolfVote(

@@ -37,8 +37,8 @@ export function WordWolfResultScreen() {
         <p className="settings-note">{result.votedPlayerName}</p>
 
         <p className="game-members-title">お題ワード</p>
-        <p className="settings-note">多数派: {result.majorityWord}</p>
-        <p className="settings-note">少数派: {result.minorityWord}</p>
+        <p className="settings-note">多数派: {result.minorityWord}</p>
+        <p className="settings-note">少数派: {result.majorityWord}</p>
 
         <p className="game-members-title">ワードウルフ</p>
         <p className="settings-note">{result.wolfPlayerNames.join(' / ')}</p>

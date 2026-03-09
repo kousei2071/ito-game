@@ -74,7 +74,7 @@ export function GameSettingsScreen() {
         <p className="settings-note">
           {gs.selectedGame === 'word-wolf'
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
-            : 'ラウンド数とお題決定者の方式を決めてから開始します。'}
+            : 'ラウンド数を決めてから開始します。'}
         </p>
 
         <p className="game-members-title">ルーム設定</p>
@@ -90,24 +90,6 @@ export function GameSettingsScreen() {
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={15}>15</option>
-            </select>
-          </label>
-
-          <label className="settings-field">
-            <span>お題決定者</span>
-            <select
-              className="input"
-              value={settings.topicChooserMode}
-              onChange={(e) =>
-                setSettings((prev) => ({
-                  ...prev,
-                  topicChooserMode: e.target.value as 'sequential' | 'random',
-                }))
-              }
-              disabled={!isHost}
-            >
-              <option value="sequential">順番（ホスト→他プレイヤー）</option>
-              <option value="random">毎ラウンドランダム</option>
             </select>
           </label>
 
