@@ -1,6 +1,7 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 import { useEffect, useState } from 'react';
+import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function GameSelectScreen() {
   const { state, actions } = useGame();
@@ -72,7 +73,7 @@ export function GameSelectScreen() {
         <ul className="game-members-list">
           {gs.players.map((p) => (
             <li key={p.id} className="game-member-item">
-              <span className="game-member-name">{p.name}</span>
+              <PlayerIdentity player={p} className="game-member-name" />
               {p.isHost ? <span className="game-member-role">ホスト</span> : null}
             </li>
           ))}

@@ -91,8 +91,8 @@ function reducer(state: State, action: Action): State {
 interface GameContextValue {
   state: State;
   actions: {
-    createRoom: (playerName: string) => void;
-    joinRoom: (roomId: string, playerName: string) => void;
+    createRoom: (playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9') => void;
+    joinRoom: (roomId: string, playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9') => void;
     leaveRoom: () => void;
     toggleReady: () => void;
     updateRoomSettings: (settings: {
@@ -194,12 +194,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ---------- Actions ----------
   const actions = {
-    createRoom: useCallback((playerName: string) => {
-      socket.emit(C2S.ROOM_CREATE, { playerName });
+    createRoom: useCallback((playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9') => {
+      socket.emit(C2S.ROOM_CREATE, { playerName, playerIconId });
     }, [socket]),
 
-    joinRoom: useCallback((roomId: string, playerName: string) => {
-      socket.emit(C2S.ROOM_JOIN, { roomId, playerName });
+    joinRoom: useCallback((roomId: string, playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9') => {
+      socket.emit(C2S.ROOM_JOIN, { roomId, playerName, playerIconId });
     }, [socket]),
 
     leaveRoom: useCallback(() => {

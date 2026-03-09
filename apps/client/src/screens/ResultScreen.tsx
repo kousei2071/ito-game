@@ -1,5 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
+import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function ResultScreen() {
   const { state, actions } = useGame();
@@ -50,7 +51,14 @@ export function ResultScreen() {
         {answeredOrder.map((entry, idx) => (
           <li key={entry.playerId} className="result-item">
             <span className="result-rank">{idx + 1}</span>
-            <span className="result-name">{entry.playerName}</span>
+            {gs.players.find((p) => p.id === entry.playerId) ? (
+              <PlayerIdentity
+                player={gs.players.find((p) => p.id === entry.playerId)!}
+                className="result-name"
+              />
+            ) : (
+              <span className="result-name">{entry.playerName}</span>
+            )}
             <span className="result-number">{entry.secretNumber}</span>
           </li>
         ))}

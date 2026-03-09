@@ -1,6 +1,7 @@
 import { useRef, useState, type TouchEvent } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
+import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function ArrangeScreen() {
   const { state, actions } = useGame();
@@ -17,7 +18,7 @@ export function ArrangeScreen() {
     round.clues.map((c) => c.playerId)
   );
 
-  const nameOf = (id: string) => gs.players.find((p) => p.id === id)?.name ?? '???';
+  const playerOf = (id: string) => gs.players.find((p) => p.id === id);
   const clueOf = (id: string) => round.clues.find((c) => c.playerId === id)?.clue ?? '';
   const [dragFromIndex, setDragFromIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -215,7 +216,11 @@ export function ArrangeScreen() {
           >
             <span className="arrange-rank">{idx + 1}</span>
             <div className="arrange-info">
-              <span className="arrange-name">{nameOf(id)}</span>
+              {playerOf(id) ? (
+                <PlayerIdentity player={playerOf(id)!} className="arrange-name" />
+              ) : (
+                <span className="arrange-name">???</span>
+              )}
             </div>
             <span className="arrange-clue">「{clueOf(id)}」</span>
           </li>

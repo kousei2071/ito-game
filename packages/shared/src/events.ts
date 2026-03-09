@@ -45,8 +45,8 @@ export const S2C = {
 
 // Client -> Server payloads
 export interface C2SPayloads {
-  [C2S.ROOM_CREATE]: { playerName: string };
-  [C2S.ROOM_JOIN]:   { roomId: string; playerName: string };
+  [C2S.ROOM_CREATE]: { playerName: string; playerIconId: import('./types.js').PlayerIconId };
+  [C2S.ROOM_JOIN]:   { roomId: string; playerName: string; playerIconId: import('./types.js').PlayerIconId };
   [C2S.ROOM_LEAVE]:  {};
   [C2S.ROOM_READY]:  {};
   [C2S.ROOM_UPDATE_SETTINGS]: {

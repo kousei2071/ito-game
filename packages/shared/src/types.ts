@@ -4,6 +4,7 @@
 export interface Player {
   id: string;          // socket.id
   name: string;
+  playerIconId: PlayerIconId;
   isHost: boolean;
   isReady: boolean;
   /** 現在オンラインかどうか */
@@ -15,6 +16,8 @@ export interface Player {
   /** 現ラウンドで提出したヒント */
   clue?: string;
 }
+
+export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9';
 
 export type TopicChooserMode = 'sequential' | 'random';
 export type GameType = 'ito' | 'word-wolf';

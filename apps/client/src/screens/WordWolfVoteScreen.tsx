@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
+import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function WordWolfVoteScreen() {
   const { state, actions } = useGame();
@@ -54,7 +55,7 @@ export function WordWolfVoteScreen() {
                     checked={selectedPlayerId === p.id}
                     onChange={() => setSelectedPlayerId(p.id)}
                   />
-                  <span className="game-member-name">{p.name}</span>
+                  <PlayerIdentity player={p} className="game-member-name" />
                 </label>
               </li>
             ))}

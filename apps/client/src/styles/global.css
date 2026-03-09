@@ -676,6 +676,41 @@ body {
   margin-top: 8px;
 }
 
+.icon-picker-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.icon-picker-label {
+  font-size: 13px;
+  color: #6f644f;
+  font-weight: 700;
+}
+
+.icon-picker-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.icon-picker-btn {
+  border: 1px solid #dfd4ba;
+  background: #fdf8f1;
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-picker-btn.selected {
+  border-color: #ff79bf;
+  box-shadow: 0 0 0 2px rgba(255, 121, 191, 0.2);
+}
+
 .home-screen .input {
   background: #fff;
   border-color: #d7d7d7;
@@ -798,10 +833,24 @@ body {
   gap: 8px;
 }
 
-.player-role-icon {
-  width: 24px;
-  height: 24px;
+.player-identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fdf8f1;
+  flex-shrink: 0;
+}
+
+.player-icon-image {
   object-fit: contain;
+  display: block;
   flex-shrink: 0;
 }
 
@@ -1343,6 +1392,18 @@ body {
 .result-name {
   flex: 1;
   font-weight: 600;
+}
+
+.topic-chooser-identity {
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.wordwolf-result-wolf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .result-number {
   color: #d65b9f;

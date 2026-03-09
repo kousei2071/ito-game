@@ -1,20 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-
-function RoleIcon({ isHost }: { isHost: boolean }) {
-  const src = isHost ? '/oya.png' : '/menber.png';
-  return (
-    <img
-      src={src}
-      alt={isHost ? '親' : 'メンバー'}
-      className="player-role-icon"
-      onError={(e) => {
-        const target = e.currentTarget;
-        target.style.display = 'none';
-      }}
-    />
-  );
-}
+import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function LobbyScreen() {
   const { state, actions } = useGame();
@@ -90,10 +76,7 @@ export function LobbyScreen() {
       <ul className="player-list">
         {gs.players.map((p) => (
           <li key={p.id} className={`player-item ${p.isReady ? 'ready' : ''}`}>
-            <span className="player-name">
-              <RoleIcon isHost={p.isHost} />
-              {p.name}
-            </span>
+            <PlayerIdentity player={p} className="player-name" />
             <span className="player-status">
               {p.isReady ? '✅ 準備OK' : '⏳ 待機中'}
             </span>

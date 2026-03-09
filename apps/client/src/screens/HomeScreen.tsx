@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { AVAILABLE_PLAYER_ICONS, PlayerIcon } from '../components/PlayerIdentity';
 
 const mascotCandidates = [
   '/mascot.png',
@@ -17,17 +18,37 @@ export function HomeScreen() {
   const [name, setName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>('menu');
+  const [selectedIconId, setSelectedIconId] = useState<(typeof AVAILABLE_PLAYER_ICONS)[number]>('icon1');
   const [mascotIndex, setMascotIndex] = useState(0);
 
   const handleCreate = () => {
     if (!name.trim()) return;
-    actions.createRoom(name.trim());
+    actions.createRoom(name.trim(), selectedIconId);
   };
 
   const handleJoin = () => {
     if (!name.trim() || !roomId.trim()) return;
-    actions.joinRoom(roomId.trim().toUpperCase(), name.trim());
+    actions.joinRoom(roomId.trim().toUpperCase(), name.trim(), selectedIconId);
   };
+
+  const iconPicker = (
+    <div className="icon-picker-wrap">
+      <p className="icon-picker-label">アイコンを選択</p>
+      <div className="icon-picker-grid">
+        {AVAILABLE_PLAYER_ICONS.map((iconId) => (
+          <button
+            key={iconId}
+            type="button"
+            className={`icon-picker-btn ${selectedIconId === iconId ? 'selected' : ''}`}
+            onClick={() => setSelectedIconId(iconId)}
+            aria-label={`アイコン ${iconId}`}
+          >
+            <PlayerIcon playerIconId={iconId} size={24} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="screen home-screen">
@@ -68,6 +89,7 @@ export function HomeScreen() {
 
       {mode === 'create' && (
         <div className="form home-form">
+          {iconPicker}
           <input
             className="input"
             placeholder="あなたの名前"
@@ -86,6 +108,7 @@ export function HomeScreen() {
 
       {mode === 'join' && (
         <div className="form home-form">
+          {iconPicker}
           <input
             className="input"
             placeholder="あなたの名前"

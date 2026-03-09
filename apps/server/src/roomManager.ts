@@ -6,6 +6,7 @@ import type {
   TopicChooserMode,
   GameType,
   WordWolfCountMode,
+  PlayerIconId,
   ItoRoundState,
   ItoRoundResult,
   WordWolfRoundResult,
@@ -101,11 +102,12 @@ function shuffle<T>(arr: T[]): T[] {
 // ============================================================
 // Room CRUD
 // ============================================================
-export function createRoom(hostSocketId: string, hostName: string): GameState {
+export function createRoom(hostSocketId: string, hostName: string, hostIconId: PlayerIconId): GameState {
   const roomId = generateRoomId();
   const host: Player = {
     id: hostSocketId,
     name: hostName,
+    playerIconId: hostIconId,
     isHost: true,
     isReady: true,
     connected: true,
@@ -128,7 +130,7 @@ export function createRoom(hostSocketId: string, hostName: string): GameState {
   return state;
 }
 
-export function joinRoom(roomId: string, socketId: string, playerName: string): GameState {
+export function joinRoom(roomId: string, socketId: string, playerName: string, playerIconId: PlayerIconId): GameState {
   const room = rooms.get(roomId);
   if (!room) throw new Error('ルームが存在しません');
   const joinablePhases = new Set(['lobby', 'game-select', 'game-settings']);
@@ -140,6 +142,7 @@ export function joinRoom(roomId: string, socketId: string, playerName: string): 
   const existing = room.players.find((p) => p.name === playerName && !p.connected);
   if (existing) {
     existing.id = socketId;
+    existing.playerIconId = playerIconId;
     existing.connected = true;
     // 切断中は準備状態をリセット
     existing.isReady = false;
@@ -149,6 +152,7 @@ export function joinRoom(roomId: string, socketId: string, playerName: string): 
   room.players.push({
     id: socketId,
     name: playerName,
+    playerIconId,
     isHost: false,
     isReady: false,
     connected: true,
