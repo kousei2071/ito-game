@@ -7,6 +7,7 @@ import { ArrangeScreen } from './screens/ArrangeScreen';
 import { ResultScreen } from './screens/ResultScreen';
 import { FinalScreen } from './screens/FinalScreen';
 import { GameSelectScreen } from './screens/GameSelectScreen';
+import { GameSettingsScreen } from './screens/GameSettingsScreen';
 
 export default function App() {
   const { state } = useGame();
@@ -24,6 +25,8 @@ export default function App() {
       return <LobbyScreen />;
     case 'game-select':
       return <GameSelectScreen />;
+    case 'game-settings':
+      return <GameSettingsScreen />;
     case 'topic':
       return <TopicSelectScreen />;
     case 'clue':

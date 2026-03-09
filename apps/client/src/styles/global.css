@@ -107,6 +107,19 @@ body {
   background-size: 24px 24px;
 }
 
+.game-settings-screen {
+  gap: 20px;
+  min-height: calc(100% - 48px);
+  padding: 16px 12px 24px;
+  border-radius: 24px;
+  color: #2a2620;
+  background-color: var(--paper-bg);
+  background-image:
+    linear-gradient(to right, var(--paper-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--paper-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 .clue-screen,
 .arrange-screen,
 .result-screen,
@@ -174,6 +187,12 @@ body {
 
 .game-select-screen .round-badge,
 .game-select-screen .score-badge {
+  background: #f7f1e3;
+  color: #5f553f;
+}
+
+.game-settings-screen .round-badge,
+.game-settings-screen .score-badge {
   background: #f7f1e3;
   color: #5f553f;
 }
@@ -254,11 +273,24 @@ body {
   padding: 10px;
 }
 
+.game-settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
 .game-members-title {
   font-size: 12px;
   color: #8b7c60;
   letter-spacing: 1px;
   font-weight: 800;
+  margin-bottom: 6px;
+  margin-top: 6px;
+}
+
+.game-members-panel .game-members-title:first-child {
+  margin-top: 0;
 }
 
 .game-members-list {

@@ -171,7 +171,36 @@ export function updateRoomSettings(
 
 export function moveToGameSelect(room: GameState): GameState {
   room.phase = 'game-select';
-  room.selectedGame = null;
+  if (!room.selectedGame) {
+    room.selectedGame = 'ito';
+  }
+  return room;
+}
+
+export function selectGame(room: GameState, socketId: string, game: GameType): GameState {
+  if (room.phase !== 'game-select') {
+    throw new Error('ゲーム選択中のみ変更できます');
+  }
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player?.isHost) {
+    throw new Error('ゲームを選択できるのはホストのみです');
+  }
+  room.selectedGame = game;
+  return room;
+}
+
+export function moveToGameSettings(room: GameState, socketId: string): GameState {
+  if (room.phase !== 'game-select') {
+    throw new Error('ゲーム選択中のみ設定へ進めます');
+  }
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player?.isHost) {
+    throw new Error('設定へ進めるのはホストのみです');
+  }
+  if (!room.selectedGame) {
+    throw new Error('ゲームを選択してください');
+  }
+  room.phase = 'game-settings';
   return room;
 }
 

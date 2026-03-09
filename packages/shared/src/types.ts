@@ -23,6 +23,7 @@ export type GameType = 'ito' | 'word-wolf';
 export type GamePhase =
   | 'lobby'    // 参加待ち
   | 'game-select' // ゲーム選択
+  | 'game-settings' // ゲーム設定
   | 'topic'    // お題選択中
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中

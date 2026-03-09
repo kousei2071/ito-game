@@ -114,7 +114,7 @@ export function LobbyScreen() {
             onClick={actions.startGame}
             disabled={!allReady}
           >
-            {allReady ? 'ゲームを始める' : '全員の準備を待っています…'}
+            {allReady ? 'ゲームを遊ぶ' : '全員の準備を待っています…'}
           </button>
         )}
 

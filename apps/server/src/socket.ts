@@ -9,6 +9,8 @@ import {
   findRoomByPlayer,
   startNewRound,
   moveToGameSelect,
+  moveToGameSettings,
+  selectGame,
   startSelectedGame,
   submitClue,
   confirmArrange,
@@ -108,28 +110,52 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     if (!player?.isHost) return emitError(socket, 'ホストのみ開始できます');
     if (room.players.length < 1) return emitError(socket, 'プレイヤーがいません');
 
-    moveToGameSelect(room);
-    broadcastState(io, room);
+    if (room.phase === 'lobby') {
+      moveToGameSelect(room);
+      broadcastState(io, room);
+      return;
+    }
+
+    if (room.phase === 'game-select') {
+      try {
+        moveToGameSettings(room, socket.id);
+        broadcastState(io, room);
+      } catch (e: any) {
+        emitError(socket, e.message);
+      }
+      return;
+    }
+
+    if (room.phase === 'game-settings') {
+      if (!room.selectedGame) {
+        return emitError(socket, 'ゲームを選択してください');
+      }
+      const round = startSelectedGame(room, room.selectedGame);
+
+      room.players.forEach((p) => {
+        io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
+      });
+      io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+        roundNumber: round.roundNumber,
+        topic: round.topic,
+      });
+      broadcastState(io, room);
+      return;
+    }
+
+    emitError(socket, 'このフェーズでは開始できません');
   });
 
   // ---------- game:select ----------
   socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'word-wolf' }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'game-select') return;
-    const player = room.players.find((p) => p.id === socket.id);
-    if (!player?.isHost) return emitError(socket, 'ホストのみ選択できます');
-
-    const round = startSelectedGame(room, game);
-
-    // 各プレイヤーに自分の数字を通知
-    room.players.forEach((p) => {
-      io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
-    });
-    io.to(room.roomId).emit(S2C.ROUND_STARTED, {
-      roundNumber: round.roundNumber,
-      topic: round.topic,
-    });
-    broadcastState(io, room);
+    try {
+      selectGame(room, socket.id, game);
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
   });
 
   // ---------- round:setTopic ----------

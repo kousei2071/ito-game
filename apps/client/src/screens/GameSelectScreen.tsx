@@ -1,6 +1,6 @@
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function GameSelectScreen() {
   const { state, actions } = useGame();
@@ -13,11 +13,21 @@ export function GameSelectScreen() {
     { id: 'word-wolf', title: 'ワードウルフ', desc: '少数派を見つける会話推理ゲーム' },
   ];
   const [selectedIndex, setSelectedIndex] = useState(
-    Math.max(0, games.findIndex((g) => g.id === gs.selectedGame)),
+    Math.max(0, games.findIndex((g) => g.id === (gs.selectedGame ?? 'ito'))),
   );
   const selectedGame = games[selectedIndex]?.id ?? 'ito';
+  useEffect(() => {
+    const idx = Math.max(0, games.findIndex((g) => g.id === (gs.selectedGame ?? 'ito')));
+    setSelectedIndex(idx);
+  }, [gs.selectedGame]);
 
-  const gameLabel = selectedGame === 'ito' ? 'ito' : 'ワードウルフ';
+  const updateSelectedGame = (nextIndex: number) => {
+    const normalized = (nextIndex + games.length) % games.length;
+    setSelectedIndex(normalized);
+    if (isHost) {
+      actions.selectGame(games[normalized].id);
+    }
+  };
 
   return (
     <div className="screen game-select-screen">
@@ -36,7 +46,7 @@ export function GameSelectScreen() {
         <button
           type="button"
           className="game-arrow-btn"
-          onClick={() => setSelectedIndex((prev) => (prev - 1 + games.length) % games.length)}
+          onClick={() => updateSelectedGame(selectedIndex - 1)}
           disabled={!isHost}
           aria-label="前のゲーム"
         >
@@ -48,7 +58,7 @@ export function GameSelectScreen() {
         <button
           type="button"
           className="game-arrow-btn"
-          onClick={() => setSelectedIndex((prev) => (prev + 1) % games.length)}
+          onClick={() => updateSelectedGame(selectedIndex + 1)}
           disabled={!isHost}
           aria-label="次のゲーム"
         >
@@ -71,10 +81,10 @@ export function GameSelectScreen() {
       <button
         type="button"
         className="btn btn-bone"
-        onClick={() => actions.selectGame(selectedGame)}
+        onClick={actions.startGame}
         disabled={!isHost}
       >
-        ゲームを始める
+        設定画面へ
       </button>
 
       {!isHost ? (
