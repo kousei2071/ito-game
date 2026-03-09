@@ -17,7 +17,7 @@ export interface Player {
   clue?: string;
 }
 
-export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10' | 'icon11' | 'icon12';
+export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
 export type GameType = 'ito' | 'word-wolf';

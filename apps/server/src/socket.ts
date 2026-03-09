@@ -59,7 +59,7 @@ function emitError(socket: Socket, message: string) {
 // ============================================================
 export function registerSocketHandlers(io: Server, socket: Socket) {
   // ---------- room:create ----------
-  socket.on(C2S.ROOM_CREATE, ({ playerName, playerIconId }: { playerName: string; playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10' | 'icon11' | 'icon12' }) => {
+  socket.on(C2S.ROOM_CREATE, ({ playerName, playerIconId }: { playerName: string; playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10' }) => {
     try {
       const room = createRoom(socket.id, playerName, playerIconId);
       socket.join(room.roomId);
@@ -70,7 +70,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- room:join ----------
-  socket.on(C2S.ROOM_JOIN, ({ roomId, playerName, playerIconId }: { roomId: string; playerName: string; playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10' | 'icon11' | 'icon12' }) => {
+  socket.on(C2S.ROOM_JOIN, ({ roomId, playerName, playerIconId }: { roomId: string; playerName: string; playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10' }) => {
     try {
       const room = joinRoom(roomId, socket.id, playerName, playerIconId);
       socket.join(roomId);
