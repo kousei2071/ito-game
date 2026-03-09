@@ -10,12 +10,15 @@ export interface Player {
   connected: boolean;
   /** 現ラウンドで配られた秘密の数字 (1-100) */
   secretNumber?: number;
+  /** 現ラウンドで配られた秘密のワード (word-wolf) */
+  secretWord?: string;
   /** 現ラウンドで提出したヒント */
   clue?: string;
 }
 
 export type TopicChooserMode = 'sequential' | 'random';
 export type GameType = 'ito' | 'word-wolf';
+export type WordWolfCountMode = 'auto' | 'one' | 'two';
 
 // ============================================================
 // Game Phase
@@ -28,12 +31,17 @@ export type GamePhase =
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中
   | 'result'   // ラウンド結果表示
+  | 'wordwolf-reveal' // ワード配布
+  | 'wordwolf-talk'   // 会話フェーズ
+  | 'wordwolf-vote'   // 投票フェーズ
+  | 'wordwolf-result' // ワードウルフ結果
   | 'finished'; // 全ラウンド終了
 
 // ============================================================
 // Round
 // ============================================================
-export interface RoundState {
+export interface ItoRoundState {
+  game: 'ito';
   roundNumber: number;       // 1-indexed
   topic: string;             // お題
   /** このラウンドでお題を決めるプレイヤーID */
@@ -52,6 +60,21 @@ export interface RoundState {
   isCorrect?: boolean;
 }
 
+export interface WordWolfRoundState {
+  game: 'word-wolf';
+  roundNumber: number;
+  talkSeconds: number;
+  voteSubmittedPlayerIds: string[];
+  votedPlayerId?: string;
+  votedPlayerName?: string;
+  wolfPlayerNames?: string[];
+  majorityWord?: string;
+  minorityWord?: string;
+  villageWon?: boolean;
+}
+
+export type RoundState = ItoRoundState | WordWolfRoundState;
+
 // ============================================================
 // Room / GameState
 // ============================================================
@@ -69,19 +92,36 @@ export interface GameState {
   score: number;             // 累積成功数
   /** 次のラウンドでお題を決めるプレイヤーのインデックス（players配列基準） */
   topicChooserIndex: number;
+  /** ワードウルフの会話時間（秒） */
+  wordWolfTalkSeconds: number;
+  /** ワードウルフ人数設定 */
+  wordWolfCountMode: WordWolfCountMode;
 }
 
-export interface RoundResult {
+export interface ItoRoundResult {
+  game: 'ito';
   roundNumber: number;
   topic: string;
   isCorrect: boolean;
   correctOrder: { playerId: string; playerName: string; secretNumber: number }[];
 }
 
+export interface WordWolfRoundResult {
+  game: 'word-wolf';
+  roundNumber: number;
+  majorityWord: string;
+  minorityWord: string;
+  votedPlayerName: string;
+  wolfPlayerNames: string[];
+  isCorrect: boolean;
+}
+
+export type RoundResult = ItoRoundResult | WordWolfRoundResult;
+
 // ============================================================
 // Public game state (secretNumber を隠したもの)
 // ============================================================
-export type PublicPlayer = Omit<Player, 'secretNumber'>;
+export type PublicPlayer = Omit<Player, 'secretNumber' | 'secretWord'>;
 
 export interface PublicGameState {
   roomId: string;
@@ -93,4 +133,6 @@ export interface PublicGameState {
   totalRounds: number;
   topicChooserMode: TopicChooserMode;
   score: number;
+  wordWolfTalkSeconds: number;
+  wordWolfCountMode: WordWolfCountMode;
 }

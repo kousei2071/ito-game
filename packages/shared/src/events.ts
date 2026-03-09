@@ -12,6 +12,9 @@ export const C2S = {
   GAME_START:           'game:start',
   GAME_SELECT:          'game:select',
   GAME_RETURN_TO_SELECT:'game:returnToSelect',
+  WORDWOLF_START_TALK:  'wordwolf:startTalk',
+  WORDWOLF_START_VOTE:  'wordwolf:startVote',
+  WORDWOLF_SUBMIT_VOTE: 'wordwolf:submitVote',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -28,6 +31,7 @@ export const S2C = {
   ROUND_RESULT:         'round:result',
   GAME_FINISHED:        'game:finished',
   YOUR_NUMBER:          'round:yourNumber',
+  YOUR_WORD:            'wordwolf:yourWord',
   ERROR:                'error:message',
   NOTICE:               'notice:message',
 } as const;
@@ -42,10 +46,18 @@ export interface C2SPayloads {
   [C2S.ROOM_JOIN]:   { roomId: string; playerName: string };
   [C2S.ROOM_LEAVE]:  {};
   [C2S.ROOM_READY]:  {};
-  [C2S.ROOM_UPDATE_SETTINGS]: { totalRounds: number; topicChooserMode: import('./types.js').TopicChooserMode };
+  [C2S.ROOM_UPDATE_SETTINGS]: {
+    totalRounds: number;
+    topicChooserMode: import('./types.js').TopicChooserMode;
+    wordWolfTalkSeconds: number;
+    wordWolfCountMode: import('./types.js').WordWolfCountMode;
+  };
   [C2S.GAME_START]:  {};
   [C2S.GAME_SELECT]: { game: import('./types.js').GameType };
   [C2S.GAME_RETURN_TO_SELECT]: {};
+  [C2S.WORDWOLF_START_TALK]: {};
+  [C2S.WORDWOLF_START_VOTE]: {};
+  [C2S.WORDWOLF_SUBMIT_VOTE]: { targetPlayerId: string };
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
@@ -62,6 +74,7 @@ export interface S2CPayloads {
   [S2C.ROUND_RESULT]: import('./types.js').RoundResult;
   [S2C.GAME_FINISHED]: { score: number; totalRounds: number; roundResults: import('./types.js').RoundResult[] };
   [S2C.YOUR_NUMBER]: { secretNumber: number };
+  [S2C.YOUR_WORD]: { word: string };
   [S2C.ERROR]: { message: string };
   [S2C.NOTICE]: { message: string };
 }
