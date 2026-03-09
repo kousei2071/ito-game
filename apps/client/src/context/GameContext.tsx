@@ -13,6 +13,7 @@ interface State {
   myWord: string | null;
   lastError: string | null;
   notice: string | null;
+  wordWolfExampleTalk: { title: string; lines: string[] } | null;
   roundResult: RoundResult | null;
   finalResult: { score: number; totalRounds: number; roundResults: RoundResult[] } | null;
 }
@@ -24,6 +25,7 @@ const initialState: State = {
   myWord: null,
   lastError: null,
   notice: null,
+  wordWolfExampleTalk: null,
   roundResult: null,
   finalResult: null,
 };
@@ -36,6 +38,8 @@ type Action =
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_NOTICE'; payload: string }
   | { type: 'CLEAR_NOTICE' }
+  | { type: 'SET_WORDWOLF_EXAMPLE_TALK'; payload: { title: string; lines: string[] } }
+  | { type: 'CLEAR_WORDWOLF_EXAMPLE_TALK' }
   | { type: 'SET_ROUND_RESULT'; payload: RoundResult }
   | { type: 'SET_FINAL_RESULT'; payload: { score: number; totalRounds: number; roundResults: RoundResult[] } }
   | { type: 'RESET' };
@@ -65,6 +69,10 @@ function reducer(state: State, action: Action): State {
       return { ...state, notice: action.payload };
     case 'CLEAR_NOTICE':
       return { ...state, notice: null };
+    case 'SET_WORDWOLF_EXAMPLE_TALK':
+      return { ...state, wordWolfExampleTalk: action.payload };
+    case 'CLEAR_WORDWOLF_EXAMPLE_TALK':
+      return { ...state, wordWolfExampleTalk: null };
     case 'SET_ROUND_RESULT':
       return { ...state, roundResult: action.payload };
     case 'SET_FINAL_RESULT':
@@ -98,6 +106,8 @@ interface GameContextValue {
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
     startWordWolfTalk: () => void;
+    requestWordWolfExampleTalk: () => void;
+    clearWordWolfExampleTalk: () => void;
     startWordWolfVote: () => void;
     submitWordWolfVote: (targetPlayerId: string) => void;
     nextRound: () => void;
@@ -148,6 +158,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on(S2C.NOTICE, ({ message }: { message: string }) => {
       dispatch({ type: 'SET_NOTICE', payload: message });
     });
+    socket.on(S2C.WORDWOLF_EXAMPLE_TALK, ({ title, lines }: { title: string; lines: string[] }) => {
+      dispatch({ type: 'SET_WORDWOLF_EXAMPLE_TALK', payload: { title, lines } });
+    });
 
     return () => {
       socket.off('connect');
@@ -161,6 +174,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off(S2C.GAME_FINISHED);
       socket.off(S2C.ERROR);
       socket.off(S2C.NOTICE);
+      socket.off(S2C.WORDWOLF_EXAMPLE_TALK);
     };
   }, [socket]);
 
@@ -223,6 +237,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
     startWordWolfTalk: useCallback(() => {
       socket.emit(C2S.WORDWOLF_START_TALK, {});
     }, [socket]),
+
+    requestWordWolfExampleTalk: useCallback(() => {
+      socket.emit(C2S.WORDWOLF_REQUEST_EXAMPLE_TALK, {});
+    }, [socket]),
+
+    clearWordWolfExampleTalk: useCallback(() => {
+      dispatch({ type: 'CLEAR_WORDWOLF_EXAMPLE_TALK' });
+    }, []),
 
     startWordWolfVote: useCallback(() => {
       socket.emit(C2S.WORDWOLF_START_VOTE, {});

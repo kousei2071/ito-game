@@ -26,7 +26,7 @@ export function WordWolfTalkScreen() {
         >
           ←
         </button>
-        <span className="score-badge">スコア: {gs.score}</span>
+        <span className="score-badge">{round.talkSeconds}</span>
       </div>
 
       <div className="topic-card">
@@ -40,6 +40,12 @@ export function WordWolfTalkScreen() {
         <p className="settings-note">目安時間: {round.talkSeconds}秒</p>
       </div>
 
+      {isHost ? (
+        <button type="button" className="btn btn-secondary" onClick={actions.requestWordWolfExampleTalk}>
+          例トークを出す
+        </button>
+      ) : null}
+
       <button
         type="button"
         className="btn btn-primary"
@@ -50,6 +56,29 @@ export function WordWolfTalkScreen() {
       </button>
 
       {!isHost ? <p className="waiting">ホストが投票へ進めるのを待っています…</p> : null}
+
+      {state.wordWolfExampleTalk ? (
+        <div className="number-modal-overlay" onClick={actions.clearWordWolfExampleTalk}>
+          <div
+            className="number-modal guide-modal wordwolf-example-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="AI例トーク"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="number-modal-label">{state.wordWolfExampleTalk.title}</p>
+            <div className="wordwolf-example-lines">
+              {state.wordWolfExampleTalk.lines.map((line, idx) => (
+                <p key={`${idx}-${line}`} className="settings-note">{line}</p>
+              ))}
+            </div>
+            <button type="button" className="btn btn-primary" onClick={actions.clearWordWolfExampleTalk}>
+              閉じる
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {state.lastError ? <div className="error">{state.lastError}</div> : null}
     </div>
   );

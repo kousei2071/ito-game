@@ -26,7 +26,7 @@ export function WordWolfRevealScreen() {
         >
           ←
         </button>
-        <span className="score-badge">スコア: {gs.score}</span>
+        <span className="score-badge">{round.talkSeconds}</span>
       </div>
 
       <div className="topic-card">

@@ -25,7 +25,7 @@ export function WordWolfResultScreen() {
         >
           ←
         </button>
-        <span className="score-badge">スコア: {gs.score}</span>
+        <span className="score-badge">{gs.wordWolfTalkSeconds}</span>
       </div>
 
       <div className={`result-status-pop ${result.isCorrect ? 'success' : 'failure'}`}>

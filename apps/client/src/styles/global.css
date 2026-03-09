@@ -366,6 +366,19 @@ body {
   accent-color: #ff79bf;
 }
 
+.wordwolf-example-modal {
+  text-align: left;
+  gap: 10px;
+}
+
+.wordwolf-example-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
 .topic-screen .topic-card {
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid #eadfc6;
