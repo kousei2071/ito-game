@@ -9,9 +9,11 @@ import type {
   PlayerIconId,
   ItoRoundState,
   ItoRoundResult,
+  RankingRoundState,
+  RankingRoundResult,
   WordWolfRoundResult,
 } from '@ito/shared';
-import { TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -179,7 +181,7 @@ function resetGameProgressToSelect(room: GameState): void {
 
 function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
   const round = room.currentRound;
-  if (!round || round.game !== 'ito') return;
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking')) return;
 
   round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
   round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
@@ -352,7 +354,7 @@ export function startSelectedGame(room: GameState, game: GameType): RoundState {
   if (game === 'word-wolf') {
     return startWordWolfRound(room);
   }
-  return startNewRound(room);
+  return startClassicRound(room, game);
 }
 
 // ============================================================
@@ -361,6 +363,14 @@ export function startSelectedGame(room: GameState, game: GameType): RoundState {
 
 /** ラウンド開始: 数字配布・お題選択 */
 export function startNewRound(room: GameState): RoundState {
+  return startClassicRound(room, 'ito');
+}
+
+function startRankingRound(room: GameState): RoundState {
+  return startClassicRound(room, 'ranking');
+}
+
+function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState {
   const roundNumber = room.roundResults.length + 1;
 
    if (room.players.length === 0) {
@@ -386,24 +396,37 @@ export function startNewRound(room: GameState): RoundState {
   });
 
   // お題
+  const presetTopics = game === 'ranking' ? RANKING_TOPICS : TOPICS;
+
   const usedTopics = room.roundResults
-    .filter((r): r is ItoRoundResult => r.game === 'ito')
+    .filter((r): r is ItoRoundResult | RankingRoundResult => r.game === game)
     .map((r) => r.topic);
-  const available = TOPICS.filter((t) => !usedTopics.includes(t));
+  const available = presetTopics.filter((t) => !usedTopics.includes(t));
   const topic = available.length > 0
     ? available[randInt(0, available.length - 1)]
-    : TOPICS[randInt(0, TOPICS.length - 1)];
+    : presetTopics[randInt(0, presetTopics.length - 1)];
 
-  const round: ItoRoundState = {
-    game: 'ito',
-    roundNumber,
-    topic,
-    topicChooserId: topicChooser.id,
-    topicChangeCount: 0,
-    submittedCluePlayerIds: [],
-    clues: [],
-    arrangedOrder: [],
-  };
+  const round: ItoRoundState | RankingRoundState = game === 'ranking'
+    ? {
+      game: 'ranking',
+      roundNumber,
+      topic,
+      topicChooserId: topicChooser.id,
+      topicChangeCount: 0,
+      submittedCluePlayerIds: [],
+      clues: [],
+      arrangedOrder: [],
+    }
+    : {
+      game: 'ito',
+      roundNumber,
+      topic,
+      topicChooserId: topicChooser.id,
+      topicChangeCount: 0,
+      submittedCluePlayerIds: [],
+      clues: [],
+      arrangedOrder: [],
+    };
   room.currentRound = round;
   // まずはお題選択フェーズから開始
   room.phase = 'topic';
@@ -471,7 +494,7 @@ export function startWordWolfRound(room: GameState): RoundState {
 export function submitClue(room: GameState, socketId: string, clue: string): boolean {
   const round = room.currentRound;
   if (!round || room.phase !== 'clue') return false;
-  if (round.game !== 'ito') return false;
+  if (round.game !== 'ito' && round.game !== 'ranking') return false;
   if (round.submittedCluePlayerIds.includes(socketId)) return false;
 
   const player = room.players.find((p) => p.id === socketId);
@@ -491,7 +514,7 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
 /** 並び替え確定 → 判定 */
 export function confirmArrange(room: GameState, order: string[]): RoundResult {
-  const round = room.currentRound as ItoRoundState;
+  const round = room.currentRound as ItoRoundState | RankingRoundState;
 
   // 正解順 (number が大きい順)
   const correctOrder = [...room.players]
@@ -507,16 +530,26 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult {
 
   room.phase = 'result';
 
-  const result: ItoRoundResult = {
-    game: 'ito',
-    roundNumber: round.roundNumber,
-    topic: round.topic,
-    isCorrect,
-    correctOrder: correctOrder.map((id) => {
-      const p = room.players.find((pl) => pl.id === id)!;
-      return { playerId: id, playerName: p.name, secretNumber: p.secretNumber ?? 0 };
-    }),
-  };
+  const sortedPlayers = correctOrder.map((id) => {
+    const p = room.players.find((pl) => pl.id === id)!;
+    return { playerId: id, playerName: p.name, secretNumber: p.secretNumber ?? 0 };
+  });
+
+  const result: ItoRoundResult | RankingRoundResult = round.game === 'ranking'
+    ? {
+      game: 'ranking',
+      roundNumber: round.roundNumber,
+      topic: round.topic,
+      isCorrect,
+      correctOrder: sortedPlayers,
+    }
+    : {
+      game: 'ito',
+      roundNumber: round.roundNumber,
+      topic: round.topic,
+      isCorrect,
+      correctOrder: sortedPlayers,
+    };
   room.roundResults.push(result);
   return result;
 }
@@ -638,6 +671,8 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
 
   if (room.selectedGame === 'word-wolf') {
     startWordWolfRound(room);
+  } else if (room.selectedGame === 'ranking') {
+    startRankingRound(room);
   } else {
     startNewRound(room);
   }
