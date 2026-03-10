@@ -79,9 +79,10 @@ function buildWordWolfExampleTalk(): { title: string; lines: string[] } {
 
 /** 4桁のルームID生成 */
 function generateRoomId(): string {
+  const ROOM_ID_CHARS = '0123456789ABCDEFGHJKLMNPRSTUVWXYZ';
   let id: string;
   do {
-    id = Math.random().toString(36).substring(2, 6).toUpperCase();
+    id = Array.from({ length: 4 }, () => ROOM_ID_CHARS[randInt(0, ROOM_ID_CHARS.length - 1)]).join('');
   } while (rooms.has(id));
   return id;
 }
