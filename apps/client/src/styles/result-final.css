@@ -1,0 +1,241 @@
+/* ============================================================
+   Result Screen
+   ============================================================ */
+
+.result-screen {
+  position: relative;
+  overflow: hidden;
+}
+
+.result-status-pop {
+  position: relative;
+  margin: 2px auto 6px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 18px;
+  border-radius: 999px;
+  text-align: center;
+  animation: result-pop-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.result-status-pop h2 {
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.result-status-pop.success {
+  background: #f4fff8;
+  border: 2px solid #00b894;
+  color: #00a381;
+}
+
+.result-status-pop.failure {
+  background: #fff5f2;
+  border: 2px solid #e17055;
+  color: #d86145;
+  animation: result-pop-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1), failure-wobble 520ms ease-in-out 420ms 1;
+}
+
+@keyframes result-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes failure-wobble {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.result-order {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #eadfc6;
+  border-radius: var(--radius);
+}
+.result-rank {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f1e3;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 13px;
+}
+.result-name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.topic-chooser-identity {
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  text-align: center;
+}
+
+.topic-chooser-identity .player-identity-name {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.topic-chooser-icon-wrap {
+  display: none;
+}
+
+.topic-chooser-icon-only {
+  display: none;
+}
+
+.topic-chooser-icon-only .player-identity-name {
+  display: none;
+}
+
+.topic-chooser-name-only {
+  display: none;
+}
+.result-clue {
+  margin-left: auto;
+  font-size: 18px;
+  font-weight: 800;
+  color: #6f644f;
+  text-align: right;
+  max-width: 58%;
+  overflow-wrap: anywhere;
+}
+
+.ranking-reveal-screen .result-item.ranking-hidden-item {
+  background: #f8f1de;
+  border-style: dashed;
+}
+
+.ranking-reveal-screen .result-item.ranking-hidden-item .result-clue {
+  color: #a08f6d;
+}
+
+.ranking-reveal-players {
+  margin-left: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.topic-chooser-name-only-visible {
+  text-align: center;
+}
+
+.topic-chooser-inline {
+  justify-content: center;
+  width: 100%;
+  gap: 10px;
+}
+
+.wordwolf-result-wolf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.result-number {
+  color: #d65b9f;
+  font-weight: 900;
+  font-family: monospace;
+  font-size: 34px;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+/* ============================================================
+   Final Screen
+   ============================================================ */
+
+.final-title {
+  text-align: center;
+  font-size: 32px;
+  margin-top: 32px;
+}
+
+.final-score-card {
+  text-align: center;
+  background: #fff4f9;
+  border: 2px solid #f0b6c9;
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.final-score-label {
+  font-size: 14px;
+  opacity: 1;
+  color: #8b7c60;
+}
+.final-score-value {
+  font-size: 48px;
+  font-weight: 800;
+  color: #d65b9f;
+}
+
+.final-rounds {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.final-round-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #eadfc6;
+  border-radius: var(--radius);
+  border-left: 4px solid transparent;
+}
+.final-round-item.success {
+  border-left-color: var(--success);
+}
+.final-round-item.failure {
+  border-left-color: var(--danger);
+}
+.final-round-num {
+  font-weight: 700;
+  font-size: 14px;
+  color: #6f644f;
+  min-width: 30px;
+}
+.final-round-topic {
+  flex: 1;
+}
+.final-round-result {
+  font-size: 18px;
+}
+
