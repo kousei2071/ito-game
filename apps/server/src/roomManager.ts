@@ -17,8 +17,10 @@ import type {
   DrawGuessStroke,
   DrawGuessDifficulty,
   DrawGuessTimeLimit,
+  AllMatchRoundState,
+  AllMatchRoundResult,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -205,7 +207,16 @@ function resetGameProgressToSelect(room: GameState): void {
 
 function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
   const round = room.currentRound;
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking')) return;
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match')) return;
+
+  if (round.game === 'all-match') {
+    round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
+    round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
+    if (room.phase === 'clue' && round.submittedCluePlayerIds.length >= room.players.length) {
+      finalizeAllMatchRound(room);
+    }
+    return;
+  }
 
   round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
   round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
@@ -405,6 +416,9 @@ export function startSelectedGame(room: GameState, game: GameType): RoundState {
   if (game === 'draw-guess') {
     return startDrawGuessRound(room);
   }
+  if (game === 'all-match') {
+    return startAllMatchRound(room);
+  }
   return startClassicRound(room, game);
 }
 
@@ -419,6 +433,33 @@ export function startNewRound(room: GameState): RoundState {
 
 function startRankingRound(room: GameState): RoundState {
   return startClassicRound(room, 'ranking');
+}
+
+function startAllMatchRound(room: GameState): RoundState {
+  const roundNumber = room.roundResults.length + 1;
+  const usedTopics = room.roundResults
+    .filter((r): r is AllMatchRoundResult => r.game === 'all-match')
+    .map((r) => r.topic);
+  const available = ALL_MATCH_TOPICS.filter((t) => !usedTopics.includes(t));
+  const topicPool = available.length > 0 ? available : ALL_MATCH_TOPICS;
+  const topic = topicPool[randInt(0, topicPool.length - 1)];
+
+  room.players.forEach((p) => {
+    p.secretNumber = undefined;
+    p.secretWord = undefined;
+    p.clue = undefined;
+  });
+
+  const round: AllMatchRoundState = {
+    game: 'all-match',
+    roundNumber,
+    topic,
+    submittedCluePlayerIds: [],
+    clues: [],
+  };
+  room.currentRound = round;
+  room.phase = 'clue';
+  return round;
 }
 
 function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState {
@@ -555,7 +596,7 @@ export function startWordWolfRound(room: GameState): RoundState {
 export function submitClue(room: GameState, socketId: string, clue: string): boolean {
   const round = room.currentRound;
   if (!round || room.phase !== 'clue') return false;
-  if (round.game !== 'ito' && round.game !== 'ranking') return false;
+  if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match') return false;
   if (round.submittedCluePlayerIds.includes(socketId)) return false;
 
   const player = room.players.find((p) => p.id === socketId);
@@ -565,12 +606,56 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
   round.submittedCluePlayerIds.push(socketId);
   round.clues.push({ playerId: socketId, clue });
 
+  if (round.game === 'all-match') {
+    if (round.submittedCluePlayerIds.length === room.players.length) {
+      finalizeAllMatchRound(room);
+      return true;
+    }
+    return false;
+  }
+
   // 全員提出済み→arrangeへ
   if (round.submittedCluePlayerIds.length === room.players.length) {
     room.phase = 'arrange';
     return true; // phase changed
   }
   return false;
+}
+
+function finalizeAllMatchRound(room: GameState): AllMatchRoundResult | null {
+  const round = room.currentRound;
+  if (!round || round.game !== 'all-match') return null;
+  if (round.clues.length < room.players.length) return null;
+
+  const normalized = round.clues.map((c) => c.clue.trim().toLowerCase());
+  const first = normalized[0] ?? '';
+  const isCorrect = normalized.every((v) => v.length > 0 && v === first);
+  round.isCorrect = isCorrect;
+  if (isCorrect) {
+    room.score += 1;
+  }
+
+  const answers = round.clues.map((c) => {
+    const player = room.players.find((p) => p.id === c.playerId);
+    return {
+      playerId: c.playerId,
+      playerName: player?.name ?? '',
+      answer: c.clue,
+    };
+  });
+
+  const result: AllMatchRoundResult = {
+    game: 'all-match',
+    roundNumber: round.roundNumber,
+    topic: round.topic,
+    isCorrect,
+    matchedAnswer: isCorrect ? round.clues[0]?.clue ?? '' : undefined,
+    answers,
+  };
+
+  room.roundResults.push(result);
+  room.phase = 'result';
+  return result;
 }
 
 /** 並び替え確定 → 判定 */
@@ -825,6 +910,8 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
     startWordWolfRound(room);
   } else if (room.selectedGame === 'ranking') {
     startRankingRound(room);
+  } else if (room.selectedGame === 'all-match') {
+    startAllMatchRound(room);
   } else if (room.selectedGame === 'draw-guess') {
     startDrawGuessRound(room);
   } else {

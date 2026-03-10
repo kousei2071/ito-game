@@ -197,6 +197,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           roundNumber: round.roundNumber,
           topic: round.topic,
         });
+      } else if (round.game === 'all-match') {
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: round.roundNumber,
+          topic: round.topic,
+        });
       } else if (round.game === 'draw-guess') {
         // send topic only to the drawer
         const topic = getDrawGuessTopic(room.roomId);
@@ -231,7 +236,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- game:select ----------
-  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' }) => {
+  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'game-select') return;
     try {
@@ -322,7 +327,15 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     const phaseChanged = submitClue(room, socket.id, clue);
     if (phaseChanged) {
       const currentRound = room.currentRound;
-      if (!currentRound || (currentRound.game !== 'ito' && currentRound.game !== 'ranking')) {
+      if (!currentRound || (currentRound.game !== 'ito' && currentRound.game !== 'ranking' && currentRound.game !== 'all-match')) {
+        broadcastState(io, room);
+        return;
+      }
+      if (currentRound.game === 'all-match') {
+        const result = room.roundResults[room.roundResults.length - 1];
+        if (result?.game === 'all-match') {
+          io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+        }
         broadcastState(io, room);
         return;
       }
@@ -507,6 +520,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         });
         // 次のラウンドもまずはお題選択フェーズ
       } else if (room.currentRound?.game === 'ranking') {
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: room.currentRound.roundNumber,
+          topic: room.currentRound.topic,
+        });
+      } else if (room.currentRound?.game === 'all-match') {
         io.to(room.roomId).emit(S2C.ROUND_STARTED, {
           roundNumber: room.currentRound.roundNumber,
           topic: room.currentRound.topic,
