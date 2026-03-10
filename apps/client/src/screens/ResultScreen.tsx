@@ -6,15 +6,12 @@ export function ResultScreen() {
   const { state, actions } = useGame();
   const gs = state.gameState!;
   const result = state.roundResult;
-  const round = gs.currentRound;
   const socket = getSocket();
   const isHost = gs.players.find((p) => p.id === socket.id)?.isHost ?? false;
 
   if (!result || (result.game !== 'ito' && result.game !== 'all-match')) {
     return <div className="screen"><p>結果を読み込み中…</p></div>;
   }
-
-  const itoRound = round && round.game === 'ito' ? round : null;
 
   return (
     <div className={`screen result-screen ${result.isCorrect ? 'is-success' : 'is-failure'}`}>
@@ -46,15 +43,12 @@ export function ResultScreen() {
       {result.game === 'ito' ? (
         <>
           {(() => {
-            const answeredOrder =
-              itoRound?.clues
-                .map((c) => result.correctOrder.find((entry) => entry.playerId === c.playerId))
-                .filter((entry): entry is (typeof result.correctOrder)[number] => Boolean(entry)) ?? result.correctOrder;
+            const arrangedOrder = result.arrangedOrder.length > 0 ? result.arrangedOrder : result.correctOrder;
             return (
               <>
           <h3>回答順</h3>
           <ul className="result-order">
-            {answeredOrder.map((entry, idx) => (
+            {arrangedOrder.map((entry, idx) => (
               <li key={entry.playerId} className="result-item">
                 <span className="result-rank">{idx + 1}</span>
                 {gs.players.find((p) => p.id === entry.playerId) ? (

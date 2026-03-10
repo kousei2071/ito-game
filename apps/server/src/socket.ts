@@ -20,6 +20,7 @@ import {
   submitRankingSelfRank,
   revealNextRanking,
   submitClue,
+  updateItoArrangeOrder,
   confirmArrange,
   advanceRound,
   disconnectPlayer,
@@ -354,6 +355,17 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- round:confirmArrange ----------
+  socket.on(C2S.ROUND_ARRANGE, ({ order }: { order: string[] }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      updateItoArrangeOrder(room, socket.id, order);
+      broadcastState(io, room);
+    } catch {
+      // ドラッグ中の瞬間的な不整合は無視してUI同期を優先
+    }
+  });
+
   socket.on(C2S.ROUND_CONFIRM, ({ order }: { order: string[] }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'arrange') return;

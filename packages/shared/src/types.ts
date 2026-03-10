@@ -167,6 +167,7 @@ export interface ItoRoundResult {
   roundNumber: number;
   topic: string;
   isCorrect: boolean;
+  arrangedOrder: { playerId: string; playerName: string; secretNumber: number }[];
   correctOrder: { playerId: string; playerName: string; secretNumber: number }[];
 }
 

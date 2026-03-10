@@ -633,10 +633,32 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
   // 全員提出済み→arrangeへ
   if (round.submittedCluePlayerIds.length === room.players.length) {
+    if (round.game === 'ito') {
+      round.arrangedOrder = round.clues.map((c) => c.playerId);
+    }
     room.phase = 'arrange';
     return true; // phase changed
   }
   return false;
+}
+
+export function updateItoArrangeOrder(room: GameState, socketId: string, order: string[]): void {
+  if (room.phase !== 'arrange') {
+    throw new Error('このフェーズでは並び替えできません');
+  }
+  const round = room.currentRound;
+  if (!round || round.game !== 'ito') {
+    throw new Error('itoの並び替え中ではありません');
+  }
+  if (round.topicChooserId !== socketId) {
+    throw new Error('並び替えできるのはお題を決めた人だけです');
+  }
+  const expected = round.clues.map((c) => c.playerId).sort();
+  const received = [...order].sort();
+  if (expected.length !== received.length || expected.some((id, idx) => id !== received[idx])) {
+    throw new Error('不正な並び順です');
+  }
+  round.arrangedOrder = [...order];
 }
 
 function finalizeAllMatchRound(room: GameState): AllMatchRoundResult | null {
@@ -697,6 +719,11 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult | 
 
   room.phase = 'result';
 
+  const arrangedPlayers = order.map((id) => {
+    const p = room.players.find((pl) => pl.id === id)!;
+    return { playerId: id, playerName: p.name, secretNumber: p.secretNumber ?? 0 };
+  });
+
   const sortedPlayers = correctOrder.map((id) => {
     const p = room.players.find((pl) => pl.id === id)!;
     return { playerId: id, playerName: p.name, secretNumber: p.secretNumber ?? 0 };
@@ -707,6 +734,7 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult | 
     roundNumber: round.roundNumber,
     topic: round.topic,
     isCorrect,
+    arrangedOrder: arrangedPlayers,
     correctOrder: sortedPlayers,
   };
   room.roundResults.push(result);

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 import { PlayerIdentity } from '../components/PlayerIdentity';
+import { C2S } from '@ito/shared';
 
 export function ArrangeScreen() {
   const { state, actions } = useGame();
@@ -115,7 +116,9 @@ function ItoArrangePanel() {
   }
 
   const canArrange = (socket.id ?? '') === round.topicChooserId;
-  const [order, setOrder] = useState<string[]>(() => round.clues.map((c) => c.playerId));
+  const [order, setOrder] = useState<string[]>(() =>
+    round.arrangedOrder.length > 0 ? round.arrangedOrder : round.clues.map((c) => c.playerId),
+  );
 
   const playerOf = (id: string) => gs.players.find((p) => p.id === id);
   const clueOf = (id: string) => round.clues.find((c) => c.playerId === id)?.clue ?? '';
@@ -124,6 +127,11 @@ function ItoArrangePanel() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showMyNumberModal, setShowMyNumberModal] = useState(false);
   const itemRefs = useRef<Record<string, HTMLLIElement | null>>({});
+
+  useEffect(() => {
+    const next = round.arrangedOrder.length > 0 ? round.arrangedOrder : round.clues.map((c) => c.playerId);
+    setOrder(next);
+  }, [round.arrangedOrder, round.clues]);
 
   const animateReorder = (nextOrder: string[]) => {
     const first = new Map<string, number>();
@@ -162,14 +170,9 @@ function ItoArrangePanel() {
     const [moved] = next.splice(fromIdx, 1);
     next.splice(toIdx, 0, moved);
     animateReorder(next);
-  };
-
-  const moveUp = (idx: number) => {
-    moveTo(idx, idx - 1);
-  };
-
-  const moveDown = (idx: number) => {
-    moveTo(idx, idx + 1);
+    if (canArrange) {
+      socket.emit(C2S.ROUND_ARRANGE, { order: next });
+    }
   };
 
   const handleConfirm = () => {
@@ -231,7 +234,7 @@ function ItoArrangePanel() {
 
       <p className="arrange-instruction">
         {canArrange
-          ? '上下ボタンで順位を入れ替えてください（ドラッグでも並べ替えできます）'
+          ? 'ドラッグで順位を入れ替えてください'
           : 'お題を決めた人が順番を並べ替え中です'}
       </p>
 
@@ -334,28 +337,6 @@ function ItoArrangePanel() {
                 )}
               </div>
               <span className="arrange-clue">「{clueOf(id)}」</span>
-              {canArrange ? (
-                <div className="arrange-arrow-controls">
-                  <button
-                    type="button"
-                    className="arrange-arrow-btn"
-                    onClick={() => moveUp(idx)}
-                    disabled={idx === 0}
-                    aria-label={`${idx + 1}位を上に移動`}
-                  >
-                    ▲
-                  </button>
-                  <button
-                    type="button"
-                    className="arrange-arrow-btn"
-                    onClick={() => moveDown(idx)}
-                    disabled={idx === order.length - 1}
-                    aria-label={`${idx + 1}位を下に移動`}
-                  >
-                    ▼
-                  </button>
-                </div>
-              ) : null}
             </li>
         ))}
       </ul>
