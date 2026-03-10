@@ -17,6 +17,8 @@ import {
   startWordWolfVote,
   getWordWolfExampleTalk,
   submitWordWolfVote,
+  submitRankingSelfRank,
+  revealNextRanking,
   submitClue,
   confirmArrange,
   advanceRound,
@@ -169,6 +171,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           roundNumber: round.roundNumber,
           topic: round.topic,
         });
+      } else if (round.game === 'ranking') {
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: round.roundNumber,
+          topic: round.topic,
+        });
       } else {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });
@@ -247,7 +254,15 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return emitError(socket, 'お題を入力してください');
       }
       round.topic = trimmed;
-      room.phase = 'clue';
+      if (round.game === 'ranking') {
+        room.phase = 'arrange';
+        round.arrangedOrder = [];
+        round.rankingSelections = [];
+        round.rankingSubmittedPlayerIds = [];
+        round.revealedRank = 0;
+      } else {
+        room.phase = 'clue';
+      }
 
       io.to(room.roomId).emit(S2C.ROUND_STARTED, {
         roundNumber: round.roundNumber,
@@ -292,8 +307,35 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     }
 
     const result = confirmArrange(room, order);
-    io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+    if (result) {
+      io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+    }
     broadcastState(io, room);
+  });
+
+  socket.on(C2S.RANKING_SUBMIT_SELF_RANK, ({ rank }: { rank: number }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      submitRankingSelfRank(room, socket.id, rank);
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
+  socket.on(C2S.RANKING_REVEAL_NEXT, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      const result = revealNextRanking(room, socket.id);
+      if (result) {
+        io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+      }
+      broadcastState(io, room);
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
   });
 
   // ---------- round:next ----------
@@ -361,6 +403,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           topic: room.currentRound.topic,
         });
         // 次のラウンドもまずはお題選択フェーズ
+      } else if (room.currentRound?.game === 'ranking') {
+        io.to(room.roomId).emit(S2C.ROUND_STARTED, {
+          roundNumber: room.currentRound.roundNumber,
+          topic: room.currentRound.topic,
+        });
       } else {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });

@@ -423,6 +423,9 @@ function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState
       submittedCluePlayerIds: [],
       clues: [],
       arrangedOrder: [],
+      rankingSelections: [],
+      rankingSubmittedPlayerIds: [],
+      revealedRank: 0,
     }
     : {
       game: 'ito',
@@ -520,28 +523,11 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 }
 
 /** 並び替え確定 → 判定 */
-export function confirmArrange(room: GameState, order: string[]): RoundResult {
+export function confirmArrange(room: GameState, order: string[]): RoundResult | null {
   const round = room.currentRound as ItoRoundState | RankingRoundState;
 
   if (round.game === 'ranking') {
-    round.correctOrder = [...order];
-    round.arrangedOrder = [...order];
-    round.isCorrect = true;
-    room.score += 1;
-    room.phase = 'result';
-
-    const result: RankingRoundResult = {
-      game: 'ranking',
-      roundNumber: round.roundNumber,
-      topic: round.topic,
-      isCorrect: true,
-      correctOrder: order.map((id) => {
-        const p = room.players.find((pl) => pl.id === id)!;
-        return { playerId: id, playerName: p.name, secretNumber: 0 };
-      }),
-    };
-    room.roundResults.push(result);
-    return result;
+    throw new Error('ランキングは各自の順位提出で確定します');
   }
 
   // 正解順 (number が大きい順)
@@ -571,6 +557,96 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult {
     correctOrder: sortedPlayers,
   };
   room.roundResults.push(result);
+  return result;
+}
+
+export function submitRankingSelfRank(room: GameState, socketId: string, rank: number): void {
+  if (room.phase !== 'arrange') {
+    throw new Error('このフェーズでは順位を提出できません');
+  }
+  const round = room.currentRound;
+  if (!round || round.game !== 'ranking') {
+    throw new Error('ランキングのラウンド情報が見つかりません');
+  }
+  if (!room.players.some((p) => p.id === socketId)) {
+    throw new Error('プレイヤーが見つかりません');
+  }
+  const maxRank = room.players.length;
+  if (!Number.isInteger(rank) || rank < 1 || rank > maxRank) {
+    throw new Error(`順位は1位〜${maxRank}位で選んでください`);
+  }
+
+  const existing = round.rankingSelections.find((s) => s.playerId === socketId);
+  if (existing) {
+    existing.rank = rank;
+  } else {
+    round.rankingSelections.push({ playerId: socketId, rank });
+  }
+
+  if (!round.rankingSubmittedPlayerIds.includes(socketId)) {
+    round.rankingSubmittedPlayerIds.push(socketId);
+  }
+
+  if (round.rankingSubmittedPlayerIds.length >= room.players.length) {
+    round.arrangedOrder = [...room.players]
+      .sort((a, b) => {
+        const aRank = round.rankingSelections.find((s) => s.playerId === a.id)?.rank ?? maxRank;
+        const bRank = round.rankingSelections.find((s) => s.playerId === b.id)?.rank ?? maxRank;
+        if (aRank !== bRank) return aRank - bRank;
+        return a.name.localeCompare(b.name, 'ja');
+      })
+      .map((p) => p.id);
+    round.revealedRank = 0;
+    room.phase = 'ranking-reveal';
+  }
+}
+
+export function revealNextRanking(room: GameState, socketId: string): RankingRoundResult | null {
+  if (room.phase !== 'ranking-reveal') {
+    throw new Error('このフェーズでは公開できません');
+  }
+  const round = room.currentRound;
+  if (!round || round.game !== 'ranking') {
+    throw new Error('ランキングのラウンド情報が見つかりません');
+  }
+  if (round.topicChooserId !== socketId) {
+    throw new Error('公開できるのはお題を決めた人だけです');
+  }
+
+  const totalRank = room.players.length;
+  if (round.rankingSelections.length === 0) {
+    throw new Error('順位提出が完了していません');
+  }
+
+  if (round.revealedRank < totalRank) {
+    round.revealedRank += 1;
+  }
+
+  if (round.revealedRank < totalRank) {
+    return null;
+  }
+
+  const rankingCards = room.players.map((player) => {
+    const rank = round.rankingSelections.find((s) => s.playerId === player.id)?.rank ?? totalRank;
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      rank,
+    };
+  }).sort((a, b) => (a.rank - b.rank) || a.playerName.localeCompare(b.playerName, 'ja'));
+
+  const result: RankingRoundResult = {
+    game: 'ranking',
+    roundNumber: round.roundNumber,
+    topic: round.topic,
+    isCorrect: true,
+    rankingCards,
+  };
+
+  round.isCorrect = true;
+  room.score += 1;
+  room.roundResults.push(result);
+  room.phase = 'ranking-result';
   return result;
 }
 

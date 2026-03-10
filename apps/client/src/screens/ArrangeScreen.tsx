@@ -1,4 +1,4 @@
-import { useRef, useState, type TouchEvent } from 'react';
+import { useEffect, useRef, useState, type TouchEvent } from 'react';
 import { useGame } from '../context/GameContext';
 import { getSocket } from '../socket';
 import { PlayerIdentity } from '../components/PlayerIdentity';
@@ -11,12 +11,111 @@ export function ArrangeScreen() {
   if (!round || (round.game !== 'ito' && round.game !== 'ranking')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
-  const canArrange = (socket.id ?? '') === round.topicChooserId;
+  if (round.game === 'ranking') {
+    return <RankingArrangePanel />;
+  }
 
-  // 初期順序: ヒント配列順
-  const [order, setOrder] = useState<string[]>(() =>
-    round.clues.map((c) => c.playerId)
+  return <ItoArrangePanel />;
+}
+
+function RankingArrangePanel() {
+  const { state, actions } = useGame();
+  const gs = state.gameState!;
+  const round = gs.currentRound;
+  const socket = getSocket();
+  if (!round || round.game !== 'ranking') {
+    return <div className="screen"><p>読み込み中…</p></div>;
+  }
+
+  const myId = socket.id ?? '';
+  const totalPlayers = gs.players.length;
+  const myDefaultRank = Math.max(1, gs.players.findIndex((p) => p.id === myId) + 1);
+  const submittedRank = round.rankingSelections.find((s) => s.playerId === myId)?.rank;
+  const [myRank, setMyRank] = useState<number>(submittedRank ?? myDefaultRank ?? 1);
+  const submitted = round.rankingSubmittedPlayerIds.includes(myId);
+
+  useEffect(() => {
+    if (submittedRank) {
+      setMyRank(submittedRank);
+    }
+  }, [submittedRank]);
+
+  const moveMyRank = (delta: -1 | 1) => {
+    setMyRank((prev) => Math.min(totalPlayers, Math.max(1, prev + delta)));
+  };
+
+  return (
+    <div className="screen arrange-screen">
+      <div className="round-header round-header-with-back">
+        <span className="round-badge">Round {round.roundNumber} / {gs.totalRounds}</span>
+        <button
+          type="button"
+          className="btn btn-back-select"
+          onClick={actions.returnToGameSelect}
+          aria-label="ゲーム選択へ戻る"
+          title="ゲーム選択へ戻る"
+        >
+          ←
+        </button>
+        <span className="score-badge">提出 {round.rankingSubmittedPlayerIds.length}/{totalPlayers}</span>
+      </div>
+
+      <div className="topic-card">
+        <p className="topic-label">お題</p>
+        <h2 className="topic-text">{round.topic}</h2>
+      </div>
+
+      <p className="arrange-instruction">自分がこのグループで何位かを決めて提出してください</p>
+
+      <div className="my-number-card">
+        <p className="number-label">あなたの予想順位</p>
+        <h1 className="number-value">{myRank}位</h1>
+        <div className="arrange-arrow-controls ranking-self-rank-controls">
+          <button
+            type="button"
+            className="arrange-arrow-btn"
+            onClick={() => moveMyRank(-1)}
+            disabled={submitted || myRank <= 1}
+            aria-label="順位を上げる"
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            className="arrange-arrow-btn"
+            onClick={() => moveMyRank(1)}
+            disabled={submitted || myRank >= totalPlayers}
+            aria-label="順位を下げる"
+          >
+            ▼
+          </button>
+        </div>
+      </div>
+
+      <button
+        className="btn btn-primary"
+        onClick={() => actions.submitRankingSelfRank(myRank)}
+        disabled={submitted}
+      >
+        {submitted ? '提出済み' : 'この順位で提出'}
+      </button>
+
+      <p className="waiting">他の人の順位は公開フェーズまで表示されません</p>
+    </div>
   );
+}
+
+function ItoArrangePanel() {
+  const { state, actions } = useGame();
+  const gs = state.gameState!;
+  const round = gs.currentRound;
+  const socket = getSocket();
+  if (!round || round.game !== 'ito') {
+    return <div className="screen"><p>読み込み中…</p></div>;
+  }
+
+  const canArrange = (socket.id ?? '') === round.topicChooserId;
+  const [order, setOrder] = useState<string[]>(() => round.clues.map((c) => c.playerId));
 
   const playerOf = (id: string) => gs.players.find((p) => p.id === id);
   const clueOf = (id: string) => round.clues.find((c) => c.playerId === id)?.clue ?? '';
@@ -132,9 +231,7 @@ export function ArrangeScreen() {
 
       <p className="arrange-instruction">
         {canArrange
-          ? round.game === 'ranking'
-            ? '上下ボタンで人気順に並べ替えてください（上ほど順位が高い）'
-            : '上下ボタンで順位を入れ替えてください（ドラッグでも並べ替えできます）'
+          ? '上下ボタンで順位を入れ替えてください（ドラッグでも並べ替えできます）'
           : 'お題を決めた人が順番を並べ替え中です'}
       </p>
 
@@ -165,14 +262,14 @@ export function ArrangeScreen() {
               <div className="arrange-guide-row is-top">
                 <span className="arrange-guide-badge">上</span>
                 <span className="arrange-guide-value">
-                  {round.game === 'ranking' ? '順位が高い（1位に近い）' : '100に近い（大きい）'}
+                  100に近い（大きい）
                 </span>
               </div>
               <div className="arrange-guide-arrow">↓</div>
               <div className="arrange-guide-row is-bottom">
                 <span className="arrange-guide-badge">下</span>
                 <span className="arrange-guide-value">
-                  {round.game === 'ranking' ? '順位が低い' : '1に近い（小さい）'}
+                  1に近い（小さい）
                 </span>
               </div>
             </div>
@@ -197,69 +294,69 @@ export function ArrangeScreen() {
 
       <ul className="arrange-list">
         {order.map((id, idx) => (
-          <li
-            key={id}
-            className={`arrange-item ${canArrange ? 'is-draggable' : ''} ${dragFromIndex === idx ? 'is-dragging' : ''} ${dragOverIndex === idx ? 'is-drag-over' : ''}`}
-            data-arrange-item-index={idx}
-            ref={(el) => {
-              itemRefs.current[id] = el;
-            }}
-            draggable={canArrange}
-            onDragStart={() => setDragFromIndex(idx)}
-            onDragOver={(e) => {
-              if (!canArrange) return;
-              e.preventDefault();
-              setDragOverIndex(idx);
-            }}
-            onDrop={(e) => {
-              if (!canArrange) return;
-              e.preventDefault();
-              handleDropTo(idx);
-            }}
-            onDragEnd={() => {
-              setDragFromIndex(null);
-              setDragOverIndex(null);
-            }}
-            onTouchStart={() => {
-              if (!canArrange) return;
-              setDragFromIndex(idx);
-              setDragOverIndex(idx);
-            }}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <span className="arrange-rank">{idx + 1}位</span>
-            <div className="arrange-info">
-              {playerOf(id) ? (
-                <PlayerIdentity player={playerOf(id)!} className="arrange-name" />
-              ) : (
-                <span className="arrange-name">???</span>
-              )}
-            </div>
-            <span className="arrange-clue">「{clueOf(id)}」</span>
-            {canArrange ? (
-              <div className="arrange-arrow-controls">
-                <button
-                  type="button"
-                  className="arrange-arrow-btn"
-                  onClick={() => moveUp(idx)}
-                  disabled={idx === 0}
-                  aria-label={`${idx + 1}位を上に移動`}
-                >
-                  ▲
-                </button>
-                <button
-                  type="button"
-                  className="arrange-arrow-btn"
-                  onClick={() => moveDown(idx)}
-                  disabled={idx === order.length - 1}
-                  aria-label={`${idx + 1}位を下に移動`}
-                >
-                  ▼
-                </button>
+            <li
+              key={id}
+              className={`arrange-item ${canArrange ? 'is-draggable' : ''} ${dragFromIndex === idx ? 'is-dragging' : ''} ${dragOverIndex === idx ? 'is-drag-over' : ''}`}
+              data-arrange-item-index={idx}
+              ref={(el) => {
+                itemRefs.current[id] = el;
+              }}
+              draggable={canArrange}
+              onDragStart={() => setDragFromIndex(idx)}
+              onDragOver={(e) => {
+                if (!canArrange) return;
+                e.preventDefault();
+                setDragOverIndex(idx);
+              }}
+              onDrop={(e) => {
+                if (!canArrange) return;
+                e.preventDefault();
+                handleDropTo(idx);
+              }}
+              onDragEnd={() => {
+                setDragFromIndex(null);
+                setDragOverIndex(null);
+              }}
+              onTouchStart={() => {
+                if (!canArrange) return;
+                setDragFromIndex(idx);
+                setDragOverIndex(idx);
+              }}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <span className="arrange-rank">{idx + 1}位</span>
+              <div className="arrange-info">
+                {playerOf(id) ? (
+                  <PlayerIdentity player={playerOf(id)!} className="arrange-name" />
+                ) : (
+                  <span className="arrange-name">???</span>
+                )}
               </div>
-            ) : null}
-          </li>
+              <span className="arrange-clue">「{clueOf(id)}」</span>
+              {canArrange ? (
+                <div className="arrange-arrow-controls">
+                  <button
+                    type="button"
+                    className="arrange-arrow-btn"
+                    onClick={() => moveUp(idx)}
+                    disabled={idx === 0}
+                    aria-label={`${idx + 1}位を上に移動`}
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    className="arrange-arrow-btn"
+                    onClick={() => moveDown(idx)}
+                    disabled={idx === order.length - 1}
+                    aria-label={`${idx + 1}位を下に移動`}
+                  >
+                    ▼
+                  </button>
+                </div>
+              ) : null}
+            </li>
         ))}
       </ul>
 

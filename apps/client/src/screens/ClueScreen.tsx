@@ -54,7 +54,7 @@ export function ClueScreen() {
           <p className="clue-instruction">
             {round.game === 'ito'
               ? `お題「${round.topic}」に対して、数字の大きさに応じた答えを入力してください`
-              : `お題「${round.topic}」に対して、ランキングに入れたい答えを入力してください`}
+              : `ランキングゲームでは回答入力はありません（この画面は通常表示されません）`}
           </p>
           <input
             className="input"

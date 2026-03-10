@@ -55,7 +55,7 @@ function reducer(state: State, action: Action): State {
         lastError: null,
         wordWolfExampleTalk: action.payload.phase === 'wordwolf-talk' ? state.wordWolfExampleTalk : null,
         roundResult:
-          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result'
+          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result'
             ? state.roundResult
             : null,
         finalResult: action.payload.phase === 'finished' ? state.finalResult : null,
@@ -111,6 +111,8 @@ interface GameContextValue {
     clearWordWolfExampleTalk: () => void;
     startWordWolfVote: () => void;
     submitWordWolfVote: (targetPlayerId: string) => void;
+    submitRankingSelfRank: (rank: number) => void;
+    revealNextRanking: () => void;
     nextRound: () => void;
     requestRandomTopic: () => void;
     confirmTopic: (topic: string) => void;
@@ -258,6 +260,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     submitWordWolfVote: useCallback((targetPlayerId: string) => {
       socket.emit(C2S.WORDWOLF_SUBMIT_VOTE, { targetPlayerId });
+    }, [socket]),
+
+    submitRankingSelfRank: useCallback((rank: number) => {
+      socket.emit(C2S.RANKING_SUBMIT_SELF_RANK, { rank });
+    }, [socket]),
+
+    revealNextRanking: useCallback(() => {
+      socket.emit(C2S.RANKING_REVEAL_NEXT, {});
     }, [socket]),
 
     nextRound: useCallback(() => {

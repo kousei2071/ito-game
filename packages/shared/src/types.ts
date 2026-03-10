@@ -33,6 +33,8 @@ export type GamePhase =
   | 'topic'    // お題選択中
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中
+  | 'ranking-reveal' // ランキング公開中
+  | 'ranking-result' // ランキング結果
   | 'result'   // ラウンド結果表示
   | 'wordwolf-reveal' // ワード配布
   | 'wordwolf-talk'   // 会話フェーズ
@@ -85,6 +87,9 @@ export interface RankingRoundState {
   submittedCluePlayerIds: string[];
   clues: { playerId: string; clue: string }[];
   arrangedOrder: string[];
+  rankingSelections: { playerId: string; rank: number }[];
+  rankingSubmittedPlayerIds: string[];
+  revealedRank: number;
   correctOrder?: string[];
   isCorrect?: boolean;
 }
@@ -137,7 +142,7 @@ export interface RankingRoundResult {
   roundNumber: number;
   topic: string;
   isCorrect: boolean;
-  correctOrder: { playerId: string; playerName: string; secretNumber: number }[];
+  rankingCards: { playerId: string; playerName: string; rank: number }[];
 }
 
 export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult;

@@ -12,6 +12,8 @@ import { WordWolfRevealScreen } from './screens/WordWolfRevealScreen';
 import { WordWolfTalkScreen } from './screens/WordWolfTalkScreen';
 import { WordWolfVoteScreen } from './screens/WordWolfVoteScreen';
 import { WordWolfResultScreen } from './screens/WordWolfResultScreen';
+import { RankingRevealScreen } from './screens/RankingRevealScreen';
+import { RankingResultScreen } from './screens/RankingResultScreen';
 
 export default function App() {
   const { state } = useGame();
@@ -42,6 +44,12 @@ export default function App() {
         break;
       case 'arrange':
         screen = <ArrangeScreen />;
+        break;
+      case 'ranking-reveal':
+        screen = <RankingRevealScreen />;
+        break;
+      case 'ranking-result':
+        screen = <RankingResultScreen />;
         break;
       case 'result':
         screen = <ResultScreen />;

@@ -1228,6 +1228,11 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.arrange-item.is-ranking .arrange-info {
+  flex: 1;
+  min-width: 0;
+}
 .arrange-name {
   font-weight: 600;
   font-size: 14px;
@@ -1249,6 +1254,14 @@ body {
   flex-direction: column;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.ranking-self-rank-controls {
+  margin: 6px auto 0;
+}
+
+.arrange-item.is-ranking .arrange-arrow-controls {
+  margin-left: auto;
 }
 
 .arrange-arrow-btn {
@@ -1468,6 +1481,23 @@ body {
   text-align: right;
   max-width: 58%;
   overflow-wrap: anywhere;
+}
+
+.ranking-reveal-screen .result-item.ranking-hidden-item {
+  background: #f8f1de;
+  border-style: dashed;
+}
+
+.ranking-reveal-screen .result-item.ranking-hidden-item .result-clue {
+  color: #a08f6d;
+}
+
+.ranking-reveal-players {
+  margin-left: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .topic-chooser-name-only-visible {

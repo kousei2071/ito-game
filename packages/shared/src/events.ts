@@ -16,6 +16,8 @@ export const C2S = {
   WORDWOLF_START_VOTE:  'wordwolf:startVote',
   WORDWOLF_SUBMIT_VOTE: 'wordwolf:submitVote',
   WORDWOLF_REQUEST_EXAMPLE_TALK: 'wordwolf:requestExampleTalk',
+  RANKING_SUBMIT_SELF_RANK: 'ranking:submitSelfRank',
+  RANKING_REVEAL_NEXT: 'ranking:revealNext',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -62,6 +64,8 @@ export interface C2SPayloads {
   [C2S.WORDWOLF_START_VOTE]: {};
   [C2S.WORDWOLF_SUBMIT_VOTE]: { targetPlayerId: string };
   [C2S.WORDWOLF_REQUEST_EXAMPLE_TALK]: {};
+  [C2S.RANKING_SUBMIT_SELF_RANK]: { rank: number };
+  [C2S.RANKING_REVEAL_NEXT]: {};
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
