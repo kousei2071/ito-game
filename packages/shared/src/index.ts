@@ -11,3 +11,4 @@ export * from './presetDrawGuessTopics.js';
 export * from './presetDrawGuessTopicsCustom.js';
 export * from './allMatchTopics.js';
 export * from './presetAllMatchTopics.js';
+export * from './presetAllMatchTopicsCustom.js';
