@@ -69,7 +69,7 @@ export function GameSettingsScreen() {
         : gs.selectedGame === 'draw-guess'
           ? 'お絵描きクイズ'
           : gs.selectedGame === 'all-match'
-            ? '全員一致ゲーム'
+            ? '以心伝心ゲーム'
         : 'ito';
 
   return (

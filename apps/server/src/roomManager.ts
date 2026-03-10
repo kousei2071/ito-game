@@ -210,6 +210,9 @@ function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void
   if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match')) return;
 
   if (round.game === 'all-match') {
+    if (round.topicChooserId === removedPlayerId) {
+      round.topicChooserId = room.players[0]?.id ?? '';
+    }
     round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
     round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
     if (room.phase === 'clue' && round.submittedCluePlayerIds.length >= room.players.length) {
@@ -437,6 +440,18 @@ function startRankingRound(room: GameState): RoundState {
 
 function startAllMatchRound(room: GameState): RoundState {
   const roundNumber = room.roundResults.length + 1;
+  if (room.players.length === 0) {
+    throw new Error('プレイヤーがいません');
+  }
+
+  const index = room.topicChooserMode === 'random'
+    ? randInt(0, room.players.length - 1)
+    : room.topicChooserIndex % room.players.length;
+  const topicChooser = room.players[index];
+  if (room.topicChooserMode === 'sequential') {
+    room.topicChooserIndex = (index + 1) % room.players.length;
+  }
+
   const usedTopics = room.roundResults
     .filter((r): r is AllMatchRoundResult => r.game === 'all-match')
     .map((r) => r.topic);
@@ -454,11 +469,13 @@ function startAllMatchRound(room: GameState): RoundState {
     game: 'all-match',
     roundNumber,
     topic,
+    topicChooserId: topicChooser.id,
+    topicChangeCount: 0,
     submittedCluePlayerIds: [],
     clues: [],
   };
   room.currentRound = round;
-  room.phase = 'clue';
+  room.phase = 'topic';
   return round;
 }
 

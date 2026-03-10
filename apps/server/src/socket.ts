@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
-import { C2S, S2C, TOPICS, RANKING_TOPICS } from '@ito/shared';
-import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult, DrawGuessStroke } from '@ito/shared';
+import { C2S, S2C, TOPICS, RANKING_TOPICS, ALL_MATCH_TOPICS } from '@ito/shared';
+import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult, AllMatchRoundResult, DrawGuessStroke } from '@ito/shared';
 import {
   createRoom,
   joinRoom,
@@ -268,7 +268,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (!room || room.phase !== 'topic' || !room.currentRound) return;
 
       const round = room.currentRound;
-      if (round.game !== 'ito' && round.game !== 'ranking') return;
+      if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match') return;
       if (round.topicChooserId !== socket.id) {
         return emitError(socket, 'このラウンドでお題を決められるのは順番のプレイヤーだけです');
       }
@@ -280,9 +280,13 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         }
         if (mode === 'random') {
           round.topicChangeCount += 1;
-          const presetTopics = round.game === 'ranking' ? RANKING_TOPICS : TOPICS;
+          const presetTopics = round.game === 'ranking'
+            ? RANKING_TOPICS
+            : round.game === 'all-match'
+              ? ALL_MATCH_TOPICS
+              : TOPICS;
           const usedTopics = room.roundResults
-            .filter((r): r is ItoRoundResult | RankingRoundResult => r.game === round.game)
+            .filter((r): r is ItoRoundResult | RankingRoundResult | AllMatchRoundResult => r.game === round.game)
             .map((r) => r.topic);
           const exclude = new Set<string>([...usedTopics, round.topic]);
           const candidates = presetTopics.filter((t) => !exclude.has(t));

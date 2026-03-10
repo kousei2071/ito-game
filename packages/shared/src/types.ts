@@ -126,6 +126,8 @@ export interface AllMatchRoundState {
   game: 'all-match';
   roundNumber: number;
   topic: string;
+  topicChooserId: string;
+  topicChangeCount: number;
   submittedCluePlayerIds: string[];
   clues: { playerId: string; clue: string }[];
   isCorrect?: boolean;

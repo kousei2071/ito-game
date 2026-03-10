@@ -14,7 +14,7 @@ export function GameSelectScreen() {
     { id: 'ranking', title: 'ランキングゲーム', desc: 'お題に沿った答えを人気順に並べる協力ゲーム' },
     { id: 'word-wolf', title: 'ワードウルフ', desc: '少数派を見つける会話推理ゲーム' },
     { id: 'draw-guess', title: 'お絵描きクイズ', desc: '絵を描いてお題を当てるゲーム' },
-    { id: 'all-match', title: '全員一致ゲーム', desc: 'みんなで同じ答えを目指す協力ゲーム' },
+    { id: 'all-match', title: '以心伝心ゲーム', desc: 'みんなで同じ答えを目指す協力ゲーム' },
   ];
   const [selectedIndex, setSelectedIndex] = useState(
     Math.max(0, games.findIndex((g) => g.id === (gs.selectedGame ?? 'ito'))),
