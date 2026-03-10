@@ -20,7 +20,7 @@ export interface Player {
 export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
-export type GameType = 'ito' | 'ranking' | 'word-wolf';
+export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
 
 // ============================================================
@@ -40,6 +40,8 @@ export type GamePhase =
   | 'wordwolf-talk'   // 会話フェーズ
   | 'wordwolf-vote'   // 投票フェーズ
   | 'wordwolf-result' // ワードウルフ結果
+  | 'drawguess-drawing' // お絵描き中
+  | 'drawguess-result'  // お絵描き結果
   | 'finished'; // 全ラウンド終了
 
 // ============================================================
@@ -94,7 +96,31 @@ export interface RankingRoundState {
   isCorrect?: boolean;
 }
 
-export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState;
+export interface DrawGuessStroke {
+  tool: 'pen' | 'eraser';
+  color: string;
+  size: number;
+  points: number[];
+}
+
+export interface DrawGuessRoundState {
+  game: 'draw-guess';
+  roundNumber: number;
+  topic: string;
+  drawerId: string;
+  /** 正解済みプレイヤーID（早い順） */
+  correctPlayerIds: string[];
+  /** 回答提出済みプレイヤーID */
+  guessSubmittedPlayerIds: string[];
+  /** 残り秒数 */
+  timeLeft: number;
+  /** 制限時間 (秒) */
+  timeLimit: number;
+  /** ストローク履歴 (リアルタイム同期用) */
+  strokes: DrawGuessStroke[];
+}
+
+export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState | DrawGuessRoundState;
 
 // ============================================================
 // Room / GameState
@@ -145,7 +171,18 @@ export interface RankingRoundResult {
   rankingCards: { playerId: string; playerName: string; rank: number }[];
 }
 
-export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult;
+export interface DrawGuessRoundResult {
+  game: 'draw-guess';
+  roundNumber: number;
+  topic: string;
+  drawerName: string;
+  isCorrect: boolean;
+  /** 正解者一覧（早い順） */
+  correctPlayers: { playerId: string; playerName: string; points: number }[];
+  drawerPoints: number;
+}
+
+export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult;
 
 // ============================================================
 // Public game state (secretNumber を隠したもの)

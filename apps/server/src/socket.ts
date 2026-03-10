@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
 import { C2S, S2C, TOPICS, RANKING_TOPICS } from '@ito/shared';
-import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult } from '@ito/shared';
+import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult, DrawGuessStroke } from '@ito/shared';
 import {
   createRoom,
   joinRoom,
@@ -24,6 +24,15 @@ import {
   advanceRound,
   disconnectPlayer,
   updateRoomSettings,
+  startDrawGuessTimer,
+  addDrawGuessStroke,
+  undoDrawGuessStroke,
+  redoDrawGuessStroke,
+  clearDrawGuessCanvas,
+  submitDrawGuessGuess,
+  finishDrawGuessRound,
+  getDrawGuessTopic,
+  getRoom,
   type PlayerExitResult,
 } from './roomManager.js';
 
@@ -54,6 +63,10 @@ function broadcastState(io: Server, room: GameState) {
 
 function emitError(socket: Socket, message: string) {
   socket.emit(S2C.ERROR, { message });
+}
+
+function findRoomByRoomId(roomId: string): GameState | undefined {
+  return getRoom(roomId);
 }
 
 // ============================================================
@@ -176,6 +189,27 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           roundNumber: round.roundNumber,
           topic: round.topic,
         });
+      } else if (round.game === 'draw-guess') {
+        // send topic only to the drawer
+        const topic = getDrawGuessTopic(room.roomId);
+        if (topic) {
+          io.to(round.drawerId).emit(S2C.NOTICE, { message: `お題: ${topic}` });
+        }
+        startDrawGuessTimer(
+          room.roomId,
+          (roomId, timeLeft) => {
+            io.to(roomId).emit(S2C.DRAWGUESS_TIME_UPDATE, { timeLeft });
+          },
+          (roomId) => {
+            const r = findRoomByRoomId(roomId);
+            if (!r) return;
+            const result = finishDrawGuessRound(r);
+            if (result) {
+              io.to(roomId).emit(S2C.ROUND_RESULT, result);
+            }
+            broadcastState(io, r);
+          },
+        );
       } else {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });
@@ -189,7 +223,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- game:select ----------
-  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'word-wolf' }) => {
+  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'game-select') return;
     try {
@@ -338,6 +372,67 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     }
   });
 
+  // ---------- drawguess events ----------
+  socket.on(C2S.DRAWGUESS_STROKE, ({ stroke }: { stroke: DrawGuessStroke }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'drawguess-drawing') return;
+    if (addDrawGuessStroke(room.roomId, socket.id, stroke)) {
+      socket.to(room.roomId).emit(S2C.DRAWGUESS_STROKE, { stroke });
+    }
+  });
+
+  socket.on(C2S.DRAWGUESS_UNDO, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'drawguess-drawing') return;
+    if (undoDrawGuessStroke(room.roomId, socket.id)) {
+      socket.to(room.roomId).emit(S2C.DRAWGUESS_UNDO, {});
+    }
+  });
+
+  socket.on(C2S.DRAWGUESS_REDO, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'drawguess-drawing') return;
+    if (redoDrawGuessStroke(room.roomId, socket.id)) {
+      socket.to(room.roomId).emit(S2C.DRAWGUESS_REDO, {});
+    }
+  });
+
+  socket.on(C2S.DRAWGUESS_CLEAR, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'drawguess-drawing') return;
+    if (clearDrawGuessCanvas(room.roomId, socket.id)) {
+      socket.to(room.roomId).emit(S2C.DRAWGUESS_CLEAR, {});
+    }
+  });
+
+  socket.on(C2S.DRAWGUESS_GUESS, ({ guess }: { guess: string }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room || room.phase !== 'drawguess-drawing') return;
+    try {
+      const result = submitDrawGuessGuess(room, socket.id, guess);
+      if (!result) return;
+      if (result.correct) {
+        io.to(room.roomId).emit(S2C.DRAWGUESS_CORRECT, {
+          playerId: socket.id,
+          playerName: result.playerName,
+          points: result.points,
+        });
+        // check if round ended (phase changed by submitDrawGuessGuess)
+        if ((room.phase as string) === 'drawguess-result') {
+          const roundResult = room.roundResults[room.roundResults.length - 1];
+          if (roundResult) {
+            io.to(room.roomId).emit(S2C.ROUND_RESULT, roundResult);
+          }
+        }
+        broadcastState(io, room);
+      } else {
+        socket.emit(S2C.NOTICE, { message: '不正解…' });
+      }
+    } catch (e: any) {
+      emitError(socket, e.message);
+    }
+  });
+
   // ---------- round:next ----------
   socket.on(C2S.WORDWOLF_START_TALK, () => {
     const room = findRoomByPlayer(socket.id);
@@ -408,6 +503,26 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           roundNumber: room.currentRound.roundNumber,
           topic: room.currentRound.topic,
         });
+      } else if (room.currentRound?.game === 'draw-guess') {
+        const topic = getDrawGuessTopic(room.roomId);
+        if (topic) {
+          io.to(room.currentRound.drawerId).emit(S2C.NOTICE, { message: `お題: ${topic}` });
+        }
+        startDrawGuessTimer(
+          room.roomId,
+          (roomId, timeLeft) => {
+            io.to(roomId).emit(S2C.DRAWGUESS_TIME_UPDATE, { timeLeft });
+          },
+          (roomId) => {
+            const r = findRoomByRoomId(roomId);
+            if (!r) return;
+            const result = finishDrawGuessRound(r);
+            if (result) {
+              io.to(roomId).emit(S2C.ROUND_RESULT, result);
+            }
+            broadcastState(io, r);
+          },
+        );
       } else {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_WORD, { word: p.secretWord ?? '' });

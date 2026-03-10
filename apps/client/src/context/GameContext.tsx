@@ -55,7 +55,7 @@ function reducer(state: State, action: Action): State {
         lastError: null,
         wordWolfExampleTalk: action.payload.phase === 'wordwolf-talk' ? state.wordWolfExampleTalk : null,
         roundResult:
-          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result'
+          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result' || action.payload.phase === 'drawguess-result'
             ? state.roundResult
             : null,
         finalResult: action.payload.phase === 'finished' ? state.finalResult : null,

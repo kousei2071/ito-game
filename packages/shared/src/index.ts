@@ -6,3 +6,5 @@ export * from './rankingTopics.js';
 export * from './presetRankingTopics.js';
 export * from './wordWolfTopics.js';
 export * from './presetWordWolfTopics.js';
+export * from './drawGuessTopics.js';
+export * from './presetDrawGuessTopics.js';

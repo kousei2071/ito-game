@@ -12,8 +12,11 @@ import type {
   RankingRoundState,
   RankingRoundResult,
   WordWolfRoundResult,
+  DrawGuessRoundState,
+  DrawGuessRoundResult,
+  DrawGuessStroke,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -28,6 +31,20 @@ interface WordWolfSecretState {
 }
 
 const wordWolfSecrets = new Map<string, WordWolfSecretState>();
+
+interface DrawGuessSecretState {
+  topic: string;
+  drawerId: string;
+  strokes: DrawGuessStroke[];
+  undoneStrokes: DrawGuessStroke[];
+  correctPlayerIds: string[];
+  timer: ReturnType<typeof setInterval> | null;
+  timeLeft: number;
+  onTick?: (roomId: string, timeLeft: number) => void;
+  onTimeUp?: (roomId: string) => void;
+}
+
+const drawGuessSecrets = new Map<string, DrawGuessSecretState>();
 
 export type PlayerExitResult =
   | { kind: 'room-closed'; roomId: string; actorName: string }
@@ -178,6 +195,8 @@ function resetGameProgressToSelect(room: GameState): void {
     p.clue = undefined;
   });
   wordWolfSecrets.delete(room.roomId);
+  stopDrawGuessTimer(room.roomId);
+  drawGuessSecrets.delete(room.roomId);
 }
 
 function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
@@ -209,12 +228,16 @@ export function leaveRoom(socketId: string): PlayerExitResult | null {
 
     if (leavingPlayer.isHost) {
       wordWolfSecrets.delete(room.roomId);
+      stopDrawGuessTimer(room.roomId);
+      drawGuessSecrets.delete(room.roomId);
       rooms.delete(room.roomId);
       return { kind: 'room-closed', roomId: room.roomId, actorName: leavingPlayer.name };
     }
 
     if (room.players.length === 0) {
       wordWolfSecrets.delete(room.roomId);
+      stopDrawGuessTimer(room.roomId);
+      drawGuessSecrets.delete(room.roomId);
       rooms.delete(room.roomId);
       return { kind: 'room-closed', roomId: room.roomId, actorName: leavingPlayer.name };
     }
@@ -226,7 +249,13 @@ export function leaveRoom(socketId: string): PlayerExitResult | null {
       && room.phase !== 'game-select'
       && room.phase !== 'game-settings';
 
-    if (isWordWolfInGamePhase) {
+    const isDrawGuessInGamePhase =
+      room.selectedGame === 'draw-guess'
+      && room.phase !== 'lobby'
+      && room.phase !== 'game-select'
+      && room.phase !== 'game-settings';
+
+    if (isWordWolfInGamePhase || isDrawGuessInGamePhase) {
       resetGameProgressToSelect(room);
       forcedToGameSelect = true;
     } else {
@@ -354,6 +383,9 @@ export function startSelectedGame(room: GameState, game: GameType): RoundState {
   room.selectedGame = game;
   if (game === 'word-wolf') {
     return startWordWolfRound(room);
+  }
+  if (game === 'draw-guess') {
+    return startDrawGuessRound(room);
   }
   return startClassicRound(room, game);
 }
@@ -775,8 +807,248 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
     startWordWolfRound(room);
   } else if (room.selectedGame === 'ranking') {
     startRankingRound(room);
+  } else if (room.selectedGame === 'draw-guess') {
+    startDrawGuessRound(room);
   } else {
     startNewRound(room);
   }
   return 'next';
+}
+
+// ============================================================
+// Draw & Guess Game
+// ============================================================
+
+const DRAW_GUESS_TIME_LIMIT = 90; // seconds
+
+function stopDrawGuessTimer(roomId: string): void {
+  const secret = drawGuessSecrets.get(roomId);
+  if (secret?.timer) {
+    clearInterval(secret.timer);
+    secret.timer = null;
+  }
+}
+
+export function startDrawGuessRound(room: GameState): DrawGuessRoundState {
+  const roundNumber = room.roundResults.length + 1;
+
+  if (room.players.length < 2) {
+    throw new Error('お絵描きゲームは2人以上で遊べます');
+  }
+
+  // drawer rotation
+  const index = room.topicChooserMode === 'random'
+    ? randInt(0, room.players.length - 1)
+    : room.topicChooserIndex % room.players.length;
+  const drawer = room.players[index];
+  if (room.topicChooserMode === 'sequential') {
+    room.topicChooserIndex = (index + 1) % room.players.length;
+  }
+
+  // pick topic
+  const usedTopics = room.roundResults
+    .filter((r): r is DrawGuessRoundResult => r.game === 'draw-guess')
+    .map((r) => r.topic);
+  const available = DRAW_GUESS_TOPICS.filter((t) => !usedTopics.includes(t));
+  const topic = available.length > 0
+    ? available[randInt(0, available.length - 1)]
+    : DRAW_GUESS_TOPICS[randInt(0, DRAW_GUESS_TOPICS.length - 1)];
+
+  // clean up previous timer
+  stopDrawGuessTimer(room.roomId);
+
+  const round: DrawGuessRoundState = {
+    game: 'draw-guess',
+    roundNumber,
+    topic: '', // hide topic from public state
+    drawerId: drawer.id,
+    correctPlayerIds: [],
+    guessSubmittedPlayerIds: [],
+    timeLeft: DRAW_GUESS_TIME_LIMIT,
+    timeLimit: DRAW_GUESS_TIME_LIMIT,
+    strokes: [],
+  };
+
+  drawGuessSecrets.set(room.roomId, {
+    topic,
+    drawerId: drawer.id,
+    strokes: [],
+    undoneStrokes: [],
+    correctPlayerIds: [],
+    timer: null,
+    timeLeft: DRAW_GUESS_TIME_LIMIT,
+  });
+
+  room.currentRound = round;
+  room.phase = 'drawguess-drawing';
+  return round;
+}
+
+export function getDrawGuessTopic(roomId: string): string | null {
+  return drawGuessSecrets.get(roomId)?.topic ?? null;
+}
+
+export function startDrawGuessTimer(
+  roomId: string,
+  onTick: (roomId: string, timeLeft: number) => void,
+  onTimeUp: (roomId: string) => void,
+): void {
+  const secret = drawGuessSecrets.get(roomId);
+  if (!secret || secret.timer) return;
+
+  secret.onTick = onTick;
+  secret.onTimeUp = onTimeUp;
+
+  secret.timer = setInterval(() => {
+    const s = drawGuessSecrets.get(roomId);
+    if (!s) {
+      stopDrawGuessTimer(roomId);
+      return;
+    }
+    s.timeLeft -= 1;
+    const room = rooms.get(roomId);
+    if (room?.currentRound?.game === 'draw-guess') {
+      (room.currentRound as DrawGuessRoundState).timeLeft = s.timeLeft;
+    }
+    if (s.onTick) s.onTick(roomId, s.timeLeft);
+    if (s.timeLeft <= 0) {
+      stopDrawGuessTimer(roomId);
+      if (s.onTimeUp) s.onTimeUp(roomId);
+    }
+  }, 1000);
+}
+
+export function addDrawGuessStroke(roomId: string, socketId: string, stroke: DrawGuessStroke): boolean {
+  const secret = drawGuessSecrets.get(roomId);
+  if (!secret || secret.drawerId !== socketId) return false;
+  secret.strokes.push(stroke);
+  secret.undoneStrokes = [];
+  const room = rooms.get(roomId);
+  if (room?.currentRound?.game === 'draw-guess') {
+    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
+  }
+  return true;
+}
+
+export function undoDrawGuessStroke(roomId: string, socketId: string): boolean {
+  const secret = drawGuessSecrets.get(roomId);
+  if (!secret || secret.drawerId !== socketId || secret.strokes.length === 0) return false;
+  const undone = secret.strokes.pop()!;
+  secret.undoneStrokes.push(undone);
+  const room = rooms.get(roomId);
+  if (room?.currentRound?.game === 'draw-guess') {
+    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
+  }
+  return true;
+}
+
+export function redoDrawGuessStroke(roomId: string, socketId: string): boolean {
+  const secret = drawGuessSecrets.get(roomId);
+  if (!secret || secret.drawerId !== socketId || secret.undoneStrokes.length === 0) return false;
+  const redone = secret.undoneStrokes.pop()!;
+  secret.strokes.push(redone);
+  const room = rooms.get(roomId);
+  if (room?.currentRound?.game === 'draw-guess') {
+    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
+  }
+  return true;
+}
+
+export function clearDrawGuessCanvas(roomId: string, socketId: string): boolean {
+  const secret = drawGuessSecrets.get(roomId);
+  if (!secret || secret.drawerId !== socketId) return false;
+  secret.strokes = [];
+  secret.undoneStrokes = [];
+  const room = rooms.get(roomId);
+  if (room?.currentRound?.game === 'draw-guess') {
+    (room.currentRound as DrawGuessRoundState).strokes = [];
+  }
+  return true;
+}
+
+export function submitDrawGuessGuess(
+  room: GameState,
+  socketId: string,
+  guess: string,
+): { correct: boolean; playerName: string; points: number } | null {
+  if (room.phase !== 'drawguess-drawing') return null;
+  const round = room.currentRound;
+  if (!round || round.game !== 'draw-guess') return null;
+  const secret = drawGuessSecrets.get(room.roomId);
+  if (!secret) return null;
+
+  // drawer can't guess
+  if (socketId === secret.drawerId) return null;
+  // already answered correctly
+  if (secret.correctPlayerIds.includes(socketId)) return null;
+
+  const player = room.players.find((p) => p.id === socketId);
+  if (!player) return null;
+
+  const normalizedGuess = guess.trim().toLowerCase().replace(/\s+/g, '');
+  const normalizedTopic = secret.topic.trim().toLowerCase().replace(/\s+/g, '');
+
+  if (normalizedGuess !== normalizedTopic) {
+    return { correct: false, playerName: player.name, points: 0 };
+  }
+
+  // correct!
+  secret.correctPlayerIds.push(socketId);
+  round.correctPlayerIds = [...secret.correctPlayerIds];
+
+  const order = secret.correctPlayerIds.length;
+  const points = Math.max(1, 4 - order); // 1st=3, 2nd=2, 3rd+=1
+
+  // check if all guessers answered
+  const guesserCount = room.players.length - 1; // exclude drawer
+  if (secret.correctPlayerIds.length >= guesserCount) {
+    // everyone guessed correctly - end round
+    stopDrawGuessTimer(room.roomId);
+    finishDrawGuessRound(room);
+  }
+
+  return { correct: true, playerName: player.name, points };
+}
+
+export function finishDrawGuessRound(room: GameState): DrawGuessRoundResult | null {
+  const round = room.currentRound;
+  if (!round || round.game !== 'draw-guess') return null;
+  const secret = drawGuessSecrets.get(room.roomId);
+  if (!secret) return null;
+
+  stopDrawGuessTimer(room.roomId);
+
+  const drawer = room.players.find((p) => p.id === secret.drawerId);
+  const correctPlayers = secret.correctPlayerIds.map((id, i) => {
+    const p = room.players.find((pl) => pl.id === id);
+    const points = Math.max(1, 4 - (i + 1));
+    return {
+      playerId: id,
+      playerName: p?.name ?? '',
+      points,
+    };
+  });
+
+  const drawerPoints = secret.correctPlayerIds.length > 0 ? secret.correctPlayerIds.length : 0;
+  const isCorrect = secret.correctPlayerIds.length > 0;
+
+  if (isCorrect) room.score += 1;
+
+  const result: DrawGuessRoundResult = {
+    game: 'draw-guess',
+    roundNumber: round.roundNumber,
+    topic: secret.topic,
+    drawerName: drawer?.name ?? '',
+    isCorrect,
+    correctPlayers,
+    drawerPoints,
+  };
+
+  // reveal topic in round state
+  round.topic = secret.topic;
+
+  room.roundResults.push(result);
+  room.phase = 'drawguess-result';
+  drawGuessSecrets.delete(room.roomId);
+  return result;
 }

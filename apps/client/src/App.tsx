@@ -14,6 +14,8 @@ import { WordWolfVoteScreen } from './screens/WordWolfVoteScreen';
 import { WordWolfResultScreen } from './screens/WordWolfResultScreen';
 import { RankingRevealScreen } from './screens/RankingRevealScreen';
 import { RankingResultScreen } from './screens/RankingResultScreen';
+import { DrawGuessScreen } from './screens/DrawGuessScreen';
+import { DrawGuessResultScreen } from './screens/DrawGuessResultScreen';
 
 export default function App() {
   const { state } = useGame();
@@ -65,6 +67,12 @@ export default function App() {
         break;
       case 'wordwolf-result':
         screen = <WordWolfResultScreen />;
+        break;
+      case 'drawguess-drawing':
+        screen = <DrawGuessScreen />;
+        break;
+      case 'drawguess-result':
+        screen = <DrawGuessResultScreen />;
         break;
       case 'finished':
         screen = <FinalScreen />;

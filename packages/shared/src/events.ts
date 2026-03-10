@@ -18,6 +18,11 @@ export const C2S = {
   WORDWOLF_REQUEST_EXAMPLE_TALK: 'wordwolf:requestExampleTalk',
   RANKING_SUBMIT_SELF_RANK: 'ranking:submitSelfRank',
   RANKING_REVEAL_NEXT: 'ranking:revealNext',
+  DRAWGUESS_STROKE:     'drawguess:stroke',
+  DRAWGUESS_UNDO:       'drawguess:undo',
+  DRAWGUESS_REDO:       'drawguess:redo',
+  DRAWGUESS_CLEAR:      'drawguess:clear',
+  DRAWGUESS_GUESS:      'drawguess:guess',
   ROUND_SET_TOPIC:      'round:setTopic',
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
@@ -36,6 +41,12 @@ export const S2C = {
   YOUR_NUMBER:          'round:yourNumber',
   YOUR_WORD:            'wordwolf:yourWord',
   WORDWOLF_EXAMPLE_TALK:'wordwolf:exampleTalk',
+  DRAWGUESS_STROKE:     'drawguess:stroke',
+  DRAWGUESS_UNDO:       'drawguess:undo',
+  DRAWGUESS_REDO:       'drawguess:redo',
+  DRAWGUESS_CLEAR:      'drawguess:clear',
+  DRAWGUESS_CORRECT:    'drawguess:correct',
+  DRAWGUESS_TIME_UPDATE:'drawguess:timeUpdate',
   ROOM_CLOSED:          'room:closed',
   ERROR:                'error:message',
   NOTICE:               'notice:message',
@@ -66,6 +77,11 @@ export interface C2SPayloads {
   [C2S.WORDWOLF_REQUEST_EXAMPLE_TALK]: {};
   [C2S.RANKING_SUBMIT_SELF_RANK]: { rank: number };
   [C2S.RANKING_REVEAL_NEXT]: {};
+  [C2S.DRAWGUESS_STROKE]: { stroke: import('./types.js').DrawGuessStroke };
+  [C2S.DRAWGUESS_UNDO]: {};
+  [C2S.DRAWGUESS_REDO]: {};
+  [C2S.DRAWGUESS_CLEAR]: {};
+  [C2S.DRAWGUESS_GUESS]: { guess: string };
   [C2S.ROUND_SET_TOPIC]: { topic?: string; mode: 'random' | 'custom'; finalize: boolean };
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
@@ -84,6 +100,12 @@ export interface S2CPayloads {
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.YOUR_WORD]: { word: string };
   [S2C.WORDWOLF_EXAMPLE_TALK]: { title: string; lines: string[] };
+  [S2C.DRAWGUESS_STROKE]: { stroke: import('./types.js').DrawGuessStroke };
+  [S2C.DRAWGUESS_UNDO]: {};
+  [S2C.DRAWGUESS_REDO]: {};
+  [S2C.DRAWGUESS_CLEAR]: {};
+  [S2C.DRAWGUESS_CORRECT]: { playerId: string; playerName: string; points: number };
+  [S2C.DRAWGUESS_TIME_UPDATE]: { timeLeft: number };
   [S2C.ROOM_CLOSED]: { message: string };
   [S2C.ERROR]: { message: string };
   [S2C.NOTICE]: { message: string };
