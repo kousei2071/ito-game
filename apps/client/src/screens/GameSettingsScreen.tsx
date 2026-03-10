@@ -51,6 +51,8 @@ export function GameSettingsScreen() {
       ? 'ワードウルフ'
       : gs.selectedGame === 'ranking'
         ? 'ランキングゲーム'
+        : gs.selectedGame === 'draw-guess'
+          ? 'お絵描きクイズ'
         : 'ito';
 
   return (
