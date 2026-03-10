@@ -14,6 +14,7 @@ export function TopicSelectScreen() {
   const chooser = gs.players.find((p) => p.id === round.topicChooserId);
   const chooserName = chooser?.name ?? '???';
   const [selectedTopic, setSelectedTopic] = useState(round.topic);
+  const [showTopicModal, setShowTopicModal] = useState(false);
 
   useEffect(() => {
     setSelectedTopic(round.topic);
@@ -25,6 +26,10 @@ export function TopicSelectScreen() {
     if (!selectedTopic) return;
     actions.confirmTopic(selectedTopic);
   };
+
+  const topicForModal = isChooser
+    ? (selectedTopic || 'ここに入力したお題が表示されます')
+    : round.topic;
 
   return (
     <div className="screen topic-screen">
@@ -50,15 +55,30 @@ export function TopicSelectScreen() {
       <div className="topic-card">
         <p className="topic-label">現在のお題</p>
         {isChooser ? (
-          <input
-            className="input"
-            value={selectedTopic}
-            onChange={(e) => setSelectedTopic(e.target.value)}
-            maxLength={40}
-            placeholder="お題を入力"
-          />
+          <>
+            <input
+              className="input"
+              value={selectedTopic}
+              onChange={(e) => setSelectedTopic(e.target.value)}
+              maxLength={40}
+              placeholder="お題を入力"
+            />
+            <button
+              type="button"
+              className="btn topic-view-btn"
+              onClick={() => setShowTopicModal(true)}
+            >
+              お題を表示
+            </button>
+          </>
         ) : (
-          <h2 className="topic-text">{round.topic}</h2>
+          <button
+            type="button"
+            className="btn topic-view-btn"
+            onClick={() => setShowTopicModal(true)}
+          >
+            お題を表示
+          </button>
         )}
       </div>
 
@@ -99,6 +119,24 @@ export function TopicSelectScreen() {
       )}
 
       {state.lastError && <div className="error">{state.lastError}</div>}
+
+      {showTopicModal ? (
+        <div className="number-modal-overlay" onClick={() => setShowTopicModal(false)}>
+          <div
+            className="number-modal topic-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="現在のお題"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="number-modal-label">現在のお題</p>
+            <p className="topic-modal-value">{topicForModal}</p>
+            <button type="button" className="btn btn-primary" onClick={() => setShowTopicModal(false)}>
+              閉じる
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

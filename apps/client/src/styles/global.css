@@ -1038,6 +1038,38 @@ body {
   color: #2a2620;
 }
 
+.topic-view-btn {
+  margin-top: 8px;
+  align-self: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #eadfc6;
+  background: #fff;
+  color: #6f644f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.topic-view-btn:hover:not(:disabled) {
+  background: #fff8ec;
+}
+
+.topic-modal {
+  width: min(540px, 100%);
+  align-items: center;
+}
+
+.topic-modal-value {
+  color: #2a2620;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* ============================================================
    Clue Screen
    ============================================================ */
@@ -1720,6 +1752,7 @@ body {
   .result-number {
     font-size: 46px;
   }
+
 }
 
 /* ============================================================
