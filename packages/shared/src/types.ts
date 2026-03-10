@@ -20,7 +20,7 @@ export interface Player {
 export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
-export type GameType = 'ito' | 'word-wolf';
+export type GameType = 'ito' | 'ranking' | 'word-wolf';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
 
 // ============================================================
@@ -76,7 +76,20 @@ export interface WordWolfRoundState {
   villageWon?: boolean;
 }
 
-export type RoundState = ItoRoundState | WordWolfRoundState;
+export interface RankingRoundState {
+  game: 'ranking';
+  roundNumber: number;
+  topic: string;
+  topicChooserId: string;
+  topicChangeCount: number;
+  submittedCluePlayerIds: string[];
+  clues: { playerId: string; clue: string }[];
+  arrangedOrder: string[];
+  correctOrder?: string[];
+  isCorrect?: boolean;
+}
+
+export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState;
 
 // ============================================================
 // Room / GameState
@@ -119,7 +132,15 @@ export interface WordWolfRoundResult {
   isCorrect: boolean;
 }
 
-export type RoundResult = ItoRoundResult | WordWolfRoundResult;
+export interface RankingRoundResult {
+  game: 'ranking';
+  roundNumber: number;
+  topic: string;
+  isCorrect: boolean;
+  correctOrder: { playerId: string; playerName: string; secretNumber: number }[];
+}
+
+export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult;
 
 // ============================================================
 // Public game state (secretNumber を隠したもの)
