@@ -20,6 +20,7 @@ export function ResultScreen() {
     itoRound?.clues
       .map((c) => result.correctOrder.find((entry) => entry.playerId === c.playerId))
       .filter((entry): entry is (typeof result.correctOrder)[number] => Boolean(entry)) ?? result.correctOrder;
+  const clueMap = new Map((itoRound?.clues ?? []).map((c) => [c.playerId, c.clue] as const));
 
   return (
     <div className={`screen result-screen ${result.isCorrect ? 'is-success' : 'is-failure'}`}>
@@ -37,8 +38,10 @@ export function ResultScreen() {
         <span className="score-badge">スコア: {gs.score}</span>
       </div>
 
-      <div className={`result-status-pop ${result.isCorrect ? 'success' : 'failure'}`}>
-        <h2>{result.isCorrect ? '成功！' : '失敗…'}</h2>
+      <div className={`result-status-pop ${result.game === 'ranking' || result.isCorrect ? 'success' : 'failure'}`}>
+        <h2>
+          {result.game === 'ranking' ? 'ランキング決定！' : result.isCorrect ? '成功！' : '失敗…'}
+        </h2>
       </div>
 
       <div className="topic-card">
@@ -46,7 +49,7 @@ export function ResultScreen() {
         <h2 className="topic-text">{result.topic}</h2>
       </div>
 
-      <h3>回答順</h3>
+      <h3>{result.game === 'ranking' ? '完成したランキング' : '回答順'}</h3>
       <ul className="result-order">
         {answeredOrder.map((entry, idx) => (
           <li key={entry.playerId} className="result-item">
@@ -59,7 +62,11 @@ export function ResultScreen() {
             ) : (
               <span className="result-name">{entry.playerName}</span>
             )}
-            <span className="result-number">{entry.secretNumber}</span>
+            {result.game === 'ranking' ? (
+              <span className="result-clue">「{clueMap.get(entry.playerId) ?? '---'}」</span>
+            ) : (
+              <span className="result-number">{entry.secretNumber}</span>
+            )}
           </li>
         ))}
       </ul>

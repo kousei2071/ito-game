@@ -388,12 +388,19 @@ function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState
      room.topicChooserIndex = (index + 1) % room.players.length;
    }
 
-  // 重複しない数字を配布
-  const numbers = shuffle(Array.from({ length: 100 }, (_, i) => i + 1)).slice(0, room.players.length);
-  room.players.forEach((p, i) => {
-    p.secretNumber = numbers[i];
-    p.clue = undefined;
-  });
+  if (game === 'ito') {
+    // itoのみ重複しない数字を配布
+    const numbers = shuffle(Array.from({ length: 100 }, (_, i) => i + 1)).slice(0, room.players.length);
+    room.players.forEach((p, i) => {
+      p.secretNumber = numbers[i];
+      p.clue = undefined;
+    });
+  } else {
+    room.players.forEach((p) => {
+      p.secretNumber = undefined;
+      p.clue = undefined;
+    });
+  }
 
   // お題
   const presetTopics = game === 'ranking' ? RANKING_TOPICS : TOPICS;
@@ -516,6 +523,27 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 export function confirmArrange(room: GameState, order: string[]): RoundResult {
   const round = room.currentRound as ItoRoundState | RankingRoundState;
 
+  if (round.game === 'ranking') {
+    round.correctOrder = [...order];
+    round.arrangedOrder = [...order];
+    round.isCorrect = true;
+    room.score += 1;
+    room.phase = 'result';
+
+    const result: RankingRoundResult = {
+      game: 'ranking',
+      roundNumber: round.roundNumber,
+      topic: round.topic,
+      isCorrect: true,
+      correctOrder: order.map((id) => {
+        const p = room.players.find((pl) => pl.id === id)!;
+        return { playerId: id, playerName: p.name, secretNumber: 0 };
+      }),
+    };
+    room.roundResults.push(result);
+    return result;
+  }
+
   // 正解順 (number が大きい順)
   const correctOrder = [...room.players]
     .sort((a, b) => (b.secretNumber ?? 0) - (a.secretNumber ?? 0))
@@ -535,21 +563,13 @@ export function confirmArrange(room: GameState, order: string[]): RoundResult {
     return { playerId: id, playerName: p.name, secretNumber: p.secretNumber ?? 0 };
   });
 
-  const result: ItoRoundResult | RankingRoundResult = round.game === 'ranking'
-    ? {
-      game: 'ranking',
-      roundNumber: round.roundNumber,
-      topic: round.topic,
-      isCorrect,
-      correctOrder: sortedPlayers,
-    }
-    : {
-      game: 'ito',
-      roundNumber: round.roundNumber,
-      topic: round.topic,
-      isCorrect,
-      correctOrder: sortedPlayers,
-    };
+  const result: ItoRoundResult = {
+    game: 'ito',
+    roundNumber: round.roundNumber,
+    topic: round.topic,
+    isCorrect,
+    correctOrder: sortedPlayers,
+  };
   room.roundResults.push(result);
   return result;
 }

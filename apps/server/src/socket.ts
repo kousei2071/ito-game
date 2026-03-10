@@ -161,7 +161,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      if (round.game === 'ito' || round.game === 'ranking') {
+      if (round.game === 'ito') {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
         });
@@ -352,7 +352,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
 
     const status = advanceRound(room);
     if (status === 'next') {
-      if (room.currentRound?.game === 'ito' || room.currentRound?.game === 'ranking') {
+      if (room.currentRound?.game === 'ito') {
         room.players.forEach((p) => {
           io.to(p.id).emit(S2C.YOUR_NUMBER, { secretNumber: p.secretNumber });
         });

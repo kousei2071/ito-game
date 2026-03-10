@@ -42,15 +42,19 @@ export function ClueScreen() {
         <h2 className="topic-text">{round.topic}</h2>
       </div>
 
-      <div className="my-number-card">
-        <p className="number-label">あなたの数字</p>
-        <h1 className="number-value">{state.myNumber ?? '??'}</h1>
-      </div>
+      {round.game === 'ito' ? (
+        <div className="my-number-card">
+          <p className="number-label">あなたの数字</p>
+          <h1 className="number-value">{state.myNumber ?? '??'}</h1>
+        </div>
+      ) : null}
 
       {!alreadySubmitted ? (
         <div className="clue-form">
           <p className="clue-instruction">
-            お題「{round.topic}」に対して、数字の大きさに応じた答えを入力してください
+            {round.game === 'ito'
+              ? `お題「${round.topic}」に対して、数字の大きさに応じた答えを入力してください`
+              : `お題「${round.topic}」に対して、ランキングに入れたい答えを入力してください`}
           </p>
           <input
             className="input"

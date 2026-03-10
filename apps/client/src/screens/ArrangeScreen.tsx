@@ -65,6 +65,14 @@ export function ArrangeScreen() {
     animateReorder(next);
   };
 
+  const moveUp = (idx: number) => {
+    moveTo(idx, idx - 1);
+  };
+
+  const moveDown = (idx: number) => {
+    moveTo(idx, idx + 1);
+  };
+
   const handleConfirm = () => {
     actions.confirmArrange(order);
   };
@@ -124,7 +132,9 @@ export function ArrangeScreen() {
 
       <p className="arrange-instruction">
         {canArrange
-          ? 'カードをつかんで上下に動かし、上ほど数字が大きい順に並べ替えてください'
+          ? round.game === 'ranking'
+            ? '上下ボタンで人気順に並べ替えてください（上ほど順位が高い）'
+            : '上下ボタンで順位を入れ替えてください（ドラッグでも並べ替えできます）'
           : 'お題を決めた人が順番を並べ替え中です'}
       </p>
 
@@ -154,12 +164,16 @@ export function ArrangeScreen() {
             <div className="arrange-guide">
               <div className="arrange-guide-row is-top">
                 <span className="arrange-guide-badge">上</span>
-                <span className="arrange-guide-value">100に近い（大きい）</span>
+                <span className="arrange-guide-value">
+                  {round.game === 'ranking' ? '順位が高い（1位に近い）' : '100に近い（大きい）'}
+                </span>
               </div>
               <div className="arrange-guide-arrow">↓</div>
               <div className="arrange-guide-row is-bottom">
                 <span className="arrange-guide-badge">下</span>
-                <span className="arrange-guide-value">1に近い（小さい）</span>
+                <span className="arrange-guide-value">
+                  {round.game === 'ranking' ? '順位が低い' : '1に近い（小さい）'}
+                </span>
               </div>
             </div>
             <button type="button" className="btn btn-primary" onClick={() => setShowGuideModal(false)}>
@@ -214,6 +228,7 @@ export function ArrangeScreen() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
+            <span className="arrange-rank">{idx + 1}位</span>
             <div className="arrange-info">
               {playerOf(id) ? (
                 <PlayerIdentity player={playerOf(id)!} className="arrange-name" />
@@ -222,6 +237,28 @@ export function ArrangeScreen() {
               )}
             </div>
             <span className="arrange-clue">「{clueOf(id)}」</span>
+            {canArrange ? (
+              <div className="arrange-arrow-controls">
+                <button
+                  type="button"
+                  className="arrange-arrow-btn"
+                  onClick={() => moveUp(idx)}
+                  disabled={idx === 0}
+                  aria-label={`${idx + 1}位を上に移動`}
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  className="arrange-arrow-btn"
+                  onClick={() => moveDown(idx)}
+                  disabled={idx === order.length - 1}
+                  aria-label={`${idx + 1}位を下に移動`}
+                >
+                  ▼
+                </button>
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>
