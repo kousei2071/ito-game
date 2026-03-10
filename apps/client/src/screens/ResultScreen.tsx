@@ -92,12 +92,6 @@ export function ResultScreen() {
               </li>
             ))}
           </ul>
-          {result.isCorrect && result.matchedAnswer ? (
-            <div className="topic-card">
-              <p className="topic-label">一致した答え</p>
-              <h2 className="topic-text">{result.matchedAnswer}</h2>
-            </div>
-          ) : null}
         </>
       )}
 
