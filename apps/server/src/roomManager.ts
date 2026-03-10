@@ -15,8 +15,10 @@ import type {
   DrawGuessRoundState,
   DrawGuessRoundResult,
   DrawGuessStroke,
+  DrawGuessDifficulty,
+  DrawGuessTimeLimit,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -145,6 +147,8 @@ export function createRoom(hostSocketId: string, hostName: string, hostIconId: P
     topicChooserIndex: 0,
     wordWolfTalkSeconds: 120,
     wordWolfCountMode: 'auto',
+    drawGuessTimeLimit: 90,
+    drawGuessDifficulty: 'normal',
   };
   rooms.set(roomId, state);
   return state;
@@ -299,6 +303,8 @@ export function updateRoomSettings(
     topicChooserMode: TopicChooserMode;
     wordWolfTalkSeconds: number;
     wordWolfCountMode: WordWolfCountMode;
+    drawGuessTimeLimit: DrawGuessTimeLimit;
+    drawGuessDifficulty: DrawGuessDifficulty;
   },
 ): GameState {
   const allowedPhases = new Set(['lobby', 'game-select', 'game-settings']);
@@ -326,10 +332,22 @@ export function updateRoomSettings(
     throw new Error('ワードウルフ人数設定が不正です');
   }
 
+  const allowedDrawGuessTimeLimit = new Set<DrawGuessTimeLimit>([0, 60, 90, 120]);
+  if (!allowedDrawGuessTimeLimit.has(settings.drawGuessTimeLimit)) {
+    throw new Error('お絵描きクイズ制限時間が不正です');
+  }
+
+  const allowedDrawGuessDifficulty = new Set<DrawGuessDifficulty>(['easy', 'normal', 'hard']);
+  if (!allowedDrawGuessDifficulty.has(settings.drawGuessDifficulty)) {
+    throw new Error('お絵描きクイズ難易度が不正です');
+  }
+
   room.totalRounds = settings.totalRounds;
   room.topicChooserMode = settings.topicChooserMode;
   room.wordWolfTalkSeconds = settings.wordWolfTalkSeconds;
   room.wordWolfCountMode = settings.wordWolfCountMode;
+  room.drawGuessTimeLimit = settings.drawGuessTimeLimit;
+  room.drawGuessDifficulty = settings.drawGuessDifficulty;
   return room;
 }
 
@@ -819,8 +837,6 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
 // Draw & Guess Game
 // ============================================================
 
-const DRAW_GUESS_TIME_LIMIT = 90; // seconds
-
 function stopDrawGuessTimer(roomId: string): void {
   const secret = drawGuessSecrets.get(roomId);
   if (secret?.timer) {
@@ -846,13 +862,19 @@ export function startDrawGuessRound(room: GameState): DrawGuessRoundState {
   }
 
   // pick topic
+  const difficultyTopics = DRAW_GUESS_TOPICS_BY_DIFFICULTY[room.drawGuessDifficulty];
+  const topicSource = difficultyTopics.length > 0
+    ? difficultyTopics
+    : DRAW_GUESS_TOPICS_BY_DIFFICULTY.normal;
   const usedTopics = room.roundResults
     .filter((r): r is DrawGuessRoundResult => r.game === 'draw-guess')
     .map((r) => r.topic);
-  const available = DRAW_GUESS_TOPICS.filter((t) => !usedTopics.includes(t));
+  const available = topicSource.filter((t) => !usedTopics.includes(t));
   const topic = available.length > 0
     ? available[randInt(0, available.length - 1)]
-    : DRAW_GUESS_TOPICS[randInt(0, DRAW_GUESS_TOPICS.length - 1)];
+    : topicSource[randInt(0, topicSource.length - 1)];
+
+  const timeLimit = room.drawGuessTimeLimit;
 
   // clean up previous timer
   stopDrawGuessTimer(room.roomId);
@@ -864,8 +886,8 @@ export function startDrawGuessRound(room: GameState): DrawGuessRoundState {
     drawerId: drawer.id,
     correctPlayerIds: [],
     guessSubmittedPlayerIds: [],
-    timeLeft: DRAW_GUESS_TIME_LIMIT,
-    timeLimit: DRAW_GUESS_TIME_LIMIT,
+    timeLeft: timeLimit,
+    timeLimit,
     strokes: [],
   };
 
@@ -876,7 +898,7 @@ export function startDrawGuessRound(room: GameState): DrawGuessRoundState {
     undoneStrokes: [],
     correctPlayerIds: [],
     timer: null,
-    timeLeft: DRAW_GUESS_TIME_LIMIT,
+    timeLeft: timeLimit,
   });
 
   room.currentRound = round;
@@ -894,7 +916,13 @@ export function startDrawGuessTimer(
   onTimeUp: (roomId: string) => void,
 ): void {
   const secret = drawGuessSecrets.get(roomId);
-  if (!secret || secret.timer) return;
+  if (!secret || secret.timer || secret.timeLeft <= 0) return;
+
+  const room = rooms.get(roomId);
+  if (room?.currentRound?.game === 'draw-guess') {
+    (room.currentRound as DrawGuessRoundState).timeLeft = secret.timeLeft;
+  }
+  onTick(roomId, secret.timeLeft);
 
   secret.onTick = onTick;
   secret.onTimeUp = onTimeUp;

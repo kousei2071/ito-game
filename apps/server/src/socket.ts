@@ -54,6 +54,8 @@ function toPublic(room: GameState): PublicGameState {
     score: room.score,
     wordWolfTalkSeconds: room.wordWolfTalkSeconds,
     wordWolfCountMode: room.wordWolfCountMode,
+    drawGuessTimeLimit: room.drawGuessTimeLimit,
+    drawGuessDifficulty: room.drawGuessDifficulty,
   };
 }
 
@@ -118,11 +120,15 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       topicChooserMode,
       wordWolfTalkSeconds,
       wordWolfCountMode,
+      drawGuessTimeLimit,
+      drawGuessDifficulty,
     }: {
       totalRounds: number;
       topicChooserMode: 'sequential' | 'random';
       wordWolfTalkSeconds: number;
       wordWolfCountMode: 'auto' | 'one' | 'two';
+      drawGuessTimeLimit: 0 | 60 | 90 | 120;
+      drawGuessDifficulty: 'easy' | 'normal' | 'hard';
     }) => {
       const room = findRoomByPlayer(socket.id);
       if (!room) return emitError(socket, 'ルームが見つかりません');
@@ -132,6 +138,8 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           topicChooserMode,
           wordWolfTalkSeconds,
           wordWolfCountMode,
+          drawGuessTimeLimit,
+          drawGuessDifficulty,
         });
         broadcastState(io, room);
       } catch (e: any) {

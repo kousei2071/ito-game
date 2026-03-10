@@ -100,6 +100,8 @@ interface GameContextValue {
       topicChooserMode: 'sequential' | 'random';
       wordWolfTalkSeconds: number;
       wordWolfCountMode: 'auto' | 'one' | 'two';
+      drawGuessTimeLimit: 0 | 60 | 90 | 120;
+      drawGuessDifficulty: 'easy' | 'normal' | 'hard';
     }) => void;
     startGame: () => void;
     selectGame: (game: GameType) => void;
@@ -218,6 +220,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
       topicChooserMode: 'sequential' | 'random';
       wordWolfTalkSeconds: number;
       wordWolfCountMode: 'auto' | 'one' | 'two';
+      drawGuessTimeLimit: 0 | 60 | 90 | 120;
+      drawGuessDifficulty: 'easy' | 'normal' | 'hard';
     }) => {
       socket.emit(C2S.ROOM_UPDATE_SETTINGS, settings);
     }, [socket]),

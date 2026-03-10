@@ -22,6 +22,8 @@ export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'ic
 export type TopicChooserMode = 'sequential' | 'random';
 export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
+export type DrawGuessTimeLimit = 0 | 60 | 90 | 120;
+export type DrawGuessDifficulty = 'easy' | 'normal' | 'hard';
 
 // ============================================================
 // Game Phase
@@ -143,6 +145,10 @@ export interface GameState {
   wordWolfTalkSeconds: number;
   /** ワードウルフ人数設定 */
   wordWolfCountMode: WordWolfCountMode;
+  /** お絵描きクイズ制限時間（0は無制限） */
+  drawGuessTimeLimit: DrawGuessTimeLimit;
+  /** お絵描きクイズ難易度 */
+  drawGuessDifficulty: DrawGuessDifficulty;
 }
 
 export interface ItoRoundResult {
@@ -201,4 +207,6 @@ export interface PublicGameState {
   score: number;
   wordWolfTalkSeconds: number;
   wordWolfCountMode: WordWolfCountMode;
+  drawGuessTimeLimit: DrawGuessTimeLimit;
+  drawGuessDifficulty: DrawGuessDifficulty;
 }

@@ -14,6 +14,8 @@ export function GameSettingsScreen() {
     topicChooserMode: gs.topicChooserMode,
     wordWolfTalkSeconds: gs.wordWolfTalkSeconds,
     wordWolfCountMode: gs.wordWolfCountMode,
+    drawGuessTimeLimit: gs.drawGuessTimeLimit,
+    drawGuessDifficulty: gs.drawGuessDifficulty,
   });
 
   useEffect(() => {
@@ -22,8 +24,17 @@ export function GameSettingsScreen() {
       topicChooserMode: gs.topicChooserMode,
       wordWolfTalkSeconds: gs.wordWolfTalkSeconds,
       wordWolfCountMode: gs.wordWolfCountMode,
+      drawGuessTimeLimit: gs.drawGuessTimeLimit,
+      drawGuessDifficulty: gs.drawGuessDifficulty,
     });
-  }, [gs.totalRounds, gs.topicChooserMode, gs.wordWolfTalkSeconds, gs.wordWolfCountMode]);
+  }, [
+    gs.totalRounds,
+    gs.topicChooserMode,
+    gs.wordWolfTalkSeconds,
+    gs.wordWolfCountMode,
+    gs.drawGuessTimeLimit,
+    gs.drawGuessDifficulty,
+  ]);
 
   useEffect(() => {
     if (!isHost) return;
@@ -31,7 +42,9 @@ export function GameSettingsScreen() {
       settings.totalRounds === gs.totalRounds &&
       settings.topicChooserMode === gs.topicChooserMode &&
       settings.wordWolfTalkSeconds === gs.wordWolfTalkSeconds &&
-      settings.wordWolfCountMode === gs.wordWolfCountMode
+      settings.wordWolfCountMode === gs.wordWolfCountMode &&
+      settings.drawGuessTimeLimit === gs.drawGuessTimeLimit &&
+      settings.drawGuessDifficulty === gs.drawGuessDifficulty
     ) {
       return;
     }
@@ -43,6 +56,8 @@ export function GameSettingsScreen() {
     gs.topicChooserMode,
     gs.wordWolfTalkSeconds,
     gs.wordWolfCountMode,
+    gs.drawGuessTimeLimit,
+    gs.drawGuessDifficulty,
     actions,
   ]);
 
@@ -81,7 +96,9 @@ export function GameSettingsScreen() {
         <p className="settings-note">
           {gs.selectedGame === 'word-wolf'
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
-            : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}
+            : gs.selectedGame === 'draw-guess'
+              ? 'ラウンド数・制限時間・難易度を決めてから開始します。'
+              : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}
         </p>
 
         <p className="game-members-title">ルーム設定</p>
@@ -134,6 +151,43 @@ export function GameSettingsScreen() {
                   <option value="auto">自動（4人以下で1人 / 5人以上で2人）</option>
                   <option value="one">1人</option>
                   <option value="two">2人</option>
+                </select>
+              </label>
+            </>
+          ) : null}
+
+          {gs.selectedGame === 'draw-guess' ? (
+            <>
+              <label className="settings-field">
+                <span>制限時間</span>
+                <select
+                  className="input"
+                  value={settings.drawGuessTimeLimit}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, drawGuessTimeLimit: Number(e.target.value) as 0 | 60 | 90 | 120 }))
+                  }
+                  disabled={!isHost}
+                >
+                  <option value={60}>60秒</option>
+                  <option value={90}>90秒</option>
+                  <option value={120}>120秒</option>
+                  <option value={0}>無制限</option>
+                </select>
+              </label>
+
+              <label className="settings-field">
+                <span>難易度</span>
+                <select
+                  className="input"
+                  value={settings.drawGuessDifficulty}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, drawGuessDifficulty: e.target.value as 'easy' | 'normal' | 'hard' }))
+                  }
+                  disabled={!isHost}
+                >
+                  <option value="easy">簡単</option>
+                  <option value="normal">普通</option>
+                  <option value="hard">難しい</option>
                 </select>
               </label>
             </>

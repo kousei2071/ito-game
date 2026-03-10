@@ -7,7 +7,7 @@ import { DrawingCanvas } from '../components/DrawingCanvas';
 import { PlayerIdentity } from '../components/PlayerIdentity';
 
 export function DrawGuessScreen() {
-  const { state } = useGame();
+  const { state, actions } = useGame();
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
@@ -21,6 +21,10 @@ export function DrawGuessScreen() {
   if (!round || round.game !== 'draw-guess') return null;
   const isDrawer = me?.id === round.drawerId;
   const drawer = gs.players.find((p) => p.id === round.drawerId);
+
+  useEffect(() => {
+    setTimeLeft(round.timeLimit);
+  }, [round.timeLimit, round.roundNumber]);
 
   // Listen for real-time events
   useEffect(() => {
@@ -109,20 +113,31 @@ export function DrawGuessScreen() {
   }, []);
 
   const guesserCount = gs.players.length - 1;
-  const timePercent = Math.max(0, (timeLeft / round.timeLimit) * 100);
+  const isUnlimitedTime = round.timeLimit === 0;
+  const timePercent = isUnlimitedTime
+    ? 100
+    : Math.max(0, (timeLeft / round.timeLimit) * 100);
 
   return (
     <div className="screen drawguess-screen">
-      <div className="round-header round-header-with-room-id">
+      <div className="round-header round-header-with-back">
         <span className="round-badge">R{round.roundNumber}</span>
-        <span className="room-id-badge">{gs.roomId}</span>
+        <button
+          type="button"
+          className="btn btn-back-select"
+          onClick={actions.returnToGameSelect}
+          aria-label="ゲーム選択へ戻る"
+          title="ゲーム選択へ戻る"
+        >
+          ←
+        </button>
         <span className="score-badge">{gs.score}✓</span>
       </div>
 
       {/* Timer bar */}
       <div className="drawguess-timer-bar-wrap">
         <div className="drawguess-timer-bar" style={{ width: `${timePercent}%` }} />
-        <span className="drawguess-timer-text">{timeLeft}秒</span>
+        <span className="drawguess-timer-text">{isUnlimitedTime ? 'むせいげん' : `${timeLeft}秒`}</span>
       </div>
 
       {/* Drawer info */}
