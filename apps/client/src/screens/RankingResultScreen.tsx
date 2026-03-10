@@ -14,7 +14,7 @@ export function RankingResultScreen() {
   }
 
   return (
-    <div className="screen result-screen is-success">
+    <div className={`screen result-screen ${result.isCorrect ? 'is-success' : 'is-failure'}`}>
       <div className="round-header round-header-with-back">
         <span className="round-badge">Round {result.roundNumber} / {gs.totalRounds}</span>
         <button
@@ -29,8 +29,8 @@ export function RankingResultScreen() {
         <span className="score-badge">スコア: {gs.score}</span>
       </div>
 
-      <div className="result-status-pop success">
-        <h2>ランキング確定！</h2>
+      <div className={`result-status-pop ${result.isCorrect ? 'success' : 'failure'}`}>
+        <h2>{result.isCorrect ? 'クリア！' : 'アウト！'}</h2>
       </div>
 
       <div className="topic-card">

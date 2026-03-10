@@ -635,16 +635,21 @@ export function revealNextRanking(room: GameState, socketId: string): RankingRou
     };
   }).sort((a, b) => (a.rank - b.rank) || a.playerName.localeCompare(b.playerName, 'ja'));
 
+  const uniqueRanks = new Set(rankingCards.map((c) => c.rank));
+  const isCorrect = uniqueRanks.size === rankingCards.length;
+
   const result: RankingRoundResult = {
     game: 'ranking',
     roundNumber: round.roundNumber,
     topic: round.topic,
-    isCorrect: true,
+    isCorrect,
     rankingCards,
   };
 
-  round.isCorrect = true;
-  room.score += 1;
+  round.isCorrect = isCorrect;
+  if (isCorrect) {
+    room.score += 1;
+  }
   room.roundResults.push(result);
   room.phase = 'ranking-result';
   return result;
