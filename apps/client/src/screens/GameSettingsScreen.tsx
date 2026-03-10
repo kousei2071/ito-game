@@ -46,7 +46,12 @@ export function GameSettingsScreen() {
     actions,
   ]);
 
-  const selectedGameLabel = gs.selectedGame === 'word-wolf' ? 'ワードウルフ' : 'ito';
+  const selectedGameLabel =
+    gs.selectedGame === 'word-wolf'
+      ? 'ワードウルフ'
+      : gs.selectedGame === 'ranking'
+        ? 'ランキングゲーム'
+        : 'ito';
 
   return (
     <div className="screen game-settings-screen">
@@ -74,7 +79,7 @@ export function GameSettingsScreen() {
         <p className="settings-note">
           {gs.selectedGame === 'word-wolf'
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
-            : 'ラウンド数を決めてから開始します。'}
+            : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}
         </p>
 
         <p className="game-members-title">ルーム設定</p>

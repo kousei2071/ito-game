@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react';
-import type { PublicGameState, RoundResult } from '@ito/shared';
+import type { PublicGameState, RoundResult, GameType, PlayerIconId } from '@ito/shared';
 import { S2C, C2S } from '@ito/shared';
 import { getSocket, SOCKET_URL } from '../socket';
 
@@ -102,7 +102,7 @@ interface GameContextValue {
       wordWolfCountMode: 'auto' | 'one' | 'two';
     }) => void;
     startGame: () => void;
-    selectGame: (game: 'ito' | 'word-wolf') => void;
+    selectGame: (game: GameType) => void;
     returnToGameSelect: () => void;
     submitClue: (clue: string) => void;
     confirmArrange: (order: string[]) => void;
@@ -194,11 +194,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   // ---------- Actions ----------
   const actions = {
-    createRoom: useCallback((playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10') => {
+    createRoom: useCallback((playerName: string, playerIconId: PlayerIconId) => {
       socket.emit(C2S.ROOM_CREATE, { playerName, playerIconId });
     }, [socket]),
 
-    joinRoom: useCallback((roomId: string, playerName: string, playerIconId: 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10') => {
+    joinRoom: useCallback((roomId: string, playerName: string, playerIconId: PlayerIconId) => {
       socket.emit(C2S.ROOM_JOIN, { roomId, playerName, playerIconId });
     }, [socket]),
 
@@ -224,7 +224,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.emit(C2S.GAME_START, {});
     }, [socket]),
 
-    selectGame: useCallback((game: 'ito' | 'word-wolf') => {
+    selectGame: useCallback((game: GameType) => {
       socket.emit(C2S.GAME_SELECT, { game });
     }, [socket]),
 

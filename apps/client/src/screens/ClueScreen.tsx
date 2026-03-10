@@ -9,7 +9,7 @@ export function ClueScreen() {
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
-  if (!round || round.game !== 'ito') {
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
   const currentSocketId = socket.id ?? '';

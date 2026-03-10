@@ -10,11 +10,11 @@ export function ResultScreen() {
   const socket = getSocket();
   const isHost = gs.players.find((p) => p.id === socket.id)?.isHost ?? false;
 
-  if (!result || result.game !== 'ito') {
+  if (!result || (result.game !== 'ito' && result.game !== 'ranking')) {
     return <div className="screen"><p>結果を読み込み中…</p></div>;
   }
 
-  const itoRound = round && round.game === 'ito' ? round : null;
+  const itoRound = round && (round.game === 'ito' || round.game === 'ranking') ? round : null;
 
   const answeredOrder =
     itoRound?.clues

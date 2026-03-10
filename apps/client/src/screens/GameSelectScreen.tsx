@@ -9,8 +9,9 @@ export function GameSelectScreen() {
   const socket = getSocket();
   const me = gs.players.find((p) => p.id === socket.id);
   const isHost = me?.isHost ?? false;
-  const games: Array<{ id: 'ito' | 'word-wolf'; title: string; desc: string }> = [
+  const games: Array<{ id: 'ito' | 'ranking' | 'word-wolf'; title: string; desc: string }> = [
     { id: 'ito', title: 'ito', desc: '価値観で数字を並べる協力ゲーム' },
+    { id: 'ranking', title: 'ランキングゲーム', desc: 'お題に沿った答えを人気順に並べる協力ゲーム' },
     { id: 'word-wolf', title: 'ワードウルフ', desc: '少数派を見つける会話推理ゲーム' },
   ];
   const [selectedIndex, setSelectedIndex] = useState(
