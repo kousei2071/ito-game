@@ -193,7 +193,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         // send topic only to the drawer
         const topic = getDrawGuessTopic(room.roomId);
         if (topic) {
-          io.to(round.drawerId).emit(S2C.NOTICE, { message: `お題: ${topic}` });
+          io.to(round.drawerId).emit(S2C.YOUR_WORD, { word: topic });
         }
         startDrawGuessTimer(
           room.roomId,
@@ -506,7 +506,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       } else if (room.currentRound?.game === 'draw-guess') {
         const topic = getDrawGuessTopic(room.roomId);
         if (topic) {
-          io.to(room.currentRound.drawerId).emit(S2C.NOTICE, { message: `お題: ${topic}` });
+          io.to(room.currentRound.drawerId).emit(S2C.YOUR_WORD, { word: topic });
         }
         startDrawGuessTimer(
           room.roomId,

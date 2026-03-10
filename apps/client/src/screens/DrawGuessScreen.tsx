@@ -17,7 +17,6 @@ export function DrawGuessScreen() {
   const [timeLeft, setTimeLeft] = useState(90);
   const [correctCount, setCorrectCount] = useState(0);
   const [myCorrect, setMyCorrect] = useState(false);
-  const [drawerTopic, setDrawerTopic] = useState<string | null>(null);
 
   if (!round || round.game !== 'draw-guess') return null;
   const isDrawer = me?.id === round.drawerId;
@@ -81,20 +80,6 @@ export function DrawGuessScreen() {
     };
   }, [socket]);
 
-  // Listen for notice with the topic (drawer only)
-  useEffect(() => {
-    if (!isDrawer) return;
-    const handleNotice = ({ message }: { message: string }) => {
-      if (message.startsWith('お題: ')) {
-        setDrawerTopic(message.replace('お題: ', ''));
-      }
-    };
-    socket.on(S2C.NOTICE, handleNotice);
-    return () => {
-      socket.off(S2C.NOTICE, handleNotice);
-    };
-  }, [socket, isDrawer]);
-
   const handleStroke = useCallback((stroke: DrawGuessStroke) => {
     socket.emit(C2S.DRAWGUESS_STROKE, { stroke });
   }, [socket]);
@@ -152,10 +137,10 @@ export function DrawGuessScreen() {
       </div>
 
       {/* Topic display for drawer */}
-      {isDrawer && drawerTopic && (
+      {isDrawer && state.myWord && (
         <div className="drawguess-topic-card">
           <span className="drawguess-topic-label">お題</span>
-          <span className="drawguess-topic-text">{drawerTopic}</span>
+          <span className="drawguess-topic-text">{state.myWord}</span>
         </div>
       )}
 
