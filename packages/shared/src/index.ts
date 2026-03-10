@@ -9,3 +9,5 @@ export * from './presetWordWolfTopics.js';
 export * from './drawGuessTopics.js';
 export * from './presetDrawGuessTopics.js';
 export * from './presetDrawGuessTopicsCustom.js';
+export * from './allMatchTopics.js';
+export * from './presetAllMatchTopics.js';

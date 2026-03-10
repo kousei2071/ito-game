@@ -20,7 +20,7 @@ export interface Player {
 export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
-export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess';
+export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
 export type DrawGuessTimeLimit = 0 | 60 | 90 | 120;
 export type DrawGuessDifficulty = 'easy' | 'normal' | 'hard';
@@ -122,7 +122,16 @@ export interface DrawGuessRoundState {
   strokes: DrawGuessStroke[];
 }
 
-export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState | DrawGuessRoundState;
+export interface AllMatchRoundState {
+  game: 'all-match';
+  roundNumber: number;
+  topic: string;
+  submittedCluePlayerIds: string[];
+  clues: { playerId: string; clue: string }[];
+  isCorrect?: boolean;
+}
+
+export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState | DrawGuessRoundState | AllMatchRoundState;
 
 // ============================================================
 // Room / GameState
@@ -188,7 +197,16 @@ export interface DrawGuessRoundResult {
   drawerPoints: number;
 }
 
-export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult;
+export interface AllMatchRoundResult {
+  game: 'all-match';
+  roundNumber: number;
+  topic: string;
+  isCorrect: boolean;
+  matchedAnswer?: string;
+  answers: { playerId: string; playerName: string; answer: string }[];
+}
+
+export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult | AllMatchRoundResult;
 
 // ============================================================
 // Public game state (secretNumber を隠したもの)
