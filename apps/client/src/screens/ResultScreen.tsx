@@ -10,16 +10,11 @@ export function ResultScreen() {
   const socket = getSocket();
   const isHost = gs.players.find((p) => p.id === socket.id)?.isHost ?? false;
 
-  if (!result || result.game !== 'ito') {
+  if (!result || (result.game !== 'ito' && result.game !== 'all-match')) {
     return <div className="screen"><p>結果を読み込み中…</p></div>;
   }
 
   const itoRound = round && round.game === 'ito' ? round : null;
-
-  const answeredOrder =
-    itoRound?.clues
-      .map((c) => result.correctOrder.find((entry) => entry.playerId === c.playerId))
-      .filter((entry): entry is (typeof result.correctOrder)[number] => Boolean(entry)) ?? result.correctOrder;
 
   return (
     <div className={`screen result-screen ${result.isCorrect ? 'is-success' : 'is-failure'}`}>
@@ -48,23 +43,63 @@ export function ResultScreen() {
         <h2 className="topic-text">{result.topic}</h2>
       </div>
 
-      <h3>回答順</h3>
-      <ul className="result-order">
-        {answeredOrder.map((entry, idx) => (
-          <li key={entry.playerId} className="result-item">
-            <span className="result-rank">{idx + 1}</span>
-            {gs.players.find((p) => p.id === entry.playerId) ? (
-              <PlayerIdentity
-                player={gs.players.find((p) => p.id === entry.playerId)!}
-                className="result-name"
-              />
-            ) : (
-              <span className="result-name">{entry.playerName}</span>
-            )}
-            <span className="result-number">{entry.secretNumber}</span>
-          </li>
-        ))}
-      </ul>
+      {result.game === 'ito' ? (
+        <>
+          {(() => {
+            const answeredOrder =
+              itoRound?.clues
+                .map((c) => result.correctOrder.find((entry) => entry.playerId === c.playerId))
+                .filter((entry): entry is (typeof result.correctOrder)[number] => Boolean(entry)) ?? result.correctOrder;
+            return (
+              <>
+          <h3>回答順</h3>
+          <ul className="result-order">
+            {answeredOrder.map((entry, idx) => (
+              <li key={entry.playerId} className="result-item">
+                <span className="result-rank">{idx + 1}</span>
+                {gs.players.find((p) => p.id === entry.playerId) ? (
+                  <PlayerIdentity
+                    player={gs.players.find((p) => p.id === entry.playerId)!}
+                    className="result-name"
+                  />
+                ) : (
+                  <span className="result-name">{entry.playerName}</span>
+                )}
+                <span className="result-number">{entry.secretNumber}</span>
+              </li>
+            ))}
+          </ul>
+              </>
+            );
+          })()}
+        </>
+      ) : (
+        <>
+          <h3>みんなの回答</h3>
+          <ul className="result-order">
+            {result.answers.map((entry, idx) => (
+              <li key={entry.playerId} className="result-item">
+                <span className="result-rank">{idx + 1}</span>
+                {gs.players.find((p) => p.id === entry.playerId) ? (
+                  <PlayerIdentity
+                    player={gs.players.find((p) => p.id === entry.playerId)!}
+                    className="result-name"
+                  />
+                ) : (
+                  <span className="result-name">{entry.playerName}</span>
+                )}
+                <span className="result-number" style={{ fontSize: 22 }}>{entry.answer}</span>
+              </li>
+            ))}
+          </ul>
+          {result.isCorrect && result.matchedAnswer ? (
+            <div className="topic-card">
+              <p className="topic-label">一致した答え</p>
+              <h2 className="topic-text">{result.matchedAnswer}</h2>
+            </div>
+          ) : null}
+        </>
+      )}
 
       {isHost && (
         <button className="btn btn-primary" onClick={actions.nextRound}>

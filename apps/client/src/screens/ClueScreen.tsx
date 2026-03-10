@@ -9,7 +9,7 @@ export function ClueScreen() {
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking')) {
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
   const currentSocketId = socket.id ?? '';
@@ -54,6 +54,8 @@ export function ClueScreen() {
           <p className="clue-instruction">
             {round.game === 'ito'
               ? `お題「${round.topic}」に対して、数字の大きさに応じた答えを入力してください`
+              : round.game === 'all-match'
+                ? `お題「${round.topic}」に対して、全員で同じ答えを狙って入力してください`
               : `ランキングゲームでは回答入力はありません（この画面は通常表示されません）`}
           </p>
           <input

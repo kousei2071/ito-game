@@ -68,6 +68,8 @@ export function GameSettingsScreen() {
         ? 'ランキングゲーム'
         : gs.selectedGame === 'draw-guess'
           ? 'お絵描きクイズ'
+          : gs.selectedGame === 'all-match'
+            ? '全員一致ゲーム'
         : 'ito';
 
   return (
@@ -98,6 +100,8 @@ export function GameSettingsScreen() {
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
             : gs.selectedGame === 'draw-guess'
               ? 'ラウンド数・制限時間・難易度を決めてから開始します。'
+              : gs.selectedGame === 'all-match'
+                ? 'ラウンド数を決めてから開始します。全員が同じ答えを出せたら成功です。'
               : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}
         </p>
 
