@@ -1,6 +1,6 @@
 import type { Server, Socket } from 'socket.io';
-import { C2S, S2C, TOPICS, RANKING_TOPICS, ALL_MATCH_TOPICS, NG_WORD_BATTLE_TOPICS } from '@ito/shared';
-import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult, AllMatchRoundResult, DrawGuessStroke, NgWordRoundResult } from '@ito/shared';
+import { C2S, S2C, TOPICS, RANKING_TOPICS, ALL_MATCH_TOPICS } from '@ito/shared';
+import type { PublicGameState, GameState, ItoRoundResult, RankingRoundResult, AllMatchRoundResult, DrawGuessStroke } from '@ito/shared';
 import {
   createRoom,
   joinRoom,
@@ -22,9 +22,9 @@ import {
   submitClue,
   openAllMatchResult,
   judgeAllMatchRound,
-  startNgWordTalk,
-  getNgWordWords,
-  reportNgWordIncident,
+  eliminateNgWordPlayer,
+  rerollNgWordAssignments,
+  maybeFinishNgWordByElimination,
   finishNgWordTalk,
   updateItoArrangeOrder,
   confirmArrange,
@@ -280,7 +280,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (!room || room.phase !== 'topic' || !room.currentRound) return;
 
       const round = room.currentRound;
-      if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'ng-word') return;
+      if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match') return;
       if (round.topicChooserId !== socket.id) {
         return emitError(socket, 'このラウンドでお題を決められるのは順番のプレイヤーだけです');
       }
@@ -296,11 +296,9 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
             ? RANKING_TOPICS
             : round.game === 'all-match'
               ? ALL_MATCH_TOPICS
-              : round.game === 'ng-word'
-                ? NG_WORD_BATTLE_TOPICS
               : TOPICS;
           const usedTopics = room.roundResults
-            .filter((r): r is ItoRoundResult | RankingRoundResult | AllMatchRoundResult | NgWordRoundResult => r.game === round.game)
+            .filter((r): r is ItoRoundResult | RankingRoundResult | AllMatchRoundResult => r.game === round.game)
             .map((r) => r.topic);
           const exclude = new Set<string>([...usedTopics, round.topic]);
           const candidates = presetTopics.filter((t) => !exclude.has(t));
@@ -325,11 +323,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         round.rankingSelections = [];
         round.rankingSubmittedPlayerIds = [];
         round.revealedRank = 0;
-      } else if (round.game === 'ng-word') {
-        startNgWordTalk(room, socket.id);
-        room.players.forEach((p) => {
-          io.to(p.id).emit(S2C.NGWORD_YOUR_WORDS, { words: getNgWordWords(room.roomId, p.id) });
-        });
       } else {
         room.phase = 'clue';
       }
@@ -398,12 +391,28 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     }
   });
 
-  // ---------- ngword:report ----------
-  socket.on(C2S.NGWORD_REPORT, ({ speakerId, inducerId, spokenWord }: { speakerId: string; inducerId: string; spokenWord: string }) => {
+  // ---------- ngword:eliminate ----------
+  socket.on(C2S.NGWORD_ELIMINATE, ({ targetPlayerId }: { targetPlayerId: string }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room) return;
     try {
-      reportNgWordIncident(room, socket.id, { speakerId, inducerId, spokenWord });
+      eliminateNgWordPlayer(room, socket.id, { targetPlayerId });
+      const result = maybeFinishNgWordByElimination(room);
+      if (result) {
+        io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+      }
+      broadcastState(io, room);
+    } catch (e) {
+      emitError(socket, (e as Error).message);
+    }
+  });
+
+  // ---------- ngword:rerollWords ----------
+  socket.on(C2S.NGWORD_REROLL_WORDS, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      rerollNgWordAssignments(room, socket.id);
       broadcastState(io, room);
     } catch (e) {
       emitError(socket, (e as Error).message);

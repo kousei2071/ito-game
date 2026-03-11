@@ -23,7 +23,7 @@ import type {
   NgWordRoundResult,
   NgWordIncident,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORD_BATTLE_TOPICS, NG_WORDS, NG_WORDS_PER_PLAYER } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORDS, NG_WORDS_PER_PLAYER } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -52,12 +52,6 @@ interface DrawGuessSecretState {
 }
 
 const drawGuessSecrets = new Map<string, DrawGuessSecretState>();
-
-interface NgWordSecretState {
-  assignments: Map<string, string[]>;
-}
-
-const ngWordSecrets = new Map<string, NgWordSecretState>();
 
 export type PlayerExitResult =
   | { kind: 'room-closed'; roomId: string; actorName: string }
@@ -210,7 +204,6 @@ function resetGameProgressToSelect(room: GameState): void {
     p.clue = undefined;
   });
   wordWolfSecrets.delete(room.roomId);
-  ngWordSecrets.delete(room.roomId);
   stopDrawGuessTimer(room.roomId);
   drawGuessSecrets.delete(room.roomId);
 }
@@ -223,11 +216,10 @@ function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void
     if (round.topicChooserId === removedPlayerId) {
       round.topicChooserId = room.players[0]?.id ?? '';
     }
+    round.eliminatedPlayerIds = round.eliminatedPlayerIds.filter((id) => id !== removedPlayerId);
     round.incidents = round.incidents.filter(
-      (incident) => incident.speakerId !== removedPlayerId && incident.inducerId !== removedPlayerId,
+      (incident) => incident.targetId !== removedPlayerId && incident.reporterId !== removedPlayerId,
     );
-    const secret = ngWordSecrets.get(room.roomId);
-    secret?.assignments.delete(removedPlayerId);
     return;
   }
 
@@ -268,7 +260,6 @@ export function leaveRoom(socketId: string): PlayerExitResult | null {
 
     if (leavingPlayer.isHost) {
       wordWolfSecrets.delete(room.roomId);
-      ngWordSecrets.delete(room.roomId);
       stopDrawGuessTimer(room.roomId);
       drawGuessSecrets.delete(room.roomId);
       rooms.delete(room.roomId);
@@ -277,7 +268,6 @@ export function leaveRoom(socketId: string): PlayerExitResult | null {
 
     if (room.players.length === 0) {
       wordWolfSecrets.delete(room.roomId);
-      ngWordSecrets.delete(room.roomId);
       stopDrawGuessTimer(room.roomId);
       drawGuessSecrets.delete(room.roomId);
       rooms.delete(room.roomId);
@@ -520,29 +510,29 @@ function startNgWordRound(room: GameState): RoundState {
     room.topicChooserIndex = (index + 1) % room.players.length;
   }
 
-  const usedTopics = room.roundResults
-    .filter((r): r is NgWordRoundResult => r.game === 'ng-word')
-    .map((r) => r.topic);
-  const available = NG_WORD_BATTLE_TOPICS.filter((t) => !usedTopics.includes(t));
-  const topicPool = available.length > 0 ? available : NG_WORD_BATTLE_TOPICS;
-  const topic = topicPool[randInt(0, topicPool.length - 1)];
-
   room.players.forEach((p) => {
     p.secretNumber = undefined;
     p.secretWord = undefined;
     p.clue = undefined;
   });
 
+  const wordAssignments = room.players.map((p) => ({
+    playerId: p.id,
+    words: shuffle(NG_WORDS).slice(0, NG_WORDS_PER_PLAYER),
+  }));
+
   const round: NgWordRoundState = {
     game: 'ng-word',
     roundNumber,
-    topic,
+    topic: '',
     topicChooserId: topicChooser.id,
     topicChangeCount: 0,
+    wordAssignments,
+    eliminatedPlayerIds: [],
     incidents: [],
   };
   room.currentRound = round;
-  room.phase = 'topic';
+  room.phase = 'ngword-talk';
   return round;
 }
 
@@ -727,109 +717,85 @@ export function openAllMatchResult(room: GameState, socketId: string): void {
   room.phase = 'result';
 }
 
-function buildNgWordAssignments(playerIds: string[]): Map<string, string[]> {
-  const assignments = new Map<string, string[]>();
-  for (const playerId of playerIds) {
-    const localPool = shuffle(NG_WORDS);
-    assignments.set(playerId, localPool.slice(0, NG_WORDS_PER_PLAYER));
-  }
-  return assignments;
-}
-
-export function startNgWordTalk(room: GameState, socketId: string): void {
-  const round = room.currentRound;
-  if (!round || round.game !== 'ng-word') {
-    throw new Error('NGワードゲームのラウンドではありません');
-  }
-  if (room.phase !== 'topic') {
-    throw new Error('このフェーズでは開始できません');
-  }
-  if (round.topicChooserId !== socketId) {
-    throw new Error('開始できるのはお題を決めた人だけです');
-  }
-
-  ngWordSecrets.set(room.roomId, {
-    assignments: buildNgWordAssignments(room.players.map((p) => p.id)),
-  });
-  room.phase = 'ngword-talk';
-}
-
-export function getNgWordWords(roomId: string, playerId: string): string[] {
-  const secret = ngWordSecrets.get(roomId);
-  if (!secret) return [];
-  return secret.assignments.get(playerId) ?? [];
-}
-
-export function reportNgWordIncident(
+export function eliminateNgWordPlayer(
   room: GameState,
   socketId: string,
-  payload: { speakerId: string; inducerId: string; spokenWord: string },
+  payload: { targetPlayerId: string },
 ): NgWordIncident {
   const round = room.currentRound;
   if (!round || round.game !== 'ng-word') {
     throw new Error('NGワードゲームのラウンドではありません');
   }
   if (room.phase !== 'ngword-talk') {
-    throw new Error('会話フェーズ中のみ記録できます');
+    throw new Error('会話フェーズ中のみ脱落処理できます');
   }
-  if (round.topicChooserId !== socketId) {
-    throw new Error('記録できるのはお題を決めた人だけです');
+  if (payload.targetPlayerId === socketId) {
+    throw new Error('自分自身は脱落させられません');
   }
 
-  const speaker = room.players.find((p) => p.id === payload.speakerId);
-  const inducer = room.players.find((p) => p.id === payload.inducerId);
-  if (!speaker || !inducer) {
+  const target = room.players.find((p) => p.id === payload.targetPlayerId);
+  const reporter = room.players.find((p) => p.id === socketId);
+  if (!target || !reporter) {
     throw new Error('プレイヤーが見つかりません');
   }
 
-  const spokenWord = payload.spokenWord.trim();
-  if (!spokenWord) {
-    throw new Error('発言されたワードを入力してください');
-  }
-
-  const assignedWords = getNgWordWords(room.roomId, speaker.id);
-  const normalized = spokenWord.toLowerCase();
-  const matched = assignedWords.find((w) => w.toLowerCase() === normalized);
-  if (!matched) {
-    throw new Error('そのワードは対象プレイヤーのNGワードではありません');
+  if (round.eliminatedPlayerIds.includes(target.id)) {
+    throw new Error('そのプレイヤーは既に脱落済みです');
   }
 
   const incident: NgWordIncident = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    speakerId: speaker.id,
-    inducerId: inducer.id,
-    spokenWord: matched,
+    targetId: target.id,
+    reporterId: reporter.id,
   };
 
+  round.eliminatedPlayerIds.push(target.id);
   round.incidents.push(incident);
   return incident;
 }
 
-export function finishNgWordTalk(room: GameState, socketId: string): NgWordRoundResult {
+export function rerollNgWordAssignments(room: GameState, socketId: string): void {
   const round = room.currentRound;
   if (!round || round.game !== 'ng-word') {
     throw new Error('NGワードゲームのラウンドではありません');
   }
   if (room.phase !== 'ngword-talk') {
-    throw new Error('このフェーズでは終了できません');
+    throw new Error('会話フェーズ中のみお題変更できます');
   }
-  if (round.topicChooserId !== socketId) {
-    throw new Error('終了できるのはお題を決めた人だけです');
+  const actor = room.players.find((p) => p.id === socketId);
+  if (!actor?.isHost) {
+    throw new Error('お題変更できるのはホストのみです');
   }
 
+  // お題変更: 全員分のNGワードを再配布
+  round.wordAssignments = room.players.map((p) => ({
+    playerId: p.id,
+    words: shuffle(NG_WORDS).slice(0, NG_WORDS_PER_PLAYER),
+  }));
+}
+
+function buildNgWordRoundResult(room: GameState, round: NgWordRoundState): NgWordRoundResult {
   const scoreMap = new Map<string, number>(room.players.map((p) => [p.id, 0]));
   for (const incident of round.incidents) {
-    scoreMap.set(incident.speakerId, (scoreMap.get(incident.speakerId) ?? 0) - 1);
-    scoreMap.set(incident.inducerId, (scoreMap.get(incident.inducerId) ?? 0) + 1);
+    scoreMap.set(incident.targetId, (scoreMap.get(incident.targetId) ?? 0) - 1);
+    scoreMap.set(incident.reporterId, (scoreMap.get(incident.reporterId) ?? 0) + 1);
   }
 
+  const alivePlayerIds = room.players
+    .map((p) => p.id)
+    .filter((id) => !round.eliminatedPlayerIds.includes(id));
+  const winnerPlayerId = alivePlayerIds.length === 1 ? alivePlayerIds[0] : undefined;
+  const winnerPlayerName = winnerPlayerId
+    ? room.players.find((p) => p.id === winnerPlayerId)?.name ?? ''
+    : undefined;
+
   const incidents = round.incidents.map((incident) => {
-    const speaker = room.players.find((p) => p.id === incident.speakerId);
-    const inducer = room.players.find((p) => p.id === incident.inducerId);
+    const target = room.players.find((p) => p.id === incident.targetId);
+    const reporter = room.players.find((p) => p.id === incident.reporterId);
     return {
       ...incident,
-      speakerName: speaker?.name ?? '',
-      inducerName: inducer?.name ?? '',
+      targetName: target?.name ?? '',
+      reporterName: reporter?.name ?? '',
     };
   });
 
@@ -841,14 +807,46 @@ export function finishNgWordTalk(room: GameState, socketId: string): NgWordRound
     }))
     .sort((a, b) => b.score - a.score);
 
-  const result: NgWordRoundResult = {
+  return {
     game: 'ng-word',
     roundNumber: round.roundNumber,
     topic: round.topic,
     isCorrect: true,
+    winnerPlayerId,
+    winnerPlayerName,
     incidents,
     scoreBoard,
   };
+}
+
+export function maybeFinishNgWordByElimination(room: GameState): NgWordRoundResult | null {
+  const round = room.currentRound;
+  if (!round || round.game !== 'ng-word') return null;
+  if (room.phase !== 'ngword-talk') return null;
+
+  const aliveCount = room.players.length - round.eliminatedPlayerIds.length;
+  if (aliveCount > 1) return null;
+
+  const result = buildNgWordRoundResult(room, round);
+  room.roundResults.push(result);
+  room.phase = 'ngword-result';
+  return result;
+}
+
+export function finishNgWordTalk(room: GameState, socketId: string): NgWordRoundResult {
+  const round = room.currentRound;
+  if (!round || round.game !== 'ng-word') {
+    throw new Error('NGワードゲームのラウンドではありません');
+  }
+  if (room.phase !== 'ngword-talk') {
+    throw new Error('このフェーズでは終了できません');
+  }
+  const actor = room.players.find((p) => p.id === socketId);
+  if (!actor?.isHost) {
+    throw new Error('終了できるのはホストのみです');
+  }
+
+  const result = buildNgWordRoundResult(room, round);
 
   room.roundResults.push(result);
   room.phase = 'ngword-result';

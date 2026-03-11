@@ -139,9 +139,8 @@ export interface AllMatchRoundState {
 
 export interface NgWordIncident {
   id: string;
-  speakerId: string;
-  inducerId: string;
-  spokenWord: string;
+  targetId: string;
+  reporterId: string;
 }
 
 export interface NgWordRoundState {
@@ -150,6 +149,8 @@ export interface NgWordRoundState {
   topic: string;
   topicChooserId: string;
   topicChangeCount: number;
+  wordAssignments: { playerId: string; words: string[] }[];
+  eliminatedPlayerIds: string[];
   incidents: NgWordIncident[];
 }
 
@@ -234,13 +235,14 @@ export interface NgWordRoundResult {
   roundNumber: number;
   topic: string;
   isCorrect: boolean;
+  winnerPlayerId?: string;
+  winnerPlayerName?: string;
   incidents: {
     id: string;
-    speakerId: string;
-    speakerName: string;
-    inducerId: string;
-    inducerName: string;
-    spokenWord: string;
+    targetId: string;
+    targetName: string;
+    reporterId: string;
+    reporterName: string;
   }[];
   scoreBoard: { playerId: string; playerName: string; score: number }[];
 }

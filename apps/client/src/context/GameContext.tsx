@@ -11,7 +11,6 @@ interface State {
   gameState: PublicGameState | null;
   myNumber: number | null;
   myWord: string | null;
-  myNgWords: string[];
   lastError: string | null;
   notice: string | null;
   wordWolfExampleTalk: { title: string; lines: string[] } | null;
@@ -24,7 +23,6 @@ const initialState: State = {
   gameState: null,
   myNumber: null,
   myWord: null,
-  myNgWords: [],
   lastError: null,
   notice: null,
   wordWolfExampleTalk: null,
@@ -37,7 +35,6 @@ type Action =
   | { type: 'SET_GAME_STATE'; payload: PublicGameState }
   | { type: 'SET_MY_NUMBER'; payload: number }
   | { type: 'SET_MY_WORD'; payload: string }
-  | { type: 'SET_MY_NG_WORDS'; payload: string[] }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'SET_NOTICE'; payload: string }
   | { type: 'CLEAR_NOTICE' }
@@ -61,15 +58,12 @@ function reducer(state: State, action: Action): State {
           action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result' || action.payload.phase === 'drawguess-result' || action.payload.phase === 'ngword-result'
             ? state.roundResult
             : null,
-        myNgWords: action.payload.phase === 'ngword-talk' ? state.myNgWords : [],
         finalResult: action.payload.phase === 'finished' ? state.finalResult : null,
       };
     case 'SET_MY_NUMBER':
       return { ...state, myNumber: action.payload, roundResult: null };
     case 'SET_MY_WORD':
       return { ...state, myWord: action.payload, roundResult: null };
-    case 'SET_MY_NG_WORDS':
-      return { ...state, myNgWords: action.payload, roundResult: null };
     case 'SET_ERROR':
       return { ...state, lastError: action.payload };
     case 'SET_NOTICE':
@@ -115,7 +109,8 @@ interface GameContextValue {
     submitClue: (clue: string) => void;
     openAllMatchResult: () => void;
     judgeAllMatch: (isCorrect: boolean) => void;
-    reportNgWordIncident: (payload: { speakerId: string; inducerId: string; spokenWord: string }) => void;
+    eliminateNgWordPlayer: (targetPlayerId: string) => void;
+    rerollNgWordWords: () => void;
     finishNgWordTalk: () => void;
     confirmArrange: (order: string[]) => void;
     startWordWolfTalk: () => void;
@@ -161,9 +156,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
     socket.on(S2C.YOUR_WORD, ({ word }: { word: string }) => {
       dispatch({ type: 'SET_MY_WORD', payload: word });
     });
-    socket.on(S2C.NGWORD_YOUR_WORDS, ({ words }: { words: string[] }) => {
-      dispatch({ type: 'SET_MY_NG_WORDS', payload: words });
-    });
     socket.on(S2C.ROUND_RESULT, (result: RoundResult) => {
       dispatch({ type: 'SET_ROUND_RESULT', payload: result });
     });
@@ -192,7 +184,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.off(S2C.GAME_STATE_CHANGED);
       socket.off(S2C.YOUR_NUMBER);
       socket.off(S2C.YOUR_WORD);
-      socket.off(S2C.NGWORD_YOUR_WORDS);
       socket.off(S2C.ROUND_RESULT);
       socket.off(S2C.GAME_FINISHED);
       socket.off(S2C.ERROR);
@@ -264,8 +255,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
       socket.emit(C2S.ALL_MATCH_JUDGE, { isCorrect });
     }, [socket]),
 
-    reportNgWordIncident: useCallback(({ speakerId, inducerId, spokenWord }: { speakerId: string; inducerId: string; spokenWord: string }) => {
-      socket.emit(C2S.NGWORD_REPORT, { speakerId, inducerId, spokenWord });
+    eliminateNgWordPlayer: useCallback((targetPlayerId: string) => {
+      socket.emit(C2S.NGWORD_ELIMINATE, { targetPlayerId });
+    }, [socket]),
+
+    rerollNgWordWords: useCallback(() => {
+      socket.emit(C2S.NGWORD_REROLL_WORDS, {});
     }, [socket]),
 
     finishNgWordTalk: useCallback(() => {

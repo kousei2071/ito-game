@@ -30,8 +30,8 @@ export function NgWordResultScreen() {
       </div>
 
       <div className="topic-card">
-        <p className="topic-label">会話テーマ</p>
-        <h2 className="topic-text">{result.topic}</h2>
+        <p className="topic-label">ラウンド結果</p>
+        <h2 className="topic-text">{result.winnerPlayerName ? `勝者: ${result.winnerPlayerName}` : 'NGワードバトル'}</h2>
       </div>
 
       <div className="game-members-panel">
@@ -55,15 +55,15 @@ export function NgWordResultScreen() {
       </div>
 
       <div className="game-members-panel">
-        <p className="game-members-title">NG発言ログ</p>
+        <p className="game-members-title">脱落ログ</p>
         {result.incidents.length === 0 ? (
-          <p className="settings-note">このラウンドではNG発言はありませんでした</p>
+          <p className="settings-note">このラウンドでは脱落者はいませんでした</p>
         ) : (
           <ul className="ngword-incident-list">
             {result.incidents.map((incident) => (
               <li key={incident.id} className="ngword-incident-item">
-                <span>{incident.speakerName} が「{incident.spokenWord}」</span>
-                <span className="settings-note">誘導: {incident.inducerName}</span>
+                <span>{incident.targetName} を脱落</span>
+                <span className="settings-note">申告: {incident.reporterName}</span>
               </li>
             ))}
           </ul>

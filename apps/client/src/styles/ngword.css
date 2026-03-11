@@ -20,6 +20,32 @@
   gap: 8px;
 }
 
+.ngword-member-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.ngword-member-card {
+  border: 1px solid #eadfc6;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.ngword-member-card:disabled {
+  opacity: 1;
+}
+
+.ngword-member-card.is-eliminated {
+  background: #f8f8f8;
+  border-color: #d6d6d6;
+}
+
 .ngword-tag {
   display: inline-flex;
   align-items: center;
@@ -48,4 +74,22 @@
   border: 1px solid #eadfc6;
   background: #fff;
   font-size: 14px;
+}
+
+.ngword-eliminated-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: #e17055;
+}
+
+.ngword-host-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
 }
