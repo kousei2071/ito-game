@@ -7,7 +7,7 @@ export function TopicSelectScreen() {
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match')) {
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'ng-word')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
   const isChooser = round.topicChooserId === socket.id;

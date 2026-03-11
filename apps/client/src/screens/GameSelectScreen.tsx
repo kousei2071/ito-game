@@ -9,12 +9,13 @@ export function GameSelectScreen() {
   const socket = getSocket();
   const me = gs.players.find((p) => p.id === socket.id);
   const isHost = me?.isHost ?? false;
-  const games: Array<{ id: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match'; title: string; desc: string }> = [
+  const games: Array<{ id: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word'; title: string; desc: string }> = [
     { id: 'ito', title: 'ito', desc: '価値観で数字を並べる協力ゲーム' },
     { id: 'ranking', title: 'ランキングゲーム', desc: 'お題に沿った答えを人気順に並べる協力ゲーム' },
     { id: 'word-wolf', title: 'ワードウルフ', desc: '少数派を見つける会話推理ゲーム' },
     { id: 'draw-guess', title: 'お絵描きクイズ', desc: '絵を描いてお題を当てるゲーム' },
     { id: 'all-match', title: '以心伝心ゲーム', desc: 'みんなで同じ答えを目指す協力ゲーム' },
+    { id: 'ng-word', title: 'NGワードゲーム', desc: '相手にNGワードを言わせる対戦ゲーム' },
   ];
   const [selectedIndex, setSelectedIndex] = useState(
     Math.max(0, games.findIndex((g) => g.id === (gs.selectedGame ?? 'ito'))),
