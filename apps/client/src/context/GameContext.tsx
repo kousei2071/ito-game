@@ -107,6 +107,7 @@ interface GameContextValue {
     selectGame: (game: GameType) => void;
     returnToGameSelect: () => void;
     submitClue: (clue: string) => void;
+    openAllMatchResult: () => void;
     judgeAllMatch: (isCorrect: boolean) => void;
     confirmArrange: (order: string[]) => void;
     startWordWolfTalk: () => void;
@@ -241,6 +242,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     submitClue: useCallback((clue: string) => {
       socket.emit(C2S.ROUND_SUBMIT_CLUE, { clue });
+    }, [socket]),
+
+    openAllMatchResult: useCallback(() => {
+      socket.emit(C2S.ALL_MATCH_OPEN_RESULT, {});
     }, [socket]),
 
     judgeAllMatch: useCallback((isCorrect: boolean) => {

@@ -14,6 +14,8 @@ export function ClueScreen() {
   }
   const currentSocketId = socket.id ?? '';
   const alreadySubmitted = submitted || round.submittedCluePlayerIds.includes(currentSocketId);
+  const allSubmitted = round.game === 'all-match' && round.submittedCluePlayerIds.length === gs.players.length;
+  const isTopicChooser = round.game === 'all-match' && round.topicChooserId === currentSocketId;
 
   const handleSubmit = () => {
     if (!clue.trim()) return;
@@ -76,6 +78,14 @@ export function ClueScreen() {
           <p className="waiting-count">
             {round.submittedCluePlayerIds.length} / {gs.players.length} 人が送信済み
           </p>
+          {allSubmitted && isTopicChooser ? (
+            <button className="btn btn-primary" onClick={actions.openAllMatchResult}>
+              結果画面へ進む
+            </button>
+          ) : null}
+          {allSubmitted && !isTopicChooser ? (
+            <p className="waiting-count">お題を決めた人が結果画面へ進めるのを待っています…</p>
+          ) : null}
         </div>
       )}
     </div>

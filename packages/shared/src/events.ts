@@ -28,6 +28,7 @@ export const C2S = {
   ROUND_ARRANGE:        'round:arrange',
   ROUND_CONFIRM:        'round:confirmArrange',
   ALL_MATCH_JUDGE:      'allmatch:judge',
+  ALL_MATCH_OPEN_RESULT:'allmatch:openResult',
   ROUND_NEXT:           'round:next',
 } as const;
 
@@ -90,6 +91,7 @@ export interface C2SPayloads {
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
   [C2S.ROUND_CONFIRM]: { order: string[] };
   [C2S.ALL_MATCH_JUDGE]: { isCorrect: boolean };
+  [C2S.ALL_MATCH_OPEN_RESULT]: {};
   [C2S.ROUND_NEXT]:  {};
 }
 

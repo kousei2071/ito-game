@@ -625,9 +625,8 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
   if (round.game === 'all-match') {
     if (round.submittedCluePlayerIds.length === room.players.length) {
-      // 全員提出完了→結果画面へ（結果画面上でトピック決定者が判定）
-      room.phase = 'result';
-      return true;
+      // 全員提出後はトピック決定者の合図待ち
+      return false;
     }
     return false;
   }
@@ -641,6 +640,24 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
     return true; // phase changed
   }
   return false;
+}
+
+/** 以心伝心: 全員提出後にトピック決定者が結果画面へ進める */
+export function openAllMatchResult(room: GameState, socketId: string): void {
+  const round = room.currentRound;
+  if (!round || round.game !== 'all-match') {
+    throw new Error('以心伝心のラウンドではありません');
+  }
+  if (room.phase !== 'clue') {
+    throw new Error('このフェーズでは結果画面へ進めません');
+  }
+  if (round.submittedCluePlayerIds.length !== room.players.length) {
+    throw new Error('全員の回答がまだ揃っていません');
+  }
+  if (round.topicChooserId !== socketId) {
+    throw new Error('結果画面へ進めるのはお題を決めた人だけです');
+  }
+  room.phase = 'result';
 }
 
 export function updateItoArrangeOrder(room: GameState, socketId: string, order: string[]): void {

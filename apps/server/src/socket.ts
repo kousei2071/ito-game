@@ -20,6 +20,7 @@ import {
   submitRankingSelfRank,
   revealNextRanking,
   submitClue,
+  openAllMatchResult,
   judgeAllMatchRound,
   updateItoArrangeOrder,
   confirmArrange,
@@ -363,6 +364,18 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (result) {
         io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
       }
+      broadcastState(io, room);
+    } catch (e) {
+      emitError(socket, (e as Error).message);
+    }
+  });
+
+  // ---------- allmatch:openResult ----------
+  socket.on(C2S.ALL_MATCH_OPEN_RESULT, () => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      openAllMatchResult(room, socket.id);
       broadcastState(io, room);
     } catch (e) {
       emitError(socket, (e as Error).message);
