@@ -13,7 +13,6 @@ import { WordWolfTalkScreen } from './screens/WordWolfTalkScreen';
 import { WordWolfVoteScreen } from './screens/WordWolfVoteScreen';
 import { WordWolfResultScreen } from './screens/WordWolfResultScreen';
 import { NgWordTalkScreen } from './screens/NgWordTalkScreen';
-import { NgWordResultScreen } from './screens/NgWordResultScreen';
 import { RankingRevealScreen } from './screens/RankingRevealScreen';
 import { RankingResultScreen } from './screens/RankingResultScreen';
 import { DrawGuessScreen } from './screens/DrawGuessScreen';
@@ -72,9 +71,6 @@ export default function App() {
         break;
       case 'ngword-talk':
         screen = <NgWordTalkScreen />;
-        break;
-      case 'ngword-result':
-        screen = <NgWordResultScreen />;
         break;
       case 'drawguess-drawing':
         screen = <DrawGuessScreen />;

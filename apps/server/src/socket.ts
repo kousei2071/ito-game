@@ -403,7 +403,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       eliminateNgWordPlayer(room, socket.id, { targetPlayerId });
       const result = maybeFinishNgWordByElimination(room);
       if (result) {
-        io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+        io.to(room.roomId).emit(S2C.NOTICE, {
+          message: result.winnerPlayerName
+            ? `NGワードゲーム終了 勝者: ${result.winnerPlayerName}`
+            : 'NGワードゲーム終了',
+        });
       }
       broadcastState(io, room);
     } catch (e) {
@@ -429,7 +433,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     if (!room) return;
     try {
       const result = finishNgWordTalk(room, socket.id);
-      io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+      io.to(room.roomId).emit(S2C.NOTICE, {
+        message: result.winnerPlayerName
+          ? `NGワードゲーム終了 勝者: ${result.winnerPlayerName}`
+          : 'NGワードゲーム終了',
+      });
       broadcastState(io, room);
     } catch (e) {
       emitError(socket, (e as Error).message);

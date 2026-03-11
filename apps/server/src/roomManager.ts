@@ -814,8 +814,7 @@ export function maybeFinishNgWordByElimination(room: GameState): NgWordRoundResu
   if (aliveCount > 1) return null;
 
   const result = buildNgWordRoundResult(room, round);
-  room.roundResults.push(result);
-  room.phase = 'ngword-result';
+  resetGameProgressToSelect(room);
   return result;
 }
 
@@ -833,9 +832,7 @@ export function finishNgWordTalk(room: GameState, socketId: string): NgWordRound
   }
 
   const result = buildNgWordRoundResult(room, round);
-
-  room.roundResults.push(result);
-  room.phase = 'ngword-result';
+  resetGameProgressToSelect(room);
   return result;
 }
 
