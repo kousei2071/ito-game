@@ -39,6 +39,15 @@ export function DrawingCanvas({ isDrawer, onStroke, onUndo, onRedo, onClear, can
 
   const currentSize = tool === 'pen' ? PEN_SIZES[penSizeIndex] : ERASER_SIZES[eraserSizeIndex];
 
+  const blockTouchGesture = useCallback((e: React.TouchEvent) => {
+    if (!isDrawer) return;
+    e.preventDefault();
+  }, [isDrawer]);
+
+  const blockContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+  }, []);
+
   const getCanvasCoords = useCallback((e: ReactPointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
@@ -236,14 +245,18 @@ export function DrawingCanvas({ isDrawer, onStroke, onUndo, onRedo, onClear, can
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        onTouchStart={blockTouchGesture}
+        onTouchMove={blockTouchGesture}
+        onContextMenu={blockContextMenu}
         style={{
           touchAction: 'none',
           cursor: isDrawer ? 'crosshair' : 'default',
         }}
       />
       {isDrawer && (
-        <div className="drawing-toolbar">
+        <div className="drawing-toolbar" onTouchStart={blockTouchGesture} onTouchMove={blockTouchGesture} onContextMenu={blockContextMenu}>
           <div className="drawing-tools-row">
             <button
               type="button"

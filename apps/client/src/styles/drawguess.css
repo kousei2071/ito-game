@@ -13,6 +13,7 @@
     linear-gradient(to bottom, var(--paper-line) 1px, transparent 1px);
   background-size: 24px 24px;
   gap: 10px;
+  overscroll-behavior: none;
 }
 
 .drawguess-screen .round-badge,
@@ -104,6 +105,11 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .drawing-canvas {
@@ -113,6 +119,7 @@
   border: 2px solid #eadfc6;
   border-radius: 12px;
   display: block;
+  touch-action: none;
 }
 
 .drawing-toolbar {
@@ -123,6 +130,7 @@
   border: 1px solid #eadfc6;
   border-radius: 12px;
   padding: 8px 10px;
+  touch-action: none;
 }
 
 .drawing-tools-row {
@@ -143,6 +151,9 @@
   align-items: center;
   justify-content: center;
   transition: background 0.15s, border-color 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .drawing-tool-btn:hover:not(:disabled) {
@@ -196,6 +207,9 @@
   align-items: center;
   justify-content: center;
   transition: border-color 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .drawing-size-btn:hover {
@@ -225,6 +239,9 @@
   border: 2px solid transparent;
   cursor: pointer;
   transition: border-color 0.15s, transform 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .drawing-color-btn:hover {
