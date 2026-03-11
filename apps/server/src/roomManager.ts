@@ -625,8 +625,8 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
   if (round.game === 'all-match') {
     if (round.submittedCluePlayerIds.length === room.players.length) {
-      // 全員提出完了→判定フェーズへ（トピック決定者が判定）
-      room.phase = 'all-match-judge';
+      // 全員提出完了→結果画面へ（結果画面上でトピック決定者が判定）
+      room.phase = 'result';
       return true;
     }
     return false;
@@ -702,7 +702,8 @@ function finalizeAllMatchRound(room: GameState): AllMatchRoundResult | null {
 export function judgeAllMatchRound(room: GameState, socketId: string, isCorrect: boolean): AllMatchRoundResult | null {
   const round = room.currentRound as AllMatchRoundState;
   if (!round || round.game !== 'all-match') return null;
-  if (room.phase !== 'all-match-judge') return null;
+  if (room.phase !== 'result') return null;
+  if (round.judgedAsCorrect !== undefined) return null;
 
   // トピック決定者のみ判定可能
   if (round.topicChooserId !== socketId) {
@@ -734,6 +735,7 @@ export function judgeAllMatchRound(room: GameState, socketId: string, isCorrect:
   };
 
   room.roundResults.push(result);
+  // 判定後も result 画面上で成功/失敗表示→次ラウンド進行を行う
   room.phase = 'result';
   return result;
 }

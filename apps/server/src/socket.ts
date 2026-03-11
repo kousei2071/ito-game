@@ -338,8 +338,8 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return;
       }
       if (currentRound.game === 'all-match') {
-        // 以心伝心は all-match-judge フェーズへ進んだ
-        if (room.phase === 'all-match-judge') {
+        // 以心伝心は result 画面へ進み、そこでお題決定者が判定する
+        if (room.phase === 'result') {
           broadcastState(io, room);
           return;
         }

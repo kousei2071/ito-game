@@ -405,6 +405,12 @@
   text-align: center;
 }
 
+.judge-next-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
 .judge-instruction {
   font-size: 13px;
   color: #6f644f;

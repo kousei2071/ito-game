@@ -35,7 +35,6 @@ export type GamePhase =
   | 'topic'    // お題選択中
   | 'clue'     // ヒント入力中
   | 'arrange'  // 並び替え中
-  | 'all-match-judge' // 以心伝心判定中（トピック決定者が判定）
   | 'ranking-reveal' // ランキング公開中
   | 'ranking-result' // ランキング結果
   | 'result'   // ラウンド結果表示
