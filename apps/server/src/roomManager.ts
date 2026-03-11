@@ -625,7 +625,8 @@ export function submitClue(room: GameState, socketId: string, clue: string): boo
 
   if (round.game === 'all-match') {
     if (round.submittedCluePlayerIds.length === room.players.length) {
-      finalizeAllMatchRound(room);
+      // 全員提出完了→判定フェーズへ（トピック決定者が判定）
+      room.phase = 'all-match-judge';
       return true;
     }
     return false;
@@ -669,6 +670,46 @@ function finalizeAllMatchRound(room: GameState): AllMatchRoundResult | null {
   const normalized = round.clues.map((c) => c.clue.trim().toLowerCase());
   const first = normalized[0] ?? '';
   const isCorrect = normalized.every((v) => v.length > 0 && v === first);
+  round.isCorrect = isCorrect;
+  if (isCorrect) {
+    room.score += 1;
+  }
+
+  const answers = round.clues.map((c) => {
+    const player = room.players.find((p) => p.id === c.playerId);
+    return {
+      playerId: c.playerId,
+      playerName: player?.name ?? '',
+      answer: c.clue,
+    };
+  });
+
+  const result: AllMatchRoundResult = {
+    game: 'all-match',
+    roundNumber: round.roundNumber,
+    topic: round.topic,
+    isCorrect,
+    matchedAnswer: isCorrect ? round.clues[0]?.clue ?? '' : undefined,
+    answers,
+  };
+
+  room.roundResults.push(result);
+  room.phase = 'result';
+  return result;
+}
+
+/** トピック決定者による以心伝心判定確定 */
+export function judgeAllMatchRound(room: GameState, socketId: string, isCorrect: boolean): AllMatchRoundResult | null {
+  const round = room.currentRound as AllMatchRoundState;
+  if (!round || round.game !== 'all-match') return null;
+  if (room.phase !== 'all-match-judge') return null;
+
+  // トピック決定者のみ判定可能
+  if (round.topicChooserId !== socketId) {
+    throw new Error('判定できるのはお題を決めた人だけです');
+  }
+
+  round.judgedAsCorrect = isCorrect;
   round.isCorrect = isCorrect;
   if (isCorrect) {
     room.score += 1;

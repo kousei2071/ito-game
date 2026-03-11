@@ -27,6 +27,7 @@ export const C2S = {
   ROUND_SUBMIT_CLUE:    'round:submitClue',
   ROUND_ARRANGE:        'round:arrange',
   ROUND_CONFIRM:        'round:confirmArrange',
+  ALL_MATCH_JUDGE:      'allmatch:judge',
   ROUND_NEXT:           'round:next',
 } as const;
 
@@ -88,6 +89,7 @@ export interface C2SPayloads {
   [C2S.ROUND_SUBMIT_CLUE]: { clue: string };
   [C2S.ROUND_ARRANGE]: { order: string[] };         // プレイヤーID[]
   [C2S.ROUND_CONFIRM]: { order: string[] };
+  [C2S.ALL_MATCH_JUDGE]: { isCorrect: boolean };
   [C2S.ROUND_NEXT]:  {};
 }
 

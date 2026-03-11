@@ -20,6 +20,7 @@ import {
   submitRankingSelfRank,
   revealNextRanking,
   submitClue,
+  judgeAllMatchRound,
   updateItoArrangeOrder,
   confirmArrange,
   advanceRound,
@@ -337,12 +338,11 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return;
       }
       if (currentRound.game === 'all-match') {
-        const result = room.roundResults[room.roundResults.length - 1];
-        if (result?.game === 'all-match') {
-          io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+        // 以心伝心は all-match-judge フェーズへ進んだ
+        if (room.phase === 'all-match-judge') {
+          broadcastState(io, room);
+          return;
         }
-        broadcastState(io, room);
-        return;
       }
       // 全員のヒントを公開
       const clues = currentRound.clues.map((c) => ({
@@ -352,6 +352,21 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       io.to(room.roomId).emit(S2C.ROUND_CLUES_COLLECTED, { clues });
     }
     broadcastState(io, room);
+  });
+
+  // ---------- allmatch:judge ----------
+  socket.on(C2S.ALL_MATCH_JUDGE, ({ isCorrect }: { isCorrect: boolean }) => {
+    const room = findRoomByPlayer(socket.id);
+    if (!room) return;
+    try {
+      const result = judgeAllMatchRound(room, socket.id, isCorrect);
+      if (result) {
+        io.to(room.roomId).emit(S2C.ROUND_RESULT, result);
+      }
+      broadcastState(io, room);
+    } catch (e) {
+      emitError(socket, (e as Error).message);
+    }
   });
 
   // ---------- round:confirmArrange ----------

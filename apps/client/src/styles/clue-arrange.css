@@ -310,3 +310,149 @@
   gap: 10px;
 }
 
+/* ============================================================
+   All Match Judge Screen
+   ============================================================ */
+
+.judge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px;
+}
+
+.judge-header {
+  text-align: center;
+}
+
+.judge-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #2a2620;
+}
+
+.judge-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.judge-topic .topic-label {
+  font-size: 12px;
+  color: #8b7c60;
+  margin: 0;
+}
+
+.judge-topic .topic-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2a2620;
+  margin: 0;
+}
+
+.judge-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.judge-answers .answers-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8b7c60;
+  margin: 0;
+}
+
+.answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fffdf7;
+  border: 1px solid #eadfc6;
+  border-radius: 8px;
+}
+
+.answer-player {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6f644f;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.answer-text {
+  font-size: 14px;
+  color: #2a2620;
+  flex: 1;
+  word-break: break-word;
+}
+
+.judge-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+.judge-instruction {
+  font-size: 13px;
+  color: #6f644f;
+  margin: 0;
+}
+
+.button-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.judge-button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.judge-button:active {
+  transform: scale(0.96);
+}
+
+.correct-button {
+  background: #4CAF50;
+  color: white;
+}
+
+.correct-button:hover {
+  background: #45a049;
+}
+
+.incorrect-button {
+  background: #f44336;
+  color: white;
+}
+
+.incorrect-button:hover {
+  background: #da190b;
+}
+
+.judge-waiting {
+  text-align: center;
+  padding: 20px 16px;
+  color: #8b7c60;
+  font-size: 14px;
+}
+
