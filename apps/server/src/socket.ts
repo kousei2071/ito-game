@@ -63,6 +63,7 @@ function toPublic(room: GameState): PublicGameState {
     wordWolfCountMode: room.wordWolfCountMode,
     drawGuessTimeLimit: room.drawGuessTimeLimit,
     drawGuessDifficulty: room.drawGuessDifficulty,
+    ngWordWordCount: room.ngWordWordCount,
   };
 }
 
@@ -129,6 +130,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       wordWolfCountMode,
       drawGuessTimeLimit,
       drawGuessDifficulty,
+      ngWordWordCount,
     }: {
       totalRounds: number;
       topicChooserMode: 'sequential' | 'random';
@@ -136,6 +138,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       wordWolfCountMode: 'auto' | 'one' | 'two';
       drawGuessTimeLimit: 0 | 60 | 90 | 120;
       drawGuessDifficulty: 'easy' | 'normal' | 'hard';
+      ngWordWordCount: number;
     }) => {
       const room = findRoomByPlayer(socket.id);
       if (!room) return emitError(socket, 'ルームが見つかりません');
@@ -147,6 +150,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           wordWolfCountMode,
           drawGuessTimeLimit,
           drawGuessDifficulty,
+          ngWordWordCount,
         });
         broadcastState(io, room);
       } catch (e: any) {

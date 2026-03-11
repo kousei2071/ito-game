@@ -74,6 +74,7 @@ export interface C2SPayloads {
     wordWolfCountMode: import('./types.js').WordWolfCountMode;
     drawGuessTimeLimit: import('./types.js').DrawGuessTimeLimit;
     drawGuessDifficulty: import('./types.js').DrawGuessDifficulty;
+    ngWordWordCount: number;
   };
   [C2S.GAME_START]:  {};
   [C2S.GAME_SELECT]: { game: import('./types.js').GameType };

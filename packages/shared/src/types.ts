@@ -181,6 +181,8 @@ export interface GameState {
   drawGuessTimeLimit: DrawGuessTimeLimit;
   /** お絵描きクイズ難易度 */
   drawGuessDifficulty: DrawGuessDifficulty;
+  /** NGワードゲーム: 1人あたりのワード数 */
+  ngWordWordCount: number;
 }
 
 export interface ItoRoundResult {
@@ -237,14 +239,6 @@ export interface NgWordRoundResult {
   isCorrect: boolean;
   winnerPlayerId?: string;
   winnerPlayerName?: string;
-  incidents: {
-    id: string;
-    targetId: string;
-    targetName: string;
-    reporterId: string;
-    reporterName: string;
-  }[];
-  scoreBoard: { playerId: string; playerName: string; score: number }[];
 }
 
 export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult | AllMatchRoundResult | NgWordRoundResult;
@@ -268,4 +262,5 @@ export interface PublicGameState {
   wordWolfCountMode: WordWolfCountMode;
   drawGuessTimeLimit: DrawGuessTimeLimit;
   drawGuessDifficulty: DrawGuessDifficulty;
+  ngWordWordCount: number;
 }

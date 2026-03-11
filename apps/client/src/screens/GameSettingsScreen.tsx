@@ -16,6 +16,7 @@ export function GameSettingsScreen() {
     wordWolfCountMode: gs.wordWolfCountMode,
     drawGuessTimeLimit: gs.drawGuessTimeLimit,
     drawGuessDifficulty: gs.drawGuessDifficulty,
+    ngWordWordCount: gs.ngWordWordCount,
   });
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export function GameSettingsScreen() {
       wordWolfCountMode: gs.wordWolfCountMode,
       drawGuessTimeLimit: gs.drawGuessTimeLimit,
       drawGuessDifficulty: gs.drawGuessDifficulty,
+      ngWordWordCount: gs.ngWordWordCount,
     });
   }, [
     gs.totalRounds,
@@ -34,6 +36,7 @@ export function GameSettingsScreen() {
     gs.wordWolfCountMode,
     gs.drawGuessTimeLimit,
     gs.drawGuessDifficulty,
+    gs.ngWordWordCount,
   ]);
 
   useEffect(() => {
@@ -44,7 +47,8 @@ export function GameSettingsScreen() {
       settings.wordWolfTalkSeconds === gs.wordWolfTalkSeconds &&
       settings.wordWolfCountMode === gs.wordWolfCountMode &&
       settings.drawGuessTimeLimit === gs.drawGuessTimeLimit &&
-      settings.drawGuessDifficulty === gs.drawGuessDifficulty
+      settings.drawGuessDifficulty === gs.drawGuessDifficulty &&
+      settings.ngWordWordCount === gs.ngWordWordCount
     ) {
       return;
     }
@@ -58,6 +62,7 @@ export function GameSettingsScreen() {
     gs.wordWolfCountMode,
     gs.drawGuessTimeLimit,
     gs.drawGuessDifficulty,
+    gs.ngWordWordCount,
     actions,
   ]);
 
@@ -70,7 +75,9 @@ export function GameSettingsScreen() {
           ? 'お絵描きクイズ'
           : gs.selectedGame === 'all-match'
             ? '以心伝心ゲーム'
-        : 'ito';
+            : gs.selectedGame === 'ng-word'
+              ? 'NGワードゲーム'
+              : 'ito';
 
   return (
     <div className="screen game-settings-screen">
@@ -100,6 +107,8 @@ export function GameSettingsScreen() {
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
             : gs.selectedGame === 'draw-guess'
               ? 'ラウンド数・制限時間・難易度を決めてから開始します。'
+              : gs.selectedGame === 'ng-word'
+                ? 'ラウンド数とお題量を決めてから開始します。'
               : gs.selectedGame === 'all-match'
                 ? 'ラウンド数を決めてから開始します。全員が同じ答えを出せたら成功です。'
               : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}
@@ -115,11 +124,41 @@ export function GameSettingsScreen() {
               onChange={(e) => setSettings((prev) => ({ ...prev, totalRounds: Number(e.target.value) }))}
               disabled={!isHost}
             >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={15}>15</option>
+              {gs.selectedGame === 'ng-word' ? (
+                <>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={5}>5</option>
+                </>
+              ) : (
+                <>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                </>
+              )}
             </select>
           </label>
+
+          {gs.selectedGame === 'ng-word' ? (
+            <label className="settings-field">
+              <span>お題量</span>
+              <select
+                className="input"
+                value={settings.ngWordWordCount}
+                onChange={(e) => setSettings((prev) => ({ ...prev, ngWordWordCount: Number(e.target.value) }))}
+                disabled={!isHost}
+              >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+                <option value={5}>5</option>
+              </select>
+            </label>
+          ) : null}
 
           {gs.selectedGame === 'word-wolf' ? (
             <>

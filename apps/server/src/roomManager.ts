@@ -23,7 +23,7 @@ import type {
   NgWordRoundResult,
   NgWordIncident,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORDS, NG_WORDS_PER_PLAYER } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORDS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -154,6 +154,7 @@ export function createRoom(hostSocketId: string, hostName: string, hostIconId: P
     wordWolfCountMode: 'auto',
     drawGuessTimeLimit: 90,
     drawGuessDifficulty: 'normal',
+    ngWordWordCount: 3,
   };
   rooms.set(roomId, state);
   return state;
@@ -333,6 +334,7 @@ export function updateRoomSettings(
     wordWolfCountMode: WordWolfCountMode;
     drawGuessTimeLimit: DrawGuessTimeLimit;
     drawGuessDifficulty: DrawGuessDifficulty;
+    ngWordWordCount: number;
   },
 ): GameState {
   const allowedPhases = new Set(['lobby', 'game-select', 'game-settings']);
@@ -345,8 +347,13 @@ export function updateRoomSettings(
     throw new Error('設定を変更できるのはホストのみです');
   }
 
-  const allowedRounds = new Set([5, 10, 15]);
+  const allowedRounds = room.selectedGame === 'ng-word'
+    ? new Set([1, 2, 3, 4, 5])
+    : new Set([5, 10, 15]);
   if (!allowedRounds.has(settings.totalRounds)) {
+    if (room.selectedGame === 'ng-word') {
+      throw new Error('ラウンド数は 1〜5 から選択してください');
+    }
     throw new Error('ラウンド数は 5 / 10 / 15 から選択してください');
   }
 
@@ -370,12 +377,17 @@ export function updateRoomSettings(
     throw new Error('お絵描きクイズ難易度が不正です');
   }
 
+  if (!Number.isInteger(settings.ngWordWordCount) || settings.ngWordWordCount < 1 || settings.ngWordWordCount > 5) {
+    throw new Error('お題量は 1〜5 で指定してください');
+  }
+
   room.totalRounds = settings.totalRounds;
   room.topicChooserMode = settings.topicChooserMode;
   room.wordWolfTalkSeconds = settings.wordWolfTalkSeconds;
   room.wordWolfCountMode = settings.wordWolfCountMode;
   room.drawGuessTimeLimit = settings.drawGuessTimeLimit;
   room.drawGuessDifficulty = settings.drawGuessDifficulty;
+  room.ngWordWordCount = settings.ngWordWordCount;
   return room;
 }
 
@@ -518,7 +530,7 @@ function startNgWordRound(room: GameState): RoundState {
 
   const wordAssignments = room.players.map((p) => ({
     playerId: p.id,
-    words: shuffle(NG_WORDS).slice(0, NG_WORDS_PER_PLAYER),
+    words: shuffle(NG_WORDS).slice(0, room.ngWordWordCount),
   }));
 
   const round: NgWordRoundState = {
@@ -770,17 +782,11 @@ export function rerollNgWordAssignments(room: GameState, socketId: string): void
   // お題変更: 全員分のNGワードを再配布
   round.wordAssignments = room.players.map((p) => ({
     playerId: p.id,
-    words: shuffle(NG_WORDS).slice(0, NG_WORDS_PER_PLAYER),
+    words: shuffle(NG_WORDS).slice(0, room.ngWordWordCount),
   }));
 }
 
 function buildNgWordRoundResult(room: GameState, round: NgWordRoundState): NgWordRoundResult {
-  const scoreMap = new Map<string, number>(room.players.map((p) => [p.id, 0]));
-  for (const incident of round.incidents) {
-    scoreMap.set(incident.targetId, (scoreMap.get(incident.targetId) ?? 0) - 1);
-    scoreMap.set(incident.reporterId, (scoreMap.get(incident.reporterId) ?? 0) + 1);
-  }
-
   const alivePlayerIds = room.players
     .map((p) => p.id)
     .filter((id) => !round.eliminatedPlayerIds.includes(id));
@@ -789,24 +795,6 @@ function buildNgWordRoundResult(room: GameState, round: NgWordRoundState): NgWor
     ? room.players.find((p) => p.id === winnerPlayerId)?.name ?? ''
     : undefined;
 
-  const incidents = round.incidents.map((incident) => {
-    const target = room.players.find((p) => p.id === incident.targetId);
-    const reporter = room.players.find((p) => p.id === incident.reporterId);
-    return {
-      ...incident,
-      targetName: target?.name ?? '',
-      reporterName: reporter?.name ?? '',
-    };
-  });
-
-  const scoreBoard = room.players
-    .map((p) => ({
-      playerId: p.id,
-      playerName: p.name,
-      score: scoreMap.get(p.id) ?? 0,
-    }))
-    .sort((a, b) => b.score - a.score);
-
   return {
     game: 'ng-word',
     roundNumber: round.roundNumber,
@@ -814,8 +802,6 @@ function buildNgWordRoundResult(room: GameState, round: NgWordRoundState): NgWor
     isCorrect: true,
     winnerPlayerId,
     winnerPlayerName,
-    incidents,
-    scoreBoard,
   };
 }
 
