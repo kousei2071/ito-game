@@ -29,6 +29,8 @@ export const C2S = {
   ROUND_CONFIRM:        'round:confirmArrange',
   ALL_MATCH_JUDGE:      'allmatch:judge',
   ALL_MATCH_OPEN_RESULT:'allmatch:openResult',
+  NGWORD_REPORT:        'ngword:report',
+  NGWORD_FINISH_TALK:   'ngword:finishTalk',
   ROUND_NEXT:           'round:next',
 } as const;
 
@@ -42,6 +44,7 @@ export const S2C = {
   GAME_FINISHED:        'game:finished',
   YOUR_NUMBER:          'round:yourNumber',
   YOUR_WORD:            'wordwolf:yourWord',
+  NGWORD_YOUR_WORDS:    'ngword:yourWords',
   WORDWOLF_EXAMPLE_TALK:'wordwolf:exampleTalk',
   DRAWGUESS_STROKE:     'drawguess:stroke',
   DRAWGUESS_UNDO:       'drawguess:undo',
@@ -92,6 +95,8 @@ export interface C2SPayloads {
   [C2S.ROUND_CONFIRM]: { order: string[] };
   [C2S.ALL_MATCH_JUDGE]: { isCorrect: boolean };
   [C2S.ALL_MATCH_OPEN_RESULT]: {};
+  [C2S.NGWORD_REPORT]: { speakerId: string; inducerId: string; spokenWord: string };
+  [C2S.NGWORD_FINISH_TALK]: {};
   [C2S.ROUND_NEXT]:  {};
 }
 
@@ -106,6 +111,7 @@ export interface S2CPayloads {
   [S2C.YOUR_NUMBER]: { secretNumber: number };
   [S2C.YOUR_WORD]: { word: string };
   [S2C.WORDWOLF_EXAMPLE_TALK]: { title: string; lines: string[] };
+  [S2C.NGWORD_YOUR_WORDS]: { words: string[] };
   [S2C.DRAWGUESS_STROKE]: { stroke: import('./types.js').DrawGuessStroke };
   [S2C.DRAWGUESS_UNDO]: {};
   [S2C.DRAWGUESS_REDO]: {};
