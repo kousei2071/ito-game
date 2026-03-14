@@ -227,9 +227,9 @@ export function DrawingCanvas({ isDrawer, onStroke, onUndo, onRedo, onClear, can
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Set to a fixed internal resolution
-    canvas.width = 800;
-    canvas.height = 800;
+    // Fixed wide internal resolution shared by all clients for consistent stroke replay.
+    canvas.width = 1280;
+    canvas.height = 720;
     if (canvasRefCallback) canvasRefCallback(canvas);
   }, [canvasRefCallback]);
 

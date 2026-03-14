@@ -26,6 +26,13 @@ export function DrawGuessScreen() {
     setTimeLeft(round.timeLimit);
   }, [round.timeLimit, round.roundNumber]);
 
+  useEffect(() => {
+    document.body.classList.add('drawguess-active');
+    return () => {
+      document.body.classList.remove('drawguess-active');
+    };
+  }, []);
+
   // Listen for real-time events
   useEffect(() => {
     const handleStroke = ({ stroke }: { stroke: DrawGuessStroke }) => {

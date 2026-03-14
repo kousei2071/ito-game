@@ -114,12 +114,42 @@
 
 .drawing-canvas {
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 9;
   background: #fff;
   border: 2px solid #eadfc6;
   border-radius: 12px;
   display: block;
   touch-action: none;
+}
+
+@media (orientation: landscape) and (max-width: 900px) {
+  body.drawguess-active #root {
+    max-width: none;
+    width: 100vw;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-right: max(8px, env(safe-area-inset-right));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
+  }
+
+  .drawguess-screen {
+    min-height: calc(100dvh - 16px);
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .drawing-canvas {
+    aspect-ratio: 16 / 9;
+  }
+
+  .drawing-toolbar {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .drawguess-drawer-hint {
+    font-size: 13px;
+  }
 }
 
 .drawing-toolbar {
