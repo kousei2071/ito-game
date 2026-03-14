@@ -105,6 +105,7 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  min-height: 0;
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
@@ -122,33 +123,142 @@
   touch-action: none;
 }
 
-@media (orientation: landscape) and (max-width: 900px) {
+@media (hover: none) and (pointer: coarse) {
   body.drawguess-active #root {
     max-width: none;
     width: 100vw;
-    padding-top: max(8px, env(safe-area-inset-top));
-    padding-right: max(8px, env(safe-area-inset-right));
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
-    padding-left: max(8px, env(safe-area-inset-left));
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    padding-left: max(0px, env(safe-area-inset-left));
   }
+}
+
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
 
   .drawguess-screen {
-    min-height: calc(100dvh - 16px);
-    padding: 8px;
-    gap: 8px;
+    position: relative;
+    min-height: 100dvh;
+    height: 100dvh;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    border-radius: 0;
+  }
+
+  .drawguess-screen > .round-header {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    z-index: 7;
+    pointer-events: none;
+  }
+
+  .drawguess-screen > .round-header > * {
+    pointer-events: auto;
+  }
+
+  .drawguess-screen .round-badge,
+  .drawguess-screen .score-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .drawguess-screen .btn-back-select {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+    font-size: 16px;
+  }
+
+  .drawguess-screen > .drawguess-timer-bar-wrap {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 7;
+    width: min(220px, 46vw);
+    height: 18px;
+  }
+
+  .drawguess-timer-text {
+    font-size: 11px;
+  }
+
+  .drawguess-screen > .drawguess-info-row,
+  .drawguess-screen > .drawguess-topic-card,
+  .drawguess-screen > .drawguess-drawer-hint,
+  .drawguess-screen > .drawguess-correct-banner {
+    display: none;
+  }
+
+  .drawing-canvas-wrapper {
+    position: absolute;
+    inset: 0;
+    min-height: 100%;
+    gap: 0;
   }
 
   .drawing-canvas {
-    aspect-ratio: 16 / 9;
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    aspect-ratio: auto;
+    border-radius: 0;
+    border-width: 0;
   }
 
   .drawing-toolbar {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 8;
     padding: 6px 8px;
+    gap: 4px;
+    background: rgba(255, 253, 247, 0.92);
+    backdrop-filter: blur(2px);
+  }
+
+  .drawing-tool-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+
+  .drawing-size-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .drawguess-screen > .drawguess-guess-form {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 8;
+    background: rgba(255, 253, 247, 0.92);
+    border: 1px solid #eadfc6;
+    border-radius: 12px;
+    padding: 6px;
     gap: 6px;
   }
 
+  .drawguess-screen > .drawguess-guess-form .drawguess-guess-input {
+    min-height: 36px;
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+
+  .drawguess-screen > .drawguess-guess-form .drawguess-guess-btn {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
   .drawguess-drawer-hint {
-    font-size: 13px;
+    display: none;
   }
 }
 
