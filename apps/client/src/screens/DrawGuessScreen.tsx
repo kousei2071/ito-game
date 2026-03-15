@@ -6,6 +6,13 @@ import type { DrawGuessStroke } from '@ito/shared';
 import { DrawingCanvas } from '../components/DrawingCanvas';
 import { PlayerIdentity } from '../components/PlayerIdentity';
 
+type DrawingCanvasApi = {
+  addRemoteStroke: (stroke: DrawGuessStroke) => void;
+  handleRemoteUndo: () => void;
+  handleRemoteRedo: () => void;
+  handleRemoteClear: () => void;
+};
+
 export function DrawGuessScreen() {
   const { state, actions } = useGame();
   const gs = state.gameState!;
@@ -35,32 +42,33 @@ export function DrawGuessScreen() {
 
   // Listen for real-time events
   useEffect(() => {
+    const getCanvasApi = (): DrawingCanvasApi | null => {
+      const canvas = canvasRef.current as (HTMLCanvasElement & { __drawingApi?: DrawingCanvasApi }) | null;
+      return canvas?.__drawingApi ?? null;
+    };
+
     const handleStroke = ({ stroke }: { stroke: DrawGuessStroke }) => {
-      const canvas = canvasRef.current;
-      if (canvas && (canvas as any).__drawingApi) {
-        (canvas as any).__drawingApi.addRemoteStroke(stroke);
-      }
+      const api = getCanvasApi();
+      if (!api) return;
+      api.addRemoteStroke(stroke);
     };
 
     const handleUndo = () => {
-      const canvas = canvasRef.current;
-      if (canvas && (canvas as any).__drawingApi) {
-        (canvas as any).__drawingApi.handleRemoteUndo();
-      }
+      const api = getCanvasApi();
+      if (!api) return;
+      api.handleRemoteUndo();
     };
 
     const handleRedo = () => {
-      const canvas = canvasRef.current;
-      if (canvas && (canvas as any).__drawingApi) {
-        (canvas as any).__drawingApi.handleRemoteRedo();
-      }
+      const api = getCanvasApi();
+      if (!api) return;
+      api.handleRemoteRedo();
     };
 
     const handleClear = () => {
-      const canvas = canvasRef.current;
-      if (canvas && (canvas as any).__drawingApi) {
-        (canvas as any).__drawingApi.handleRemoteClear();
-      }
+      const api = getCanvasApi();
+      if (!api) return;
+      api.handleRemoteClear();
     };
 
     const handleTimeUpdate = ({ timeLeft: tl }: { timeLeft: number }) => {

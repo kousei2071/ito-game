@@ -135,6 +135,11 @@
 }
 
 @media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  .drawguess-screen {
+    --dg-overlay-gap: 8px;
+    --dg-overlay-bg: rgba(255, 253, 247, 0.92);
+    --dg-overlay-border: #eadfc6;
+  }
 
   .drawguess-screen {
     position: relative;
@@ -148,9 +153,9 @@
 
   .drawguess-screen > .round-header {
     position: absolute;
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: var(--dg-overlay-gap);
+    left: var(--dg-overlay-gap);
+    right: var(--dg-overlay-gap);
     z-index: 7;
     pointer-events: none;
   }
@@ -174,7 +179,7 @@
 
   .drawguess-screen > .drawguess-timer-bar-wrap {
     position: absolute;
-    top: 10px;
+    top: calc(var(--dg-overlay-gap) + 2px);
     left: 50%;
     transform: translateX(-50%);
     z-index: 7;
@@ -212,13 +217,13 @@
 
   .drawing-toolbar {
     position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
+    left: var(--dg-overlay-gap);
+    right: var(--dg-overlay-gap);
+    bottom: var(--dg-overlay-gap);
     z-index: 8;
     padding: 6px 8px;
     gap: 4px;
-    background: rgba(255, 253, 247, 0.92);
+    background: var(--dg-overlay-bg);
     backdrop-filter: blur(2px);
   }
 
@@ -235,12 +240,12 @@
 
   .drawguess-screen > .drawguess-guess-form {
     position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
+    left: var(--dg-overlay-gap);
+    right: var(--dg-overlay-gap);
+    bottom: var(--dg-overlay-gap);
     z-index: 8;
-    background: rgba(255, 253, 247, 0.92);
-    border: 1px solid #eadfc6;
+    background: var(--dg-overlay-bg);
+    border: 1px solid var(--dg-overlay-border);
     border-radius: 12px;
     padding: 6px;
     gap: 6px;
@@ -255,10 +260,6 @@
   .drawguess-screen > .drawguess-guess-form .drawguess-guess-btn {
     min-height: 36px;
     padding: 8px 12px;
-  }
-
-  .drawguess-drawer-hint {
-    display: none;
   }
 }
 
