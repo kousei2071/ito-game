@@ -38,6 +38,7 @@ import {
   clearDrawGuessCanvas,
   submitDrawGuessGuess,
   finishDrawGuessRound,
+  forceFinishAndAdvanceRound,
   getDrawGuessTopic,
   getRoom,
   type PlayerExitResult,
@@ -49,13 +50,50 @@ import {
 
 /** secretNumber を隠して返す */
 function toPublic(room: GameState): PublicGameState {
+  const currentRound = room.currentRound?.game === 'draw-guess'
+    ? {
+      ...room.currentRound,
+      // Drawing strokes are streamed via dedicated events; keep state payload small.
+      strokes: [],
+    }
+    : room.currentRound;
+
+  const roundResults = room.roundResults.map((result) => {
+    switch (result.game) {
+      case 'ito':
+        return {
+          ...result,
+          // Final screen only needs topic/isCorrect; trim bulky per-player history in sync payload.
+          arrangedOrder: [],
+          correctOrder: [],
+        };
+      case 'ranking':
+        return {
+          ...result,
+          rankingCards: [],
+        };
+      case 'all-match':
+        return {
+          ...result,
+          answers: [],
+        };
+      case 'draw-guess':
+        return {
+          ...result,
+          correctPlayers: [],
+        };
+      default:
+        return result;
+    }
+  });
+
   return {
     roomId: room.roomId,
     players: room.players.map(({ secretNumber, secretWord, ...rest }) => rest),
     phase: room.phase,
     selectedGame: room.selectedGame,
-    currentRound: room.currentRound,
-    roundResults: room.roundResults,
+    currentRound,
+    roundResults,
     totalRounds: room.totalRounds,
     topicChooserMode: room.topicChooserMode,
     score: room.score,
@@ -614,7 +652,23 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     const player = room.players.find((p) => p.id === socket.id);
     if (!player?.isHost) return;
 
-    const status = advanceRound(room);
+    const normalAdvancePhases = new Set([
+      'result',
+      'ranking-result',
+      'wordwolf-result',
+      'drawguess-result',
+    ]);
+
+    const isNormalAdvance = normalAdvancePhases.has(room.phase);
+
+    const status = isNormalAdvance
+      ? advanceRound(room)
+      : forceFinishAndAdvanceRound(room);
+
+    if (!isNormalAdvance) {
+      io.to(room.roomId).emit(S2C.NOTICE, { message: '進行が停止したため、このラウンドをスキップしました' });
+    }
+
     if (status === 'next') {
       if (room.currentRound?.game === 'ito') {
         room.players.forEach((p) => {

@@ -496,6 +496,26 @@ body {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
+.btn-recovery-next {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  z-index: 90;
+  border: 1px solid #e17055;
+  background: #fff4ef;
+  color: #a6412f;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  min-height: 34px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.btn-recovery-next:hover {
+  background: #ffe8de;
+}
+
 .btn-back-select {
   display: inline-flex;
   align-items: center;

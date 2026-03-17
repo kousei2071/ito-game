@@ -17,9 +17,10 @@ import { RankingRevealScreen } from './screens/RankingRevealScreen';
 import { RankingResultScreen } from './screens/RankingResultScreen';
 import { DrawGuessScreen } from './screens/DrawGuessScreen';
 import { DrawGuessResultScreen } from './screens/DrawGuessResultScreen';
+import { getSocket } from './socket';
 
 export default function App() {
-  const { state } = useGame();
+  const { state, actions } = useGame();
   const { gameState, finalResult } = state;
 
   let screen = <HomeScreen />;
@@ -86,9 +87,33 @@ export default function App() {
     }
   }
 
+  const socket = getSocket();
+  const me = gameState?.players.find((p) => p.id === socket.id);
+  const normalAdvancePhases = new Set(['result', 'ranking-result', 'wordwolf-result', 'drawguess-result']);
+  const showRecoveryButton = Boolean(
+    gameState
+    && me?.isHost
+    && gameState.phase !== 'lobby'
+    && gameState.phase !== 'game-select'
+    && gameState.phase !== 'game-settings'
+    && gameState.phase !== 'finished'
+    && !normalAdvancePhases.has(gameState.phase),
+  );
+
+  const handleRecoveryAdvance = () => {
+    const ok = window.confirm('進行が止まった場合のみ使ってください。このラウンドをスキップして次へ進みます。');
+    if (!ok) return;
+    actions.nextRound();
+  };
+
   return (
     <>
       {state.notice ? <div className="global-notice">{state.notice}</div> : null}
+      {showRecoveryButton ? (
+        <button type="button" className="btn btn-recovery-next" onClick={handleRecoveryAdvance}>
+          進行復旧
+        </button>
+      ) : null}
       {screen}
     </>
   );

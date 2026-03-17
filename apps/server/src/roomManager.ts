@@ -1203,6 +1203,90 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
   return 'next';
 }
 
+/**
+ * Recovery path: force-close the current round as failed and move forward.
+ * Used when clients get stuck and cannot reach the normal result transition.
+ */
+export function forceFinishAndAdvanceRound(room: GameState): 'next' | 'finished' {
+  const current = room.currentRound;
+  if (current) {
+    if (current.game === 'ito') {
+      const result: ItoRoundResult = {
+        game: 'ito',
+        roundNumber: current.roundNumber,
+        topic: current.topic,
+        isCorrect: false,
+        arrangedOrder: [],
+        correctOrder: [],
+      };
+      room.roundResults.push(result);
+    } else if (current.game === 'ranking') {
+      const result: RankingRoundResult = {
+        game: 'ranking',
+        roundNumber: current.roundNumber,
+        topic: current.topic,
+        isCorrect: false,
+        rankingCards: [],
+      };
+      room.roundResults.push(result);
+    } else if (current.game === 'word-wolf') {
+      const secret = wordWolfSecrets.get(room.roomId);
+      const wolfNames = secret
+        ? room.players.filter((p) => secret.wolfPlayerIds.has(p.id)).map((p) => p.name)
+        : [];
+      const result: WordWolfRoundResult = {
+        game: 'word-wolf',
+        roundNumber: current.roundNumber,
+        majorityWord: secret?.majorityWord ?? '',
+        minorityWord: secret?.minorityWord ?? '',
+        votedPlayerName: '強制終了',
+        wolfPlayerNames: wolfNames,
+        isCorrect: false,
+      };
+      room.roundResults.push(result);
+      wordWolfSecrets.delete(room.roomId);
+    } else if (current.game === 'draw-guess') {
+      const secret = drawGuessSecrets.get(room.roomId);
+      const drawerName = room.players.find((p) => p.id === current.drawerId)?.name ?? '';
+      const result: DrawGuessRoundResult = {
+        game: 'draw-guess',
+        roundNumber: current.roundNumber,
+        topic: secret?.topic ?? current.topic ?? '',
+        drawerName,
+        isCorrect: false,
+        correctPlayers: [],
+        drawerPoints: 0,
+      };
+      room.roundResults.push(result);
+      stopDrawGuessTimer(room.roomId);
+      drawGuessSecrets.delete(room.roomId);
+    } else if (current.game === 'all-match') {
+      const result: AllMatchRoundResult = {
+        game: 'all-match',
+        roundNumber: current.roundNumber,
+        topic: current.topic,
+        isCorrect: false,
+        answers: current.clues.map((c) => ({
+          playerId: c.playerId,
+          playerName: room.players.find((p) => p.id === c.playerId)?.name ?? '',
+          answer: c.clue,
+        })),
+      };
+      room.roundResults.push(result);
+    } else if (current.game === 'ng-word') {
+      const result: NgWordRoundResult = {
+        game: 'ng-word',
+        roundNumber: current.roundNumber,
+        topic: current.topic,
+        isCorrect: false,
+      };
+      room.roundResults.push(result);
+    }
+  }
+
+  return advanceRound(room);
+}
+
 // ============================================================
 // Draw & Guess Game
 // ============================================================
@@ -1321,10 +1405,6 @@ export function addDrawGuessStroke(roomId: string, socketId: string, stroke: Dra
   if (!secret || secret.drawerId !== socketId) return false;
   secret.strokes.push(stroke);
   secret.undoneStrokes = [];
-  const room = rooms.get(roomId);
-  if (room?.currentRound?.game === 'draw-guess') {
-    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
-  }
   return true;
 }
 
@@ -1333,10 +1413,6 @@ export function undoDrawGuessStroke(roomId: string, socketId: string): boolean {
   if (!secret || secret.drawerId !== socketId || secret.strokes.length === 0) return false;
   const undone = secret.strokes.pop()!;
   secret.undoneStrokes.push(undone);
-  const room = rooms.get(roomId);
-  if (room?.currentRound?.game === 'draw-guess') {
-    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
-  }
   return true;
 }
 
@@ -1345,10 +1421,6 @@ export function redoDrawGuessStroke(roomId: string, socketId: string): boolean {
   if (!secret || secret.drawerId !== socketId || secret.undoneStrokes.length === 0) return false;
   const redone = secret.undoneStrokes.pop()!;
   secret.strokes.push(redone);
-  const room = rooms.get(roomId);
-  if (room?.currentRound?.game === 'draw-guess') {
-    (room.currentRound as DrawGuessRoundState).strokes = [...secret.strokes];
-  }
   return true;
 }
 
@@ -1357,10 +1429,6 @@ export function clearDrawGuessCanvas(roomId: string, socketId: string): boolean 
   if (!secret || secret.drawerId !== socketId) return false;
   secret.strokes = [];
   secret.undoneStrokes = [];
-  const room = rooms.get(roomId);
-  if (room?.currentRound?.game === 'draw-guess') {
-    (room.currentRound as DrawGuessRoundState).strokes = [];
-  }
   return true;
 }
 
