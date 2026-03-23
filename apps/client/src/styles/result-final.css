@@ -175,6 +175,10 @@
   margin-top: 8px;
 }
 
+.survey-count-grid.single {
+  grid-template-columns: 1fr;
+}
+
 .survey-count-card {
   border: 2px solid #eadfc6;
   border-radius: 14px;
@@ -219,24 +223,6 @@
   font-size: 13px;
   color: #6f644f;
   font-weight: 700;
-}
-
-.survey-rate-wrap {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.survey-rate-bar-bg {
-  height: 12px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #eadfc6;
-}
-
-.survey-rate-bar-yes {
-  height: 100%;
-  background: #00b894;
 }
 
 .result-number {

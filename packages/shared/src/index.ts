@@ -17,3 +17,4 @@ export * from './presetNgWordTopics.js';
 export * from './presetNgWordTopicsCustom.js';
 export * from './anonymousSurveyTopics.js';
 export * from './presetAnonymousSurveyTopics.js';
+export * from './gameTopics/index.js';
