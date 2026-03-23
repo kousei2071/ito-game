@@ -55,7 +55,7 @@ function reducer(state: State, action: Action): State {
         lastError: null,
         wordWolfExampleTalk: action.payload.phase === 'wordwolf-talk' ? state.wordWolfExampleTalk : null,
         roundResult:
-          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result' || action.payload.phase === 'drawguess-result'
+          action.payload.phase === 'result' || action.payload.phase === 'wordwolf-result' || action.payload.phase === 'ranking-result' || action.payload.phase === 'drawguess-result' || action.payload.phase === 'survey-result'
             ? state.roundResult
             : null,
         finalResult: action.payload.phase === 'finished' ? state.finalResult : null,
@@ -113,6 +113,8 @@ interface GameContextValue {
     eliminateNgWordPlayer: (targetPlayerId: string) => void;
     rerollNgWordWords: () => void;
     finishNgWordTalk: () => void;
+    submitAnonymousSurveyAnswer: (answer: 'yes' | 'no') => void;
+    openAnonymousSurveyResult: () => void;
     confirmArrange: (order: string[]) => void;
     startWordWolfTalk: () => void;
     requestWordWolfExampleTalk: () => void;
@@ -267,6 +269,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
     finishNgWordTalk: useCallback(() => {
       socket.emit(C2S.NGWORD_FINISH_TALK, {});
+    }, [socket]),
+
+    submitAnonymousSurveyAnswer: useCallback((answer: 'yes' | 'no') => {
+      socket.emit(C2S.ANONYMOUS_SURVEY_SUBMIT, { answer });
+    }, [socket]),
+
+    openAnonymousSurveyResult: useCallback(() => {
+      socket.emit(C2S.ANONYMOUS_SURVEY_OPEN_RESULT, {});
     }, [socket]),
 
     confirmArrange: useCallback((order: string[]) => {

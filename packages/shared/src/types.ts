@@ -20,7 +20,7 @@ export interface Player {
 export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
-export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word';
+export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
 export type DrawGuessTimeLimit = 0 | 60 | 90 | 120;
 export type DrawGuessDifficulty = 'easy' | 'normal' | 'hard';
@@ -46,6 +46,8 @@ export type GamePhase =
   | 'drawguess-result'  // お絵描き結果
   | 'ngword-talk' // NGワード会話中
   | 'ngword-result' // NGワード結果
+  | 'survey-answer' // 匿名アンケート回答中
+  | 'survey-result' // 匿名アンケート結果
   | 'finished'; // 全ラウンド終了
 
 // ============================================================
@@ -154,7 +156,16 @@ export interface NgWordRoundState {
   incidents: NgWordIncident[];
 }
 
-export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState | DrawGuessRoundState | AllMatchRoundState | NgWordRoundState;
+export interface AnonymousSurveyRoundState {
+  game: 'anonymous-survey';
+  roundNumber: number;
+  topic: string;
+  topicChooserId: string;
+  topicChangeCount: number;
+  answeredPlayerIds: string[];
+}
+
+export type RoundState = ItoRoundState | RankingRoundState | WordWolfRoundState | DrawGuessRoundState | AllMatchRoundState | NgWordRoundState | AnonymousSurveyRoundState;
 
 // ============================================================
 // Room / GameState
@@ -241,7 +252,17 @@ export interface NgWordRoundResult {
   winnerPlayerName?: string;
 }
 
-export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult | AllMatchRoundResult | NgWordRoundResult;
+export interface AnonymousSurveyRoundResult {
+  game: 'anonymous-survey';
+  roundNumber: number;
+  topic: string;
+  isCorrect: boolean;
+  yesCount: number;
+  noCount: number;
+  totalCount: number;
+}
+
+export type RoundResult = ItoRoundResult | RankingRoundResult | WordWolfRoundResult | DrawGuessRoundResult | AllMatchRoundResult | NgWordRoundResult | AnonymousSurveyRoundResult;
 
 // ============================================================
 // Public game state (secretNumber を隠したもの)

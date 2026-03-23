@@ -32,6 +32,8 @@ export const C2S = {
   NGWORD_ELIMINATE:     'ngword:eliminate',
   NGWORD_REROLL_WORDS:  'ngword:rerollWords',
   NGWORD_FINISH_TALK:   'ngword:finishTalk',
+  ANONYMOUS_SURVEY_SUBMIT: 'survey:submit',
+  ANONYMOUS_SURVEY_OPEN_RESULT: 'survey:openResult',
   ROUND_NEXT:           'round:next',
 } as const;
 
@@ -99,6 +101,8 @@ export interface C2SPayloads {
   [C2S.NGWORD_ELIMINATE]: { targetPlayerId: string };
   [C2S.NGWORD_REROLL_WORDS]: {};
   [C2S.NGWORD_FINISH_TALK]: {};
+  [C2S.ANONYMOUS_SURVEY_SUBMIT]: { answer: 'yes' | 'no' };
+  [C2S.ANONYMOUS_SURVEY_OPEN_RESULT]: {};
   [C2S.ROUND_NEXT]:  {};
 }
 

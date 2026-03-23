@@ -77,6 +77,8 @@ export function GameSettingsScreen() {
             ? '以心伝心ゲーム'
             : gs.selectedGame === 'ng-word'
               ? 'NGワードゲーム'
+              : gs.selectedGame === 'anonymous-survey'
+                ? '匿名アンケート'
               : 'ito';
 
   return (
@@ -109,6 +111,8 @@ export function GameSettingsScreen() {
               ? 'ラウンド数・制限時間・難易度を決めてから開始します。'
               : gs.selectedGame === 'ng-word'
                 ? 'ラウンド数とお題量を決めてから開始します。'
+              : gs.selectedGame === 'anonymous-survey'
+                ? 'ラウンド数を決めてから開始します。全員がYES/NO回答後に結果を公開します。'
               : gs.selectedGame === 'all-match'
                 ? 'ラウンド数を決めてから開始します。全員が同じ答えを出せたら成功です。'
               : 'ラウンド数を決めてから開始します（お題は自作またはランダム選択）。'}

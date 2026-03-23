@@ -15,3 +15,5 @@ export * from './presetAllMatchTopicsCustom.js';
 export * from './ngWordTopics.js';
 export * from './presetNgWordTopics.js';
 export * from './presetNgWordTopicsCustom.js';
+export * from './anonymousSurveyTopics.js';
+export * from './presetAnonymousSurveyTopics.js';

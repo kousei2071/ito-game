@@ -22,8 +22,10 @@ import type {
   NgWordRoundState,
   NgWordRoundResult,
   NgWordIncident,
+  AnonymousSurveyRoundState,
+  AnonymousSurveyRoundResult,
 } from '@ito/shared';
-import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORDS } from '@ito/shared';
+import { TOPICS, RANKING_TOPICS, PRESET_WORD_WOLF_TOPICS, PRESET_WORD_WOLF_EXAMPLE_TALKS, DRAW_GUESS_TOPICS_BY_DIFFICULTY, ALL_MATCH_TOPICS, NG_WORDS, ANONYMOUS_SURVEY_TOPICS } from '@ito/shared';
 
 // ============================================================
 // In-memory Room Store
@@ -52,6 +54,12 @@ interface DrawGuessSecretState {
 }
 
 const drawGuessSecrets = new Map<string, DrawGuessSecretState>();
+
+interface AnonymousSurveySecretState {
+  answersByPlayerId: Map<string, 'yes' | 'no'>;
+}
+
+const anonymousSurveySecrets = new Map<string, AnonymousSurveySecretState>();
 
 export type PlayerExitResult =
   | { kind: 'room-closed'; roomId: string; actorName: string }
@@ -207,11 +215,12 @@ function resetGameProgressToSelect(room: GameState): void {
   wordWolfSecrets.delete(room.roomId);
   stopDrawGuessTimer(room.roomId);
   drawGuessSecrets.delete(room.roomId);
+  anonymousSurveySecrets.delete(room.roomId);
 }
 
 function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
   const round = room.currentRound;
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'ng-word')) return;
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'ng-word' && round.game !== 'anonymous-survey')) return;
 
   if (round.game === 'ng-word') {
     if (round.topicChooserId === removedPlayerId) {
@@ -233,6 +242,16 @@ function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void
     if (room.phase === 'clue' && round.submittedCluePlayerIds.length >= room.players.length) {
       finalizeAllMatchRound(room);
     }
+    return;
+  }
+
+  if (round.game === 'anonymous-survey') {
+    if (round.topicChooserId === removedPlayerId) {
+      round.topicChooserId = room.players[0]?.id ?? '';
+    }
+    round.answeredPlayerIds = round.answeredPlayerIds.filter((id) => id !== removedPlayerId);
+    const secret = anonymousSurveySecrets.get(room.roomId);
+    secret?.answersByPlayerId.delete(removedPlayerId);
     return;
   }
 
@@ -451,6 +470,9 @@ export function startSelectedGame(room: GameState, game: GameType): RoundState {
   if (game === 'all-match') {
     return startAllMatchRound(room);
   }
+  if (game === 'anonymous-survey') {
+    return startAnonymousSurveyRound(room);
+  }
   return startClassicRound(room, game);
 }
 
@@ -545,6 +567,51 @@ function startNgWordRound(room: GameState): RoundState {
   };
   room.currentRound = round;
   room.phase = 'ngword-talk';
+  return round;
+}
+
+function startAnonymousSurveyRound(room: GameState): RoundState {
+  const roundNumber = room.roundResults.length + 1;
+  if (room.players.length === 0) {
+    throw new Error('プレイヤーがいません');
+  }
+
+  const index = room.topicChooserMode === 'random'
+    ? randInt(0, room.players.length - 1)
+    : room.topicChooserIndex % room.players.length;
+  const topicChooser = room.players[index];
+  if (room.topicChooserMode === 'sequential') {
+    room.topicChooserIndex = (index + 1) % room.players.length;
+  }
+
+  const usedTopics = room.roundResults
+    .filter((r): r is AnonymousSurveyRoundResult => r.game === 'anonymous-survey')
+    .map((r) => r.topic);
+  const available = ANONYMOUS_SURVEY_TOPICS.filter((t) => !usedTopics.includes(t));
+  const topicPool = available.length > 0 ? available : ANONYMOUS_SURVEY_TOPICS;
+  const topic = topicPool[randInt(0, topicPool.length - 1)];
+
+  room.players.forEach((p) => {
+    p.secretNumber = undefined;
+    p.secretWord = undefined;
+    p.clue = undefined;
+  });
+
+  const round: AnonymousSurveyRoundState = {
+    game: 'anonymous-survey',
+    roundNumber,
+    topic,
+    topicChooserId: topicChooser.id,
+    topicChangeCount: 0,
+    answeredPlayerIds: [],
+  };
+
+  anonymousSurveySecrets.set(room.roomId, {
+    answersByPlayerId: new Map<string, 'yes' | 'no'>(),
+  });
+
+  room.currentRound = round;
+  room.phase = 'topic';
   return round;
 }
 
@@ -727,6 +794,73 @@ export function openAllMatchResult(room: GameState, socketId: string): void {
     throw new Error('結果画面へ進めるのはお題を決めた人だけです');
   }
   room.phase = 'result';
+}
+
+export function submitAnonymousSurveyAnswer(room: GameState, socketId: string, answer: 'yes' | 'no'): void {
+  const round = room.currentRound;
+  if (!round || round.game !== 'anonymous-survey') {
+    throw new Error('匿名アンケートのラウンドではありません');
+  }
+  if (room.phase !== 'survey-answer') {
+    throw new Error('このフェーズでは回答できません');
+  }
+  if (!room.players.some((p) => p.id === socketId)) {
+    throw new Error('プレイヤーが見つかりません');
+  }
+  if (round.answeredPlayerIds.includes(socketId)) {
+    throw new Error('すでに回答済みです');
+  }
+
+  const secret = anonymousSurveySecrets.get(room.roomId);
+  if (!secret) {
+    throw new Error('回答データが見つかりません');
+  }
+
+  secret.answersByPlayerId.set(socketId, answer);
+  round.answeredPlayerIds.push(socketId);
+}
+
+export function openAnonymousSurveyResult(room: GameState, socketId: string): AnonymousSurveyRoundResult {
+  const round = room.currentRound;
+  if (!round || round.game !== 'anonymous-survey') {
+    throw new Error('匿名アンケートのラウンドではありません');
+  }
+  if (room.phase !== 'survey-answer') {
+    throw new Error('このフェーズでは結果を開けません');
+  }
+  if (round.topicChooserId !== socketId) {
+    throw new Error('結果を開けるのはお題を決めた人だけです');
+  }
+  if (round.answeredPlayerIds.length !== room.players.length) {
+    throw new Error('全員の回答がまだ揃っていません');
+  }
+
+  const secret = anonymousSurveySecrets.get(room.roomId);
+  if (!secret) {
+    throw new Error('回答データが見つかりません');
+  }
+
+  let yesCount = 0;
+  let noCount = 0;
+  for (const value of secret.answersByPlayerId.values()) {
+    if (value === 'yes') yesCount += 1;
+    else noCount += 1;
+  }
+
+  const result: AnonymousSurveyRoundResult = {
+    game: 'anonymous-survey',
+    roundNumber: round.roundNumber,
+    topic: round.topic,
+    isCorrect: true,
+    yesCount,
+    noCount,
+    totalCount: room.players.length,
+  };
+
+  room.roundResults.push(result);
+  room.phase = 'survey-result';
+  anonymousSurveySecrets.delete(room.roomId);
+  return result;
 }
 
 export function eliminateNgWordPlayer(
@@ -1197,6 +1331,8 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
     startAllMatchRound(room);
   } else if (room.selectedGame === 'draw-guess') {
     startDrawGuessRound(room);
+  } else if (room.selectedGame === 'anonymous-survey') {
+    startAnonymousSurveyRound(room);
   } else {
     startNewRound(room);
   }
@@ -1281,6 +1417,27 @@ export function forceFinishAndAdvanceRound(room: GameState): 'next' | 'finished'
         isCorrect: false,
       };
       room.roundResults.push(result);
+    } else if (current.game === 'anonymous-survey') {
+      const secret = anonymousSurveySecrets.get(room.roomId);
+      let yesCount = 0;
+      let noCount = 0;
+      if (secret) {
+        for (const value of secret.answersByPlayerId.values()) {
+          if (value === 'yes') yesCount += 1;
+          else noCount += 1;
+        }
+      }
+      const result: AnonymousSurveyRoundResult = {
+        game: 'anonymous-survey',
+        roundNumber: current.roundNumber,
+        topic: current.topic,
+        isCorrect: false,
+        yesCount,
+        noCount,
+        totalCount: room.players.length,
+      };
+      room.roundResults.push(result);
+      anonymousSurveySecrets.delete(room.roomId);
     }
   }
 

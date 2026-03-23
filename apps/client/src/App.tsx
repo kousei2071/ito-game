@@ -17,6 +17,8 @@ import { RankingRevealScreen } from './screens/RankingRevealScreen';
 import { RankingResultScreen } from './screens/RankingResultScreen';
 import { DrawGuessScreen } from './screens/DrawGuessScreen';
 import { DrawGuessResultScreen } from './screens/DrawGuessResultScreen';
+import { AnonymousSurveyAnswerScreen } from './screens/AnonymousSurveyAnswerScreen';
+import { AnonymousSurveyResultScreen } from './screens/AnonymousSurveyResultScreen';
 import { getSocket } from './socket';
 
 export default function App() {
@@ -78,6 +80,12 @@ export default function App() {
         break;
       case 'drawguess-result':
         screen = <DrawGuessResultScreen />;
+        break;
+      case 'survey-answer':
+        screen = <AnonymousSurveyAnswerScreen />;
+        break;
+      case 'survey-result':
+        screen = <AnonymousSurveyResultScreen />;
         break;
       case 'finished':
         screen = <FinalScreen />;
