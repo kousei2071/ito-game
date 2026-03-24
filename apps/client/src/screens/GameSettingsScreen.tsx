@@ -71,6 +71,8 @@ export function GameSettingsScreen() {
       ? 'ワードウルフ'
       : gs.selectedGame === 'ranking'
         ? 'ランキングゲーム'
+        : gs.selectedGame === 'ranking2'
+          ? 'ランキングゲーム2'
         : gs.selectedGame === 'draw-guess'
           ? 'お絵描きクイズ'
           : gs.selectedGame === 'all-match'
@@ -107,6 +109,8 @@ export function GameSettingsScreen() {
         <p className="settings-note">
           {gs.selectedGame === 'word-wolf'
             ? 'ラウンド数・会話時間・ワードウルフ人数を決めてから開始します。'
+            : gs.selectedGame === 'ranking2'
+              ? 'ラウンド数を決めてから開始します。各自に割り当てられたメンバーの順位を予想して提出します。'
             : gs.selectedGame === 'draw-guess'
               ? 'ラウンド数・制限時間・難易度を決めてから開始します。'
               : gs.selectedGame === 'ng-word'

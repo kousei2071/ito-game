@@ -9,10 +9,10 @@ export function ArrangeScreen() {
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking')) {
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'ranking2')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
-  if (round.game === 'ranking') {
+  if (round.game === 'ranking' || round.game === 'ranking2') {
     return <RankingArrangePanel />;
   }
 
@@ -24,7 +24,7 @@ function RankingArrangePanel() {
   const gs = state.gameState!;
   const round = gs.currentRound;
   const socket = getSocket();
-  if (!round || round.game !== 'ranking') {
+  if (!round || (round.game !== 'ranking' && round.game !== 'ranking2')) {
     return <div className="screen"><p>読み込み中…</p></div>;
   }
 
@@ -32,6 +32,9 @@ function RankingArrangePanel() {
   const totalPlayers = gs.players.length;
   const myDefaultRank = Math.max(1, gs.players.findIndex((p) => p.id === myId) + 1);
   const submittedRank = round.rankingSelections.find((s) => s.playerId === myId)?.rank;
+  const myTargetId = round.rankingTargets.find((t) => t.playerId === myId)?.targetPlayerId ?? '';
+  const myTarget = gs.players.find((p) => p.id === myTargetId);
+  const isRanking2 = round.game === 'ranking2';
   const [myRank, setMyRank] = useState<number>(submittedRank ?? myDefaultRank ?? 1);
   const submitted = round.rankingSubmittedPlayerIds.includes(myId);
 
@@ -66,10 +69,25 @@ function RankingArrangePanel() {
         <h2 className="topic-text">{round.topic}</h2>
       </div>
 
-      <p className="arrange-instruction">自分がこのグループで何位かを決めて提出してください</p>
+      <p className="arrange-instruction">
+        {isRanking2
+          ? '担当メンバーがこのグループで何位かを予想して提出してください'
+          : '自分がこのグループで何位かを決めて提出してください'}
+      </p>
+
+      {isRanking2 ? (
+        <div className="topic-card">
+          <p className="topic-label">あなたの担当メンバー</p>
+          {myTarget ? (
+            <PlayerIdentity player={myTarget} className="topic-text" />
+          ) : (
+            <h2 className="topic-text">割り当て中...</h2>
+          )}
+        </div>
+      ) : null}
 
       <div className="my-number-card">
-        <p className="number-label">あなたの予想順位</p>
+        <p className="number-label">{isRanking2 ? '担当メンバーの予想順位' : 'あなたの予想順位'}</p>
         <h1 className="number-value">{myRank}位</h1>
         <div className="arrange-arrow-controls ranking-self-rank-controls">
           <button
@@ -96,7 +114,7 @@ function RankingArrangePanel() {
       <button
         className="btn btn-primary"
         onClick={() => actions.submitRankingSelfRank(myRank)}
-        disabled={submitted}
+        disabled={submitted || (isRanking2 && !myTarget)}
       >
         {submitted ? '提出済み' : 'この順位で提出'}
       </button>

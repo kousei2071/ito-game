@@ -8,7 +8,7 @@ export function RankingRevealScreen() {
   const round = gs.currentRound;
   const socket = getSocket();
 
-  if (!round || round.game !== 'ranking') {
+  if (!round || (round.game !== 'ranking' && round.game !== 'ranking2')) {
     return <div className="screen"><p>公開情報を読み込み中…</p></div>;
   }
 
@@ -22,7 +22,7 @@ export function RankingRevealScreen() {
     const rank = i + 1;
     const players = round.rankingSelections
       .filter((s) => s.rank === rank)
-      .map((s) => gs.players.find((p) => p.id === s.playerId))
+      .map((s) => gs.players.find((p) => p.id === s.targetPlayerId))
       .filter((p): p is NonNullable<typeof p> => Boolean(p));
     return { rank, revealed: rank <= revealedRank, players };
   });

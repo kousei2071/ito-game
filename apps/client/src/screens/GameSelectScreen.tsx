@@ -9,9 +9,10 @@ export function GameSelectScreen() {
   const socket = getSocket();
   const me = gs.players.find((p) => p.id === socket.id);
   const isHost = me?.isHost ?? false;
-  const games: Array<{ id: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey'; title: string; desc: string }> = [
+  const games: Array<{ id: 'ito' | 'ranking' | 'ranking2' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey'; title: string; desc: string }> = [
     { id: 'ito', title: 'ito', desc: '価値観で数字を並べる協力ゲーム' },
     { id: 'ranking', title: 'ランキングゲーム', desc: 'お題に沿った答えを人気順に並べる協力ゲーム' },
+    { id: 'ranking2', title: 'ランキングゲーム2', desc: '担当メンバーの順位を予想して提出する協力ゲーム' },
     { id: 'word-wolf', title: 'ワードウルフ', desc: '少数派を見つける会話推理ゲーム' },
     { id: 'draw-guess', title: 'お絵描きクイズ', desc: '絵を描いてお題を当てるゲーム' },
     { id: 'all-match', title: '以心伝心ゲーム', desc: 'みんなで同じ答えを目指す協力ゲーム' },

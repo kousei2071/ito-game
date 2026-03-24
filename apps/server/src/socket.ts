@@ -70,6 +70,7 @@ function toPublic(room: GameState): PublicGameState {
           correctOrder: [],
         };
       case 'ranking':
+      case 'ranking2':
         return {
           ...result,
           rankingCards: [],
@@ -243,7 +244,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           roundNumber: round.roundNumber,
           topic: round.topic,
         });
-      } else if (round.game === 'ranking') {
+      } else if (round.game === 'ranking' || round.game === 'ranking2') {
         io.to(room.roomId).emit(S2C.ROUND_STARTED, {
           roundNumber: round.roundNumber,
           topic: round.topic,
@@ -297,7 +298,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   });
 
   // ---------- game:select ----------
-  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey' }) => {
+  socket.on(C2S.GAME_SELECT, ({ game }: { game: 'ito' | 'ranking' | 'ranking2' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey' }) => {
     const room = findRoomByPlayer(socket.id);
     if (!room || room.phase !== 'game-select') return;
     try {
@@ -329,7 +330,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       if (!room || room.phase !== 'topic' || !room.currentRound) return;
 
       const round = room.currentRound;
-      if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'anonymous-survey') return;
+      if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'ranking2' && round.game !== 'all-match' && round.game !== 'anonymous-survey') return;
       if (round.topicChooserId !== socket.id) {
         return emitError(socket, 'このラウンドでお題を決められるのは順番のプレイヤーだけです');
       }
@@ -341,7 +342,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         }
         if (mode === 'random') {
           round.topicChangeCount += 1;
-          const presetTopics = round.game === 'ranking'
+          const presetTopics = round.game === 'ranking' || round.game === 'ranking2'
             ? RANKING_TOPICS
             : round.game === 'all-match'
               ? ALL_MATCH_TOPICS
@@ -368,7 +369,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return emitError(socket, 'お題を入力してください');
       }
       round.topic = trimmed;
-      if (round.game === 'ranking') {
+      if (round.game === 'ranking' || round.game === 'ranking2') {
         room.phase = 'arrange';
         round.arrangedOrder = [];
         round.rankingSelections = [];
@@ -396,7 +397,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     const phaseChanged = submitClue(room, socket.id, clue);
     if (phaseChanged) {
       const currentRound = room.currentRound;
-      if (!currentRound || (currentRound.game !== 'ito' && currentRound.game !== 'ranking' && currentRound.game !== 'all-match')) {
+      if (!currentRound || (currentRound.game !== 'ito' && currentRound.game !== 'ranking' && currentRound.game !== 'ranking2' && currentRound.game !== 'all-match')) {
         broadcastState(io, room);
         return;
       }
@@ -535,7 +536,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     if (!room || room.phase !== 'arrange') return;
     if (
       !room.currentRound
-      || (room.currentRound.game !== 'ito' && room.currentRound.game !== 'ranking')
+      || (room.currentRound.game !== 'ito' && room.currentRound.game !== 'ranking' && room.currentRound.game !== 'ranking2')
       || room.currentRound.topicChooserId !== socket.id
     ) {
       return emitError(socket, 'このラウンドで並びを確定できるのはお題を決めた人だけです');
@@ -715,7 +716,7 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           topic: room.currentRound.topic,
         });
         // 次のラウンドもまずはお題選択フェーズ
-      } else if (room.currentRound?.game === 'ranking') {
+      } else if (room.currentRound?.game === 'ranking' || room.currentRound?.game === 'ranking2') {
         io.to(room.roomId).emit(S2C.ROUND_STARTED, {
           roundNumber: room.currentRound.roundNumber,
           topic: room.currentRound.topic,

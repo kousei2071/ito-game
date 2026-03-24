@@ -20,7 +20,7 @@ export interface Player {
 export type PlayerIconId = 'icon1' | 'icon2' | 'icon3' | 'icon4' | 'icon5' | 'icon6' | 'icon7' | 'icon8' | 'icon9' | 'icon10';
 
 export type TopicChooserMode = 'sequential' | 'random';
-export type GameType = 'ito' | 'ranking' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey';
+export type GameType = 'ito' | 'ranking' | 'ranking2' | 'word-wolf' | 'draw-guess' | 'all-match' | 'ng-word' | 'anonymous-survey';
 export type WordWolfCountMode = 'auto' | 'one' | 'two';
 export type DrawGuessTimeLimit = 0 | 60 | 90 | 120;
 export type DrawGuessDifficulty = 'easy' | 'normal' | 'hard';
@@ -87,7 +87,7 @@ export interface WordWolfRoundState {
 }
 
 export interface RankingRoundState {
-  game: 'ranking';
+  game: 'ranking' | 'ranking2';
   roundNumber: number;
   topic: string;
   topicChooserId: string;
@@ -95,7 +95,8 @@ export interface RankingRoundState {
   submittedCluePlayerIds: string[];
   clues: { playerId: string; clue: string }[];
   arrangedOrder: string[];
-  rankingSelections: { playerId: string; rank: number }[];
+  rankingTargets: { playerId: string; targetPlayerId: string }[];
+  rankingSelections: { playerId: string; targetPlayerId: string; rank: number }[];
   rankingSubmittedPlayerIds: string[];
   revealedRank: number;
   correctOrder?: string[];
@@ -216,7 +217,7 @@ export interface WordWolfRoundResult {
 }
 
 export interface RankingRoundResult {
-  game: 'ranking';
+  game: 'ranking' | 'ranking2';
   roundNumber: number;
   topic: string;
   isCorrect: boolean;

@@ -9,7 +9,7 @@ export function RankingResultScreen() {
   const socket = getSocket();
   const isHost = gs.players.find((p) => p.id === socket.id)?.isHost ?? false;
 
-  if (!result || result.game !== 'ranking') {
+  if (!result || (result.game !== 'ranking' && result.game !== 'ranking2')) {
     return <div className="screen"><p>結果を読み込み中…</p></div>;
   }
 

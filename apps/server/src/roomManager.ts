@@ -134,6 +134,30 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+function buildRankingTargets(playerIds: string[], game: 'ranking' | 'ranking2'): Array<{ playerId: string; targetPlayerId: string }> {
+  if (game === 'ranking') {
+    return playerIds.map((playerId) => ({ playerId, targetPlayerId: playerId }));
+  }
+
+  if (playerIds.length < 2) {
+    throw new Error('ランキングゲーム2は2人以上で遊べます');
+  }
+
+  // 可能な限りランダムな完全順列（誰も自分を担当しない）を作る
+  for (let attempt = 0; attempt < 32; attempt += 1) {
+    const targets = shuffle(playerIds);
+    const isDerangement = playerIds.every((playerId, i) => targets[i] !== playerId);
+    if (!isDerangement) continue;
+    return playerIds.map((playerId, i) => ({ playerId, targetPlayerId: targets[i] }));
+  }
+
+  // フォールバック: 1つ回転させれば必ず自分以外になる（2人以上前提）
+  return playerIds.map((playerId, i) => ({
+    playerId,
+    targetPlayerId: playerIds[(i + 1) % playerIds.length],
+  }));
+}
+
 // ============================================================
 // Room CRUD
 // ============================================================
@@ -220,7 +244,7 @@ function resetGameProgressToSelect(room: GameState): void {
 
 function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void {
   const round = room.currentRound;
-  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match' && round.game !== 'ng-word' && round.game !== 'anonymous-survey')) return;
+  if (!round || (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'ranking2' && round.game !== 'all-match' && round.game !== 'ng-word' && round.game !== 'anonymous-survey')) return;
 
   if (round.game === 'ng-word') {
     if (round.topicChooserId === removedPlayerId) {
@@ -258,6 +282,21 @@ function applyItoExitAdjustments(room: GameState, removedPlayerId: string): void
   round.submittedCluePlayerIds = round.submittedCluePlayerIds.filter((id) => id !== removedPlayerId);
   round.clues = round.clues.filter((c) => c.playerId !== removedPlayerId);
   round.arrangedOrder = round.arrangedOrder.filter((id) => id !== removedPlayerId);
+  if (round.game === 'ranking' || round.game === 'ranking2') {
+    const activeIds = room.players.map((p) => p.id);
+    if (round.game === 'ranking2' && activeIds.length < 2) {
+      resetGameProgressToSelect(room);
+      return;
+    }
+
+    round.rankingTargets = buildRankingTargets(activeIds, round.game);
+    round.rankingSelections = [];
+    round.rankingSubmittedPlayerIds = [];
+    round.revealedRank = 0;
+    if (room.phase === 'ranking-reveal' || room.phase === 'ranking-result') {
+      room.phase = 'arrange';
+    }
+  }
   if (round.correctOrder) {
     round.correctOrder = round.correctOrder.filter((id) => id !== removedPlayerId);
   }
@@ -485,10 +524,6 @@ export function startNewRound(room: GameState): RoundState {
   return startClassicRound(room, 'ito');
 }
 
-function startRankingRound(room: GameState): RoundState {
-  return startClassicRound(room, 'ranking');
-}
-
 function startAllMatchRound(room: GameState): RoundState {
   const roundNumber = room.roundResults.length + 1;
   if (room.players.length === 0) {
@@ -615,11 +650,15 @@ function startAnonymousSurveyRound(room: GameState): RoundState {
   return round;
 }
 
-function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState {
+function startClassicRound(room: GameState, game: 'ito' | 'ranking' | 'ranking2'): RoundState {
   const roundNumber = room.roundResults.length + 1;
 
    if (room.players.length === 0) {
      throw new Error('プレイヤーがいません');
+   }
+
+   if (game === 'ranking2' && room.players.length < 2) {
+     throw new Error('ランキングゲーム2は2人以上で遊べます');
    }
 
    // このラウンドのお題決定者を決定
@@ -648,7 +687,7 @@ function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState
   }
 
   // お題
-  const presetTopics = game === 'ranking' ? RANKING_TOPICS : TOPICS;
+  const presetTopics = game === 'ranking' || game === 'ranking2' ? RANKING_TOPICS : TOPICS;
 
   const usedTopics = room.roundResults
     .filter((r): r is ItoRoundResult | RankingRoundResult => r.game === game)
@@ -658,9 +697,9 @@ function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState
     ? available[randInt(0, available.length - 1)]
     : presetTopics[randInt(0, presetTopics.length - 1)];
 
-  const round: ItoRoundState | RankingRoundState = game === 'ranking'
+  const round: ItoRoundState | RankingRoundState = game === 'ranking' || game === 'ranking2'
     ? {
-      game: 'ranking',
+      game,
       roundNumber,
       topic,
       topicChooserId: topicChooser.id,
@@ -668,6 +707,7 @@ function startClassicRound(room: GameState, game: 'ito' | 'ranking'): RoundState
       submittedCluePlayerIds: [],
       clues: [],
       arrangedOrder: [],
+      rankingTargets: buildRankingTargets(room.players.map((p) => p.id), game),
       rankingSelections: [],
       rankingSubmittedPlayerIds: [],
       revealedRank: 0,
@@ -749,7 +789,7 @@ export function startWordWolfRound(room: GameState): RoundState {
 export function submitClue(room: GameState, socketId: string, clue: string): boolean {
   const round = room.currentRound;
   if (!round || room.phase !== 'clue') return false;
-  if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'all-match') return false;
+  if (round.game !== 'ito' && round.game !== 'ranking' && round.game !== 'ranking2' && round.game !== 'all-match') return false;
   if (round.submittedCluePlayerIds.includes(socketId)) return false;
 
   const player = room.players.find((p) => p.id === socketId);
@@ -1071,7 +1111,7 @@ export function judgeAllMatchRound(room: GameState, socketId: string, isCorrect:
 export function confirmArrange(room: GameState, order: string[]): RoundResult | null {
   const round = room.currentRound as ItoRoundState | RankingRoundState;
 
-  if (round.game === 'ranking') {
+  if (round.game === 'ranking' || round.game === 'ranking2') {
     throw new Error('ランキングは各自の順位提出で確定します');
   }
 
@@ -1116,11 +1156,15 @@ export function submitRankingSelfRank(room: GameState, socketId: string, rank: n
     throw new Error('このフェーズでは順位を提出できません');
   }
   const round = room.currentRound;
-  if (!round || round.game !== 'ranking') {
+  if (!round || (round.game !== 'ranking' && round.game !== 'ranking2')) {
     throw new Error('ランキングのラウンド情報が見つかりません');
   }
   if (!room.players.some((p) => p.id === socketId)) {
     throw new Error('プレイヤーが見つかりません');
+  }
+  const target = round.rankingTargets.find((t) => t.playerId === socketId);
+  if (!target) {
+    throw new Error('担当メンバーが見つかりません');
   }
   const maxRank = room.players.length;
   if (!Number.isInteger(rank) || rank < 1 || rank > maxRank) {
@@ -1130,8 +1174,9 @@ export function submitRankingSelfRank(room: GameState, socketId: string, rank: n
   const existing = round.rankingSelections.find((s) => s.playerId === socketId);
   if (existing) {
     existing.rank = rank;
+    existing.targetPlayerId = target.targetPlayerId;
   } else {
-    round.rankingSelections.push({ playerId: socketId, rank });
+    round.rankingSelections.push({ playerId: socketId, targetPlayerId: target.targetPlayerId, rank });
   }
 
   if (!round.rankingSubmittedPlayerIds.includes(socketId)) {
@@ -1141,8 +1186,8 @@ export function submitRankingSelfRank(room: GameState, socketId: string, rank: n
   if (round.rankingSubmittedPlayerIds.length >= room.players.length) {
     round.arrangedOrder = [...room.players]
       .sort((a, b) => {
-        const aRank = round.rankingSelections.find((s) => s.playerId === a.id)?.rank ?? maxRank;
-        const bRank = round.rankingSelections.find((s) => s.playerId === b.id)?.rank ?? maxRank;
+        const aRank = round.rankingSelections.find((s) => s.targetPlayerId === a.id)?.rank ?? maxRank;
+        const bRank = round.rankingSelections.find((s) => s.targetPlayerId === b.id)?.rank ?? maxRank;
         if (aRank !== bRank) return aRank - bRank;
         return a.name.localeCompare(b.name, 'ja');
       })
@@ -1157,7 +1202,7 @@ export function revealNextRanking(room: GameState, socketId: string): RankingRou
     throw new Error('このフェーズでは公開できません');
   }
   const round = room.currentRound;
-  if (!round || round.game !== 'ranking') {
+  if (!round || (round.game !== 'ranking' && round.game !== 'ranking2')) {
     throw new Error('ランキングのラウンド情報が見つかりません');
   }
   if (round.topicChooserId !== socketId) {
@@ -1178,7 +1223,7 @@ export function revealNextRanking(room: GameState, socketId: string): RankingRou
   }
 
   const rankingCards = room.players.map((player) => {
-    const rank = round.rankingSelections.find((s) => s.playerId === player.id)?.rank ?? totalRank;
+    const rank = round.rankingSelections.find((s) => s.targetPlayerId === player.id)?.rank ?? totalRank;
     return {
       playerId: player.id,
       playerName: player.name,
@@ -1325,8 +1370,8 @@ export function advanceRound(room: GameState): 'next' | 'finished' {
     startWordWolfRound(room);
   } else if (room.selectedGame === 'ng-word') {
     startNgWordRound(room);
-  } else if (room.selectedGame === 'ranking') {
-    startRankingRound(room);
+  } else if (room.selectedGame === 'ranking' || room.selectedGame === 'ranking2') {
+    startClassicRound(room, room.selectedGame);
   } else if (room.selectedGame === 'all-match') {
     startAllMatchRound(room);
   } else if (room.selectedGame === 'draw-guess') {
@@ -1356,9 +1401,9 @@ export function forceFinishAndAdvanceRound(room: GameState): 'next' | 'finished'
         correctOrder: [],
       };
       room.roundResults.push(result);
-    } else if (current.game === 'ranking') {
+    } else if (current.game === 'ranking' || current.game === 'ranking2') {
       const result: RankingRoundResult = {
-        game: 'ranking',
+        game: current.game,
         roundNumber: current.roundNumber,
         topic: current.topic,
         isCorrect: false,
